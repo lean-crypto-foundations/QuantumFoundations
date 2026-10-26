@@ -18,3 +18,8 @@ public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.Instrument
 public import QuantumFoundations.InstrumentCP
 public import QuantumFoundations.QRHL
+public import QuantumFoundations.GentleMeasurement
+public import QuantumFoundations.FuchsVanDeGraaf
+public import QuantumFoundations.PetzRecovery
+public import QuantumFoundations.QuantumBayes
+public import QuantumFoundations.QuantumMarkovChain

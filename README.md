@@ -21,6 +21,12 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `Instrument` | `QComp d α`: instruments with summable, jointly trace-nonincreasing branches; the lawful monad |
 | `InstrumentCP` | complete positivity of instrument branches, tensor products of instruments |
 | `QRHL` | quantum relational Hoare logic over instruments |
+| `GentleMeasurement` | the gentle-measurement lemma for projective measurements |
+| `FuchsVanDeGraaf` | `1 − F(P, ρ) ≤ traceDist P ρ` for a pure target `P` (one Fuchs–van de Graaf inequality) |
+| `PetzRecovery` | the Petz recovery map, its exact recovery of the prior and compositionality |
+| `QuantumBayes` | quantum Bayesian inversion by the Petz map, the Lüders (Jeffrey) update |
+| `QuantumMarkovChain` | conditional quantum mutual information and quantum Markov chains |
+| `ForMathlib/MatrixPosSemidef` | positivity lemmas for complex matrices |
 
 The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
 types, CP branches) are separate pull requests.
