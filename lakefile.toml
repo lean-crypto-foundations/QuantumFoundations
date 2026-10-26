@@ -1,0 +1,16 @@
+name = "QuantumFoundations"
+defaultTargets = ["QuantumFoundations"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+weak.linter.style.header.license = "Released under MIT or Apache 2.0 license as described in the files LICENSE-MIT and LICENSE-APACHE."
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.35.0"
+
+[[lean_lib]]
+name = "QuantumFoundations"
