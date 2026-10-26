@@ -5,4 +5,16 @@ Authors: Bas Spitters
 -/
 module
 
-public import Mathlib.LinearAlgebra.Matrix.Trace
+public import QuantumFoundations.CPMap
+public import QuantumFoundations.DualMap
+public import QuantumFoundations.ChoiKraus
+public import QuantumFoundations.Stinespring
+public import QuantumFoundations.PartialTrace
+public import QuantumFoundations.TensorProduct
+public import QuantumFoundations.KroneckerPSD
+public import QuantumFoundations.TraceNorm
+public import QuantumFoundations.Measurement
+public import QuantumFoundations.UnitaryChannel
+public import QuantumFoundations.Instrument
+public import QuantumFoundations.InstrumentCP
+public import QuantumFoundations.QRHL
