@@ -86,6 +86,7 @@ def matUnit (i j : ι) : Matrix ι ι ℂ :=
   fun k l => if k = i ∧ l = j then 1 else 0
 
 omit [Fintype ι] in
+/-- Entry formula of a matrix unit. -/
 @[simp]
 theorem matUnit_apply (i j k l : ι) :
     matUnit i j k l = if k = i ∧ l = j then 1 else 0 := rfl
@@ -130,7 +131,7 @@ def dualMap
     simp [add_mul, Finset.sum_add_distrib]
   map_smul' c A := by
     ext i j
-    show _ = c * _
+    change _ = c * _
     simp only [Matrix.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
 
 /-- Entry formula of the dual map:
@@ -220,8 +221,8 @@ private theorem Complex.ofReal_mul_nonneg {r : ℝ} {z : ℂ} (hr : 0 ≤ r) (hz
     0 ≤ (r : ℂ) * z := by
   rw [Complex.nonneg_iff] at hz ⊢
   constructor
-  · simp [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, hz.2.symm]
-    exact mul_nonneg hr hz.1
+  · simpa [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, hz.2.symm] using
+      mul_nonneg hr hz.1
   · simp [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, hz.2.symm]
 
 omit [Fintype ι] in
@@ -232,12 +233,14 @@ private theorem matUnit_conjTranspose (i j : ι) :
   simp only [conjTranspose_apply, matUnit_apply, and_comm]
   split <;> simp
 
+omit [DecidableEq ι] in
 /-- Trace of product of two PSD matrices is nonneg.
     Proof via spectral decomposition of `A`:
     `tr(A * B) = ∑ᵢ λᵢ · ⟨vᵢ, B vᵢ⟩` where `λᵢ ≥ 0` and `⟨vᵢ, B vᵢ⟩ ≥ 0`. -/
 theorem trace_psd_mul_psd_nonneg
     (A B : Matrix ι ι ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef) :
     0 ≤ (A * B).trace := by
+  classical
   set U : Matrix ι ι ℂ := ↑hA.isHermitian.eigenvectorUnitary
   set ev := hA.isHermitian.eigenvalues
   set D : Matrix ι ι ℂ := diagonal (Complex.ofReal ∘ ev)
@@ -267,12 +270,11 @@ private theorem quadForm_eq_trace (M : Matrix ι ι ℂ) (x : ι → ℂ) :
     star x ⬝ᵥ M.mulVec x = (M * vecMulVec x (star x)).trace := by
   rw [mul_vecMulVec, trace_vecMulVec, dotProduct_comm]
 
-omit [DecidableEq ι] in
+omit [Fintype ι] [DecidableEq ι] in
 /-- `vecMulVec x (star x)` is PSD (rank-1 outer product). -/
-private theorem posSemidef_outer_product (x : ι → ℂ) :
+private theorem posSemidef_outer_product [Finite ι] (x : ι → ℂ) :
     (vecMulVec x (star x)).PosSemidef := by
-  have := posSemidef_vecMulVec_star_self (star x)
-  simp at this; exact this
+  simpa using posSemidef_vecMulVec_star_self (star x)
 
 omit [DecidableEq ι] in
 /-- The imaginary part of `star x ⬝ᵥ M *ᵥ x` for PSD `M` is zero. -/
@@ -284,9 +286,9 @@ private theorem im_quadForm_of_psd {M : Matrix ι ι ℂ}
 /-- Standard basis vector: `eᵢ(k) = if k = i then 1 else 0`. -/
 private def basisVec (i : ι) : ι → ℂ := fun k => if k = i then 1 else 0
 
-omit [DecidableEq ι] in
+omit [Fintype ι] [DecidableEq ι] in
 /-- The outer product `vecMulVec (star v) v` is PSD. -/
-private theorem psd_outer (v : ι → ℂ) :
+private theorem psd_outer [Finite ι] (v : ι → ℂ) :
     (vecMulVec (star v) v).PosSemidef := posSemidef_vecMulVec_star_self v
 
 omit [Fintype ι] in
@@ -295,8 +297,10 @@ omit [Fintype ι] in
 private theorem matUnit_decomp₁ (i j : ι) :
     matUnit i j = (1/4 : ℂ) • vecMulVec (star (basisVec i + basisVec j)) (basisVec i + basisVec j)
       - (1/4 : ℂ) • vecMulVec (star (basisVec i - basisVec j)) (basisVec i - basisVec j)
-      - (Complex.I/4) • vecMulVec (star (basisVec i + Complex.I • basisVec j)) (basisVec i + Complex.I • basisVec j)
-      + (Complex.I/4) • vecMulVec (star (basisVec i - Complex.I • basisVec j)) (basisVec i - Complex.I • basisVec j) := by
+      - (Complex.I/4) • vecMulVec (star (basisVec i + Complex.I • basisVec j))
+          (basisVec i + Complex.I • basisVec j)
+      + (Complex.I/4) • vecMulVec (star (basisVec i - Complex.I • basisVec j))
+          (basisVec i - Complex.I • basisVec j) := by
   ext k l
   simp only [matUnit_apply, Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul,
     vecMulVec_apply, Pi.star_apply, Pi.add_apply, Pi.sub_apply, Pi.smul_apply,
@@ -311,8 +315,10 @@ omit [Fintype ι] in
 private theorem matUnit_decomp₂ (i j : ι) :
     matUnit j i = (1/4 : ℂ) • vecMulVec (star (basisVec i + basisVec j)) (basisVec i + basisVec j)
       - (1/4 : ℂ) • vecMulVec (star (basisVec i - basisVec j)) (basisVec i - basisVec j)
-      + (Complex.I/4) • vecMulVec (star (basisVec i + Complex.I • basisVec j)) (basisVec i + Complex.I • basisVec j)
-      - (Complex.I/4) • vecMulVec (star (basisVec i - Complex.I • basisVec j)) (basisVec i - Complex.I • basisVec j) := by
+      + (Complex.I/4) • vecMulVec (star (basisVec i + Complex.I • basisVec j))
+          (basisVec i + Complex.I • basisVec j)
+      - (Complex.I/4) • vecMulVec (star (basisVec i - Complex.I • basisVec j))
+          (basisVec i - Complex.I • basisVec j) := by
   ext k l
   simp only [matUnit_apply, Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul,
     vecMulVec_apply, Pi.star_apply, Pi.add_apply, Pi.sub_apply, Pi.smul_apply,
@@ -321,15 +327,18 @@ private theorem matUnit_decomp₂ (i j : ι) :
     by_cases hkj : k = j <;> by_cases hli : l = i <;>
     simp_all <;> norm_num [Complex.ext_iff, Complex.I_re, Complex.I_im]
 
+omit [Fintype ι] in
 /-- Positive maps are star-preserving on matrix units: `(Φ(eᵢⱼ))ᴴ = Φ(eⱼᵢ)`. -/
-private theorem positive_map_conjTranspose_matUnit
+private theorem positive_map_conjTranspose_matUnit [Finite ι]
     (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ)
     (hΦ : IsPositiveMap Φ) (i j : ι) :
     (Φ (matUnit i j))ᴴ = Φ (matUnit j i) := by
   let P₁ := vecMulVec (star (basisVec i + basisVec j)) (basisVec i + basisVec j)
   let P₂ := vecMulVec (star (basisVec i - basisVec j)) (basisVec i - basisVec j)
-  let P₃ := vecMulVec (star (basisVec i + Complex.I • basisVec j)) (basisVec i + Complex.I • basisVec j)
-  let P₄ := vecMulVec (star (basisVec i - Complex.I • basisVec j)) (basisVec i - Complex.I • basisVec j)
+  let P₃ := vecMulVec (star (basisVec i + Complex.I • basisVec j))
+    (basisVec i + Complex.I • basisVec j)
+  let P₄ := vecMulVec (star (basisVec i - Complex.I • basisVec j))
+    (basisVec i - Complex.I • basisVec j)
   have hP₁ : (Φ P₁).IsHermitian := (hΦ _ (psd_outer _)).isHermitian
   have hP₂ : (Φ P₂).IsHermitian := (hΦ _ (psd_outer _)).isHermitian
   have hP₃ : (Φ P₃).IsHermitian := (hΦ _ (psd_outer _)).isHermitian
@@ -386,14 +395,14 @@ def tensorIdMap
   toFun M p q := (Φ (blockMatrix M p.1 q.1)) p.2 q.2
   map_add' M₁ M₂ := by
     funext ⟨a, i⟩ ⟨b, j⟩
-    show (Φ (blockMatrix (M₁ + M₂) a b)) i j =
+    change (Φ (blockMatrix (M₁ + M₂) a b)) i j =
       (Φ (blockMatrix M₁ a b)) i j + (Φ (blockMatrix M₂ a b)) i j
     have : blockMatrix (M₁ + M₂) a b = blockMatrix M₁ a b + blockMatrix M₂ a b := by
       ext; simp [blockMatrix, Matrix.add_apply]
     rw [this, map_add]; rfl
   map_smul' c M := by
     funext ⟨a, i⟩ ⟨b, j⟩
-    show (Φ (blockMatrix (c • M) a b)) i j = c * (Φ (blockMatrix M a b)) i j
+    change (Φ (blockMatrix (c • M) a b)) i j = c * (Φ (blockMatrix M a b)) i j
     have : blockMatrix (c • M) a b = c • blockMatrix M a b := by
       ext; simp [blockMatrix, Matrix.smul_apply]
     rw [this, LinearMapClass.map_smul]; rfl
@@ -482,8 +491,10 @@ theorem isCPMap_conj (K : Matrix (Fin n) (Fin n) ℂ)
       Matrix.kroneckerMap (· * ·) (1 : Matrix (Fin k) (Fin k) ℂ) K * M *
         (Matrix.kroneckerMap (· * ·) (1 : Matrix (Fin k) (Fin k) ℂ) K)ᴴ := by
     ext ⟨a, i⟩ ⟨b, j⟩
-    simp [tensorIdMap_apply, hΦ, blockMatrix, Matrix.mul_apply,
-      Fintype.sum_prod_type, Matrix.one_apply, Matrix.conjTranspose_apply, Finset.sum_mul]
+    simp only [tensorIdMap_apply, hΦ, Matrix.mul_apply, blockMatrix, conjTranspose_apply,
+      RCLike.star_def, Finset.sum_mul, kroneckerMap_apply, Matrix.one_apply, ite_mul, one_mul,
+      zero_mul, Fintype.sum_prod_type, Finset.sum_ite_irrel, Finset.sum_const_zero,
+      Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
     rw [Finset.sum_eq_single b (fun x _ hx => by simp [Ne.symm hx]) (by simp)]
     simp
   rw [key]

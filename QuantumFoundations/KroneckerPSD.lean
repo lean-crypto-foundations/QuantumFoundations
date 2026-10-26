@@ -8,19 +8,22 @@ module
 public import QuantumFoundations.TensorProduct
 public import Mathlib.Analysis.Matrix.Order
 
-@[expose] public section
-
-set_option autoImplicit false
-
 /-!
-# Kronecker products of PSD matrices
+# Kronecker products of positive semidefinite matrices
 
-`kronecker_posSemidef`: the index-flattened Kronecker product
-`TensorProduct.kronecker` of two PSD matrices is PSD.
+The index-flattened Kronecker product `TensorProduct.kronecker` of two positive
+semidefinite complex matrices is positive semidefinite.
+
+## Main results
+
+* `Quantum.QHL.kronecker_posSemidef` — if `A` and `B` are positive semidefinite,
+  so is `TensorProduct.kronecker A B`.
 -/
 
+@[expose] public section
+
 open scoped Matrix ComplexOrder
-open Matrix Classical
+open Matrix
 
 noncomputable section
 

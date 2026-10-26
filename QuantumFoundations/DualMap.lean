@@ -26,15 +26,15 @@ morphism on such maps.
 
 @[expose] public section
 
-set_option autoImplicit false
-
 namespace Quantum
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
+omit [DecidableEq ι] in
 /-- Matrices are separated by traces against all matrices. -/
 theorem ext_of_trace_mul {X Y : Matrix ι ι ℂ}
     (h : ∀ B : Matrix ι ι ℂ, (X * B).trace = (Y * B).trace) : X = Y := by
+  classical
   ext i j
   have hu := h (matUnit j i)
   rwa [trace_mul_matUnit, trace_mul_matUnit] at hu

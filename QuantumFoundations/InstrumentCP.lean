@@ -7,10 +7,6 @@ module
 
 public import QuantumFoundations.QRHL
 
-@[expose] public section
-
-set_option autoImplicit false
-
 /-!
 # Completely positive branches of basic instruments
 
@@ -21,19 +17,24 @@ completely positive branches.
 
 ## Main definitions
 
-* `QComp.tensor`: the tensor of two instruments with completely positive
-  branches, `QRHL.jointEvolve`
-* `GentleMeasurement.Projector`: a self-adjoint idempotent matrix
-* `IrisBridge.measureProj`: the projective instrument `{P, 1 - P}`
+* `Quantum.QComp.tensor`: the tensor of two instruments with completely positive
+  branches, `QRHL.jointEvolve`.
+* `Quantum.GentleMeasurement.Projector`: a self-adjoint idempotent matrix.
+* `Quantum.measureProj`: the projective instrument `{P, 1 - P}`.
 
 ## Main results
 
-* `isCPMap_zero`: the zero map is completely positive
-* `qpure_branch_isCPMap`: every branch of `QComp.qpure` is completely positive
-* `QComp.tensor_def`: the tensor is `localOp₁ C` followed by `localOp₂ D`
-* `IrisBridge.measureProj_branch_isCPMap`: every branch of the projective
-  instrument is completely positive
+* `Quantum.isCPMap_zero`: the zero map is completely positive.
+* `Quantum.qpure_branch_isCPMap`: every branch of `QComp.qpure` is completely
+  positive.
+* `Quantum.QComp.tensor_def`: the tensor is `localOp₁ C` followed by `localOp₂ D`.
+* `Quantum.measureProj_branch_isCPMap`: every branch of the projective
+  instrument is completely positive.
 -/
+
+@[expose] public section
+
+set_option autoImplicit false
 
 open scoped Matrix ComplexOrder
 open Matrix
@@ -46,13 +47,14 @@ open Quantum.TensorProduct
 
 /-! ## The trivial branches -/
 
+/-- The zero map is completely positive. -/
 theorem isCPMap_zero {n : ℕ} :
     IsCPMap (0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) := by
   intro k M _
   have h : tensorIdMap
       (0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) k M = 0 := by
     funext p q
-    show ((0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+    change ((0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
       (blockMatrix M p.1 q.1)) p.2 q.2 = 0
     simp
   rw [h]
@@ -64,7 +66,7 @@ it is `id` on the outcome `a₀` and `0` elsewhere. -/
 theorem qpure_branch_isCPMap {n : ℕ} {α : Type} (a₀ : α) :
     ∀ a, IsCPMap ((QComp.qpure (d := n) a₀).branch a) := by
   intro a
-  show IsCPMap (if a = a₀ then LinearMap.id else 0)
+  change IsCPMap (if a = a₀ then LinearMap.id else 0)
   split_ifs with h
   · exact isCPMap_id
   · exact isCPMap_zero
@@ -83,6 +85,8 @@ def QComp.tensor (C : QComp d α) (D : QComp e β)
     QComp (d * e) (α × β) :=
   QRHL.jointEvolve C D hC hD
 
+/-- The tensor of `C` and `D` runs `localOp₁ C`, then `localOp₂ D`, and returns
+the pair of outcomes. -/
 theorem QComp.tensor_def (C : QComp d α) (D : QComp e β)
     (hC : ∀ a, IsCPMap (C.branch a)) (hD : ∀ b, IsCPMap (D.branch b)) :
     C.tensor D hC hD =
@@ -97,8 +101,11 @@ namespace Quantum.GentleMeasurement
 
 /-- A projector on a `d`-dimensional system: self-adjoint and idempotent. -/
 structure Projector (d : ℕ) where
+  /-- The underlying matrix. -/
   val : Matrix (Fin d) (Fin d) ℂ
+  /-- The matrix is self-adjoint. -/
   self_adjoint : valᴴ = val
+  /-- The matrix is idempotent. -/
   idempotent : val * val = val
 
 end Quantum.GentleMeasurement
@@ -114,7 +121,7 @@ def measureProj {d : ℕ} (P : Projector d) : QComp d Bool :=
   QComp.ofKraus (fun b => if b then P.val else 1 - P.val)
     (by
       rw [Fintype.sum_bool]
-      show P.valᴴ * P.val + (1 - P.val)ᴴ * (1 - P.val) = 1
+      change P.valᴴ * P.val + (1 - P.val)ᴴ * (1 - P.val) = 1
       have hsaQ : (1 - P.val)ᴴ = 1 - P.val := by
         rw [Matrix.conjTranspose_sub, Matrix.conjTranspose_one,
           P.self_adjoint]
@@ -126,17 +133,19 @@ def measureProj {d : ℕ} (P : Projector d) : QComp d Bool :=
       rw [hQ]
       abel)
 
+/-- The branch of `measureProj P` at `true` is `ρ ↦ P ρ P`. -/
 theorem measureProj_branch_true {d : ℕ} (P : Projector d)
     (ρ : Matrix (Fin d) (Fin d) ℂ) :
     (measureProj P).branch true ρ = P.val * ρ * P.val := by
-  show (if true then P.val else 1 - P.val) * ρ *
+  change (if true then P.val else 1 - P.val) * ρ *
     (if true then P.val else 1 - P.val)ᴴ = _
   rw [ite_eq_left rfl, P.self_adjoint]
 
+/-- The branch of `measureProj P` at `false` is `ρ ↦ (1 - P) ρ (1 - P)`. -/
 theorem measureProj_branch_false {d : ℕ} (P : Projector d)
     (ρ : Matrix (Fin d) (Fin d) ℂ) :
     (measureProj P).branch false ρ = (1 - P.val) * ρ * (1 - P.val) := by
-  show (if false then P.val else 1 - P.val) * ρ *
+  change (if false then P.val else 1 - P.val) * ρ *
     (if false then P.val else 1 - P.val)ᴴ = _
   rw [ite_eq_right Bool.false_ne_true, Matrix.conjTranspose_sub,
     Matrix.conjTranspose_one, P.self_adjoint]

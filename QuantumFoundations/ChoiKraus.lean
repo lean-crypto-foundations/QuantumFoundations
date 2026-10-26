@@ -8,10 +8,6 @@ module
 public import Mathlib.Analysis.Matrix.Order
 public import QuantumFoundations.CPMap
 
-@[expose] public section
-
-set_option autoImplicit false
-
 /-!
 # Choi matrix and Kraus representation of completely positive maps
 
@@ -40,10 +36,12 @@ positivity in the sense of `IsCPMap` makes it positive semidefinite. A factorisa
 
 ## References
 
-* Choi, *Completely positive linear maps on complex matrices*, Linear Algebra
+* M.-D. Choi, *Completely positive linear maps on complex matrices*, Linear Algebra
   Appl. 10 (1975)
 * Watrous, *The Theory of Quantum Information* (Cambridge, 2018), §2.2
 -/
+
+@[expose] public section
 
 open scoped Matrix ComplexOrder MatrixOrder
 open Matrix
@@ -119,8 +117,9 @@ theorem eq_kraus_of_choi_eq {r : Type*} [Fintype r]
 
 /-- A positive semidefinite complex matrix is `Bᴴ * B` for a square `B`. -/
 theorem exists_eq_conjTranspose_mul_self_of_posSemidef {ι : Type*} [Fintype ι]
-    [DecidableEq ι] {A : Matrix ι ι ℂ} (hA : A.PosSemidef) :
+    {A : Matrix ι ι ℂ} (hA : A.PosSemidef) :
     ∃ B : Matrix ι ι ℂ, A = Bᴴ * B := by
+  classical
   have h0 : 0 ≤ A := nonneg_iff_posSemidef.mpr hA
   refine ⟨CFC.sqrt A, ?_⟩
   have hs : star (CFC.sqrt A) = CFC.sqrt A := (CFC.sqrt_nonneg A).isSelfAdjoint.star_eq

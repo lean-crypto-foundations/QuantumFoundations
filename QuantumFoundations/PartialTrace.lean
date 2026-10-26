@@ -14,16 +14,18 @@ public import Mathlib.LinearAlgebra.Matrix.Trace
 Defines the partial trace operation on bipartite quantum systems, tracing
 out one subsystem.
 
-## Main Definitions
+## Main definitions
 
-* `partialTrace₂` — trace out the second register: `(tr₂ ρ)_{i₁,j₁} = ∑_k ρ_{(i₁,k),(j₁,k)}`
-* `partialTrace₁` — trace out the first register: `(tr₁ ρ)_{i₂,j₂} = ∑_k ρ_{(k,i₂),(k,j₂)}`
+* `partialTrace₂` — trace out the second register:
+  `(tr₂ ρ)_{i₁,j₁} = ∑_k ρ_{(i₁,k),(j₁,k)}`
+* `partialTrace₁` — trace out the first register:
+  `(tr₁ ρ)_{i₂,j₂} = ∑_k ρ_{(k,i₂),(k,j₂)}`
 
-## Properties
+## Main results
 
-* `trace_partialTrace₂` — `tr(tr₂ ρ) = tr(ρ)`
+* `trace_partialTrace₂`, `trace_partialTrace₁` — `tr(tr₂ ρ) = tr(ρ)`
 * `partialTrace₂_kronecker` — `tr₂(A ⊗ B) = tr(B) • A`
-* Partial trace preserves PSD
+* `partialTrace₂_psd`, `partialTrace₁_psd` — partial traces preserve PSD
 * `partialTrace₂_kronecker_one_mul`, `partialTrace₂_one_kronecker_mul_comm`
   and their `partialTrace₁` duals — partial traces of products with local
   operators
@@ -33,7 +35,8 @@ out one subsystem.
 
 ## References
 
-* Watrous — The Theory of Quantum Information, §2.4
+* J. Watrous, *The Theory of Quantum Information*, Cambridge University Press,
+  2018, Section 2.4
 -/
 
 @[expose] public section
@@ -41,7 +44,7 @@ out one subsystem.
 set_option autoImplicit false
 
 open scoped Matrix ComplexOrder
-open Matrix Classical
+open Matrix
 
 noncomputable section
 
@@ -83,16 +86,20 @@ def partialTrace₁ :
     ext i₂ j₂
     simp [Matrix.of_apply, Matrix.smul_apply, Finset.mul_sum]
 
+/-- Entries of `partialTrace₂`. -/
 theorem partialTrace₂_apply (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₁ j₁ : Fin d₁) :
     partialTrace₂ ρ i₁ j₁ =
-      ∑ k : Fin d₂, ρ (finProdEquiv d₁ d₂ (i₁, k)) (finProdEquiv d₁ d₂ (j₁, k)) := by
+      ∑ k : Fin d₂,
+        ρ (finProdEquiv d₁ d₂ (i₁, k)) (finProdEquiv d₁ d₂ (j₁, k)) := by
   simp [partialTrace₂, Matrix.of_apply]
 
+/-- Entries of `partialTrace₁`. -/
 theorem partialTrace₁_apply (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₂ j₂ : Fin d₂) :
     partialTrace₁ ρ i₂ j₂ =
-      ∑ k : Fin d₁, ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂)) := by
+      ∑ k : Fin d₁,
+        ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂)) := by
   simp [partialTrace₁, Matrix.of_apply]
 
 /-- Total trace = trace of partial trace (over second register). -/
@@ -132,7 +139,7 @@ theorem partialTrace₁_kronecker
     Matrix.smul_apply, Matrix.trace, Matrix.diag, smul_eq_mul]
   simp_rw [← Finset.sum_mul]
 
-/-- Partial trace preserves positive semidefiniteness. -/
+/-- Partial trace over the second register preserves positive semidefiniteness. -/
 theorem partialTrace₂_psd
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (hρ : ρ.PosSemidef) :
@@ -146,6 +153,7 @@ theorem partialTrace₂_psd
   rw [heq]
   exact posSemidef_sum _ fun k _ => hρ.submatrix _
 
+/-- Partial trace over the first register preserves positive semidefiniteness. -/
 theorem partialTrace₁_psd
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (hρ : ρ.PosSemidef) :

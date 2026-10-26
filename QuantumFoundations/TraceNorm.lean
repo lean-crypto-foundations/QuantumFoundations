@@ -108,25 +108,16 @@ def IsEffect (E : Matrix n n ℂ) : Prop :=
 
 /-- Trace norm is non-negative (sum of non-negative terms). -/
 theorem traceNormH_nonneg (A : Matrix n n ℂ) (hA : A.IsHermitian) :
-    0 ≤ traceNormH A hA := by
-  apply Finset.sum_nonneg
-  intro i _
-  exact abs_nonneg _
+    0 ≤ traceNormH A hA :=
+  Finset.sum_nonneg fun _ _ => abs_nonneg _
 
 /-- Trace norm of zero is zero. -/
 theorem traceNormH_zero (h0 : (0 : Matrix n n ℂ).IsHermitian) :
     traceNormH 0 h0 = 0 := by
-  simp only [traceNormH]
-  apply Finset.sum_eq_zero
-  intro i _
-  rw [IsHermitian.eigenvalues_eq]
-  simp
+  simp [traceNormH, IsHermitian.eigenvalues_eq]
 
-/-- Trace norm of negation equals trace norm: `‖-A‖₁ = ‖A‖₁`.
-    The eigenvector bases for `-A` and `A` differ, so we cannot match eigenvalues
-    term-by-term. Instead, we show the *multisets* of eigenvalues are related by
-    negation (via characteristic polynomial roots), then `|(-λ)| = |λ|` gives
-    equality of the multiset sums of absolute values. -/
+/-- Trace norm of negation equals trace norm: `‖-A‖₁ = ‖A‖₁`. The multiset of
+    eigenvalues of `-A` is the negation of that of `A`. -/
 theorem traceNormH_neg (A : Matrix n n ℂ) (hA : A.IsHermitian)
     (hNA : (-A).IsHermitian) :
     traceNormH (-A) hNA = traceNormH A hA := by
@@ -146,26 +137,22 @@ omit [Fintype n] in
 theorem isEffect_one : IsEffect (1 : Matrix n n ℂ) := by
   constructor
   · exact PosSemidef.one
-  · simp; exact PosSemidef.zero
+  · simpa using PosSemidef.zero
 
 omit [Fintype n] in
 /-- The zero matrix is an effect. -/
 theorem isEffect_zero : IsEffect (0 : Matrix n n ℂ) := by
   constructor
   · exact PosSemidef.zero
-  · simp; exact PosSemidef.one
+  · simpa using PosSemidef.one
 
 /-! ## Trace of PSD matrices -/
 
 omit [DecidableEq n] in
 /-- The trace of a PSD matrix has zero imaginary part. -/
 theorem trace_im_zero_of_psd {A : Matrix n n ℂ} (hA : A.PosSemidef) :
-    A.trace.im = 0 := by
-  simp only [Matrix.trace, Matrix.diag]
-  rw [Complex.im_sum]
-  apply Finset.sum_eq_zero
-  intro i _
-  exact (Complex.nonneg_iff.mp (hA.diag_nonneg)).2.symm
+    A.trace.im = 0 :=
+  (Complex.nonneg_iff.mp hA.trace_nonneg).2.symm
 
 /-! ## Helstrom Helper Lemmas -/
 
@@ -303,10 +290,9 @@ theorem effect_trace_le (X : Matrix n n ℂ) (hX : X.IsHermitian) (htr : X.trace
       ≤ ∑ i, (if 0 ≤ hX.eigenvalues i then hX.eigenvalues i else 0) := by
         apply Finset.sum_le_sum; intro i _
         have ⟨hF0, hF1⟩ := effect_diag_re_bounds F hF i
-        by_cases h : 0 ≤ hX.eigenvalues i
-        · simp [h]; exact mul_le_of_le_one_left h hF1
-        · push Not at h; simp [show ¬(0 ≤ hX.eigenvalues i) from not_le.mpr h]
-          exact mul_nonpos_of_nonneg_of_nonpos hF0 (le_of_lt h)
+        split_ifs with h
+        · exact mul_le_of_le_one_left h hF1
+        · exact mul_nonpos_of_nonneg_of_nonpos hF0 (not_le.mp h).le
     _ = (1/2 : ℝ) * traceNormH X hX := by
         simp only [traceNormH]
         exact sum_pos_eq_half_abs_sum _ (eigenvalues_sum_zero X hX htr)
@@ -333,13 +319,8 @@ theorem exists_effect_achieves (X : Matrix n n ℂ) (hX : X.IsHermitian)
   exact sum_pos_eq_half_abs_sum _ (eigenvalues_sum_zero X hX htr)
 
 /-- **Helstrom's theorem** for traceless Hermitian matrices:
-    `½ ‖X‖₁ = sup {Re(tr(EX)) | 0 ≤ E ≤ I}`
-
-    This variational characterization of trace distance is the foundation
-    for the post-processing lemma at the density matrix level.
-
-    Proved as `le_antisymm` using `effect_trace_le` (upper bound)
-    and `exists_effect_achieves` (achievability via spectral projection). -/
+    `½ ‖X‖₁ = sup {Re(tr(EX)) | 0 ≤ E ≤ I}`, from the upper bound `effect_trace_le`
+    and its attainment `exists_effect_achieves`. -/
 theorem helstrom_traceless (X : Matrix n n ℂ) (hX : X.IsHermitian)
     (htr : X.trace = 0) :
     (1/2 : ℝ) * traceNormH X hX =
@@ -424,10 +405,7 @@ theorem exists_selfAdjoint_involution_trace_eq_traceNormH
 /-! ## Trace Distance for Density Matrices -/
 
 /-- Trace distance between density matrices:
-    `traceDist ρ σ = ½ ‖ρ - σ‖₁`
-
-    This is a proper metric on the space of density matrices.
-    The factor ½ normalizes it to the range [0, 1]. -/
+    `traceDist ρ σ = ½ ‖ρ - σ‖₁`. -/
 def traceDist {d : ℕ} (ρ σ : Matrix (Fin d) (Fin d) ℂ)
     (_hρ : ρ.PosSemidef) (_hσ : σ.PosSemidef)
     (h_herm : (ρ - σ).IsHermitian) : ℝ :=

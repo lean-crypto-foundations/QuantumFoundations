@@ -11,15 +11,11 @@ public import QuantumFoundations.PartialTrace
 public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.CPMap
 
-@[expose] public section
-
-set_option autoImplicit false
-
 /-!
 # Quantum Relational Hoare Logic (qRHL)
 
-Defines a quantum relational Hoare logic for relating two QComp programs,
-following Unruh (2019) and Barthe et al. (2019).
+Defines a quantum relational Hoare logic for relating two `QComp` programs,
+following Unruh (2019) and Barthe et al. (2020).
 
 ## Mathematical Background
 
@@ -31,23 +27,34 @@ Semantically: `{Φ} C₁ ~ C₂ {Ψ}` means for all joint states ρ on H₁ ⊗ 
 satisfying Φ(ρ), applying C₁ on register 1 and C₂ on register 2 yields a
 state satisfying Ψ.
 
-## Main Definitions
+## Main definitions
 
 * `BipartitePred` — predicate on bipartite density matrices
+* `jointBranch` — the branch of the joint evolution for an outcome pair
 * `qrHoare` — the qRHL judgment
-* Rules: `qrhl_skip`, `qrhl_conseq`, `qrhl_unitary_wp`, `qrhl_unitary`,
-  `qrhl_one_sided_left_wp`, `qrhl_one_sided_left`, `qrhl_seq_one_sided_left`
+* `qIndist` — ε-indistinguishability of two programs
+
+## Main results
+
+* `qrhl_skip`, `qrhl_conseq` — structural rules
+* `qrhl_one_sided_left_wp`, `qrhl_one_sided_left`, `qrhl_seq_one_sided_left` —
+  one-sided rules
+* `qrhl_unitary_wp`, `qrhl_unitary` — the unitary rule
+* `qIndist_refl`, `qIndist_symm`, `qIndist_triangle`
 
 ## References
 
-* Unruh, D. — *Quantum Relational Hoare Logic*, POPL 2019
-* Barthe, G. et al. — *Relational Proofs for Quantum Programs*, POPL 2019
-* Li, Y. & Ying, M. — *Algorithmic Analysis of Termination Problems for Quantum
-  Programs*, POPL 2018
+* D. Unruh, *Quantum Relational Hoare Logic*, POPL 2019
+* G. Barthe, J. Hsu, M. Ying, N. Yu, L. Zhou, *Relational Proofs for Quantum
+  Programs*, POPL 2020
 -/
 
+@[expose] public section
+
+set_option autoImplicit false
+
 open scoped Matrix ComplexOrder ENNReal
-open Matrix Classical
+open Matrix
 
 noncomputable section
 
@@ -82,7 +89,8 @@ def BipartitePred.eq (σ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
 
 /-- Separability predicate: state is a product state ρ₁ ⊗ ρ₂. -/
 def BipartitePred.separable : BipartitePred d₁ d₂ :=
-  fun ρ => ∃ (ρ₁ : Matrix (Fin d₁) (Fin d₁) ℂ) (ρ₂ : Matrix (Fin d₂) (Fin d₂) ℂ),
+  fun ρ => ∃ (ρ₁ : Matrix (Fin d₁) (Fin d₁) ℂ)
+    (ρ₂ : Matrix (Fin d₂) (Fin d₂) ℂ),
     ρ₁.PosSemidef ∧ ρ₂.PosSemidef ∧ ρ = TensorProduct.kronecker ρ₁ ρ₂
 
 /-! ## Joint Evolution -/
@@ -119,7 +127,7 @@ def jointBranch (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
     (C₂.branch b (Matrix.of fun i₂' j₂' =>
       (C₁.branch a (extractBlock ρ i₂' j₂')) i₁ j₁)) i₂ j₂
 
-/-- Helper: the inner matrix fed to C₂ in `jointBranch`. -/
+/-- The inner matrix fed to `C₂` in `jointBranch`. -/
 private def innerMatrix (C₁ : QComp d₁ α) (a : α)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₁ j₁ : Fin d₁) : Matrix (Fin d₂) (Fin d₂) ℂ :=
@@ -149,6 +157,7 @@ private theorem jointBranch_unfold (C₁ : QComp d₁ α) (C₂ : QComp d₂ β)
         (e.symm i).2 (e.symm j).2 := by
   simp [jointBranch, innerMatrix, Matrix.of_apply]
 
+/-- `jointBranch` is additive in the state. -/
 theorem jointBranch_add (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
     (ρ₁ ρ₂ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     jointBranch C₁ C₂ a b (ρ₁ + ρ₂) =
@@ -157,6 +166,7 @@ theorem jointBranch_add (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (
   simp only [jointBranch_unfold, Matrix.add_apply]
   rw [innerMatrix_add, map_add, Matrix.add_apply]
 
+/-- `jointBranch` commutes with scalar multiplication of the state. -/
 theorem jointBranch_smul (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
     (c : ℂ) (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     jointBranch C₁ C₂ a b (c • ρ) = c • jointBranch C₁ C₂ a b ρ := by
@@ -206,7 +216,6 @@ theorem jointBranch_qpure (a : α) (b : β)
   ext i j
   simp only [jointBranch, Matrix.of_apply, QComp.qpure, ite_true, LinearMap.id_coe, id_eq,
     extractBlock_apply, Matrix.of_apply]
-  -- Goal: ρ (finProdEquiv d₁ d₂ (e⁻¹(i).1, e⁻¹(i).2)) (finProdEquiv d₁ d₂ (e⁻¹(j).1, e⁻¹(j).2)) = ρ i j
   simp [Equiv.apply_symm_apply]
 
 /-- Joint branch where both sides are pure gives 0 for non-matching outcomes. -/
@@ -267,7 +276,7 @@ theorem tsum_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
     ∑' (p : α × β), jointBranch C₁ (QComp.qpure b) p.1 p.2 ρ = oneSidedPost C₁ b ρ := by
   set F := fun (p : α × β) => jointBranch C₁ (QComp.qpure b) p.1 p.2 ρ
   set G := fun (a : α) => jointBranch C₁ (QComp.qpure b) a b ρ
-  show ∑' p, F p = ∑' a, G a
+  change ∑' p, F p = ∑' a, G a
   apply tsum_eq_tsum_of_ne_zero_bij (i := fun x => (x.1, b))
   · -- Injective
     intro x y h
@@ -314,12 +323,14 @@ theorem summable_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
     corresponding block of `ρ`. -/
 theorem extractBlock_oneSidedPost (C₁ : QComp d₁ α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (i₂ j₂ : Fin d₂) :
-    extractBlock (oneSidedPost C₁ b ρ) i₂ j₂ = ∑' a, C₁.branch a (extractBlock ρ i₂ j₂) := by
+    extractBlock (oneSidedPost C₁ b ρ) i₂ j₂ =
+      ∑' a, C₁.branch a (extractBlock ρ i₂ j₂) := by
   ext i₁ j₁
   rw [extractBlock_apply, oneSidedPost]
   erw [Pi.tsum_apply (summable_jointBranch_qpure_right C₁ b ρ),
     Pi.tsum_apply (Pi.summable.mp (summable_jointBranch_qpure_right C₁ b ρ) _),
-    Pi.tsum_apply (C₁.branch_summable _), Pi.tsum_apply (Pi.summable.mp (C₁.branch_summable _) _)]
+    Pi.tsum_apply (C₁.branch_summable _),
+    Pi.tsum_apply (Pi.summable.mp (C₁.branch_summable _) _)]
   simp only [jointBranch_qpure_right_apply, Equiv.symm_apply_apply]
 
 /-- The first marginal of `oneSidedPost C₁ b ρ` is the total action of `C₁` on the
@@ -349,7 +360,8 @@ theorem partialTrace₁_oneSidedPost (C₁ : QComp d₁ α) (b : β)
   rw [htr, htr, extractBlock_oneSidedPost, htp]
 
 /-- **One-sided rule**: if the total action of `C₁` preserves `P₁` on PSD states and is
-    trace-preserving, then `{P₁ ⊗ P₂} C₁ ~ pure b {P₁ ⊗ P₂}` for the product predicate. -/
+    trace-preserving, then `{P₁ ⊗ P₂} C₁ ~ pure b {P₁ ⊗ P₂}` for the product
+    predicate. -/
 theorem qrhl_one_sided_left
     (P₁ : Matrix (Fin d₁) (Fin d₁) ℂ → Prop)
     (P₂ : Matrix (Fin d₂) (Fin d₂) ℂ → Prop)
@@ -495,7 +507,8 @@ theorem qrhl_unitary_wp
     (U₁ : Matrix.unitaryGroup (Fin d₁) ℂ)
     (U₂ : Matrix.unitaryGroup (Fin d₂) ℂ)
     (Ψ : BipartitePred d₁ d₂) :
-    qrHoare (BipartitePred.conjPre U₁ U₂ Ψ) (unitaryChannel U₁) (unitaryChannel U₂) Ψ := by
+    qrHoare (BipartitePred.conjPre U₁ U₂ Ψ) (unitaryChannel U₁) (unitaryChannel U₂)
+      Ψ := by
   intro ρ _hρ hΦ
   rw [tsum_jointBranch_unitaryChannel]
   exact hΦ
@@ -506,7 +519,8 @@ theorem qrhl_unitary
     (U₁ : Matrix.unitaryGroup (Fin d₁) ℂ)
     (U₂ : Matrix.unitaryGroup (Fin d₂) ℂ)
     (Φ : BipartitePred d₁ d₂) :
-    qrHoare Φ (unitaryChannel U₁) (unitaryChannel U₂) (BipartitePred.conjImage U₁ U₂ Φ) := by
+    qrHoare Φ (unitaryChannel U₁) (unitaryChannel U₂)
+      (BipartitePred.conjImage U₁ U₂ Φ) := by
   intro ρ hρ hΦ
   rw [tsum_jointBranch_unitaryChannel]
   exact ⟨ρ, hρ, hΦ, rfl⟩
@@ -517,15 +531,12 @@ theorem qrhl_unitary
     are ε-indistinguishable if no distinguisher `D` and input `ρ` *on the
     program's own dimension* `d₁` separate them by more than ε.
 
-    `ρ` carries no reference register. The diamond-norm version, which adds a
-    reference register and satisfies a frame rule, is `qIndistDiamond` of CatCrypt-core's
-    quantum UC development.
+    `ρ` carries no reference register; a diamond-norm variant adds one.
 
     At dimension `d₁ = 0` there is no density matrix (the trace of the empty
     matrix is `0`, not `1`), so `qIndist C₁ C₂ ε` holds for all `C₁`, `C₂` and
     `ε`. A statement about `qIndist` carries information only for `d₁ ≠ 0`,
-    which a caller over a variable dimension states as `[NeZero d₁]` (as the
-    lifting theorems of `Quantum/ClassicalLift.lean` do). -/
+    which a caller over a variable dimension states as `[NeZero d₁]`. -/
 def qIndist (C₁ C₂ : QComp d₁ α) (ε : ℝ≥0∞) : Prop :=
   ∀ (D : α → QComp d₁ Bool) (ρ : DensityMatrix d₁),
     absDiff (prTrue_Q (QComp.qbind C₁ D) ρ) (prTrue_Q (QComp.qbind C₂ D) ρ) ≤ ε

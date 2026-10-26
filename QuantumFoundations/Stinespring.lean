@@ -9,18 +9,14 @@ public import QuantumFoundations.ChoiKraus
 public import QuantumFoundations.PartialTrace
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 
-@[expose] public section
-
-set_option autoImplicit false
-
 /-!
 # Stinespring dilation and purification
 
 A register `Fin D` is split into a system `Fin d` and an ancilla `Fin r` by an
 equivalence `e : Fin (d * r) ≃ Fin D`, with `Fin (d * r)` indexed row-major by
-`finProdEquiv` (system first), the convention `kr e A B =
-(A ⊗ₖ B).submatrix e.symm e.symm` of the multi-round QROM adversaries of CatCrypt-core, whose
-ancilla projector `ancProj 0` is the ancilla state `Matrix.diagonal (Pi.single 0 1)`.
+`finProdEquiv` (system first). A product operator on the register is
+`(A ⊗ₖ B).submatrix e.symm e.symm`, and the ancilla starts in the state
+`Matrix.diagonal (Pi.single 0 1)`, written `|0⟩⟨0|`.
 
 ## Main definitions
 
@@ -42,8 +38,12 @@ ancilla projector `ancProj 0` is the ancilla state `Matrix.diagonal (Pi.single 0
 
 ## References
 
+* W. F. Stinespring, *Positive functions on C*-algebras*, Proc. Amer. Math. Soc. 6
+  (1955)
 * Watrous, *The Theory of Quantum Information* (Cambridge, 2018), §2.2
 -/
+
+@[expose] public section
 
 open scoped Matrix ComplexOrder InnerProductSpace
 open Matrix Quantum.TensorProduct Quantum.PartialTrace
@@ -61,11 +61,13 @@ def trAnc (e : Fin (d * r) ≃ Fin D) (M : Matrix (Fin D) (Fin D) ℂ) :
     Matrix (Fin d) (Fin d) ℂ :=
   partialTrace₂ (M.submatrix e e)
 
+/-- Entry formula of the ancilla partial trace: a sum over the ancilla index. -/
 theorem trAnc_apply (e : Fin (d * r) ≃ Fin D) (M : Matrix (Fin D) (Fin D) ℂ) (x x' : Fin d) :
     trAnc e M x x' =
       ∑ k : Fin r, M (e (finProdEquiv d r (x, k))) (e (finProdEquiv d r (x', k))) := by
   simp [trAnc, partialTrace₂_apply]
 
+/-- The ancilla partial trace preserves the trace. -/
 theorem trace_trAnc (e : Fin (d * r) ≃ Fin D) (M : Matrix (Fin D) (Fin D) ℂ) :
     (trAnc e M).trace = M.trace := by
   rw [trAnc, trace_partialTrace₂]
@@ -86,11 +88,13 @@ def dilation (e : Fin (d * r) ≃ Fin D) (K : Fin r → Matrix (Fin d) (Fin d) �
   Matrix.of fun a y =>
     K ((finProdEquiv d r).symm (e.symm a)).2 ((finProdEquiv d r).symm (e.symm a)).1 y
 
+/-- Entry formula of `dilation e K` at the register index of the pair `(x, i)`. -/
 theorem dilation_apply_pair (e : Fin (d * r) ≃ Fin D) (K : Fin r → Matrix (Fin d) (Fin d) ℂ)
     (x : Fin d) (i : Fin r) (y : Fin d) :
     dilation e K (e (finProdEquiv d r (x, i))) y = K i x y := by
   simp [dilation]
 
+/-- `Vᴴ * V` for the dilation `V` of `K` is `∑ i, (K i)ᴴ * K i`. -/
 theorem dilation_conjTranspose_mul_self (e : Fin (d * r) ≃ Fin D)
     (K : Fin r → Matrix (Fin d) (Fin d) ℂ) :
     (dilation e K)ᴴ * dilation e K = ∑ i, (K i)ᴴ * K i := by
@@ -129,10 +133,9 @@ theorem ancEmbed_conj (e : Fin (d * r) ≃ Fin D) (ρ : Matrix (Fin d) (Fin d) �
   ext a b
   obtain ⟨⟨x, i⟩, rfl⟩ := ((finProdEquiv d r).trans e).surjective a
   obtain ⟨⟨x', i'⟩, rfl⟩ := ((finProdEquiv d r).trans e).surjective b
-  simp [ancEmbed, mul_apply, conjTranspose_apply, kronecker_apply, Matrix.diagonal_apply,
-    Pi.single_apply]
   rcases eq_or_ne i 0 with rfl | hi <;> rcases eq_or_ne i' 0 with rfl | hi' <;>
-    simp [*, Ne.symm]
+    simp [ancEmbed, mul_apply, conjTranspose_apply, kronecker_apply, Matrix.diagonal_apply, *,
+      Ne.symm]
 
 /-- An isometry `V` factors as `U * ancEmbed e` with `U` unitary. -/
 theorem exists_unitary_mul_ancEmbed (e : Fin (d * r) ≃ Fin D) {V : Matrix (Fin D) (Fin d) ℂ}
@@ -164,8 +167,8 @@ theorem exists_unitary_mul_ancEmbed (e : Fin (d * r) ≃ Fin D) {V : Matrix (Fin
   have hby : b (j y) = col y := by
     rw [hb _ ⟨y, rfl⟩]
     simp [v, hj.extend_apply]
-  simp [ancEmbed, mul_apply, Module.Basis.toMatrix_apply]
-  exact congrArg (fun w => w.ofLp a) hby
+  simpa [ancEmbed, mul_apply, Module.Basis.toMatrix_apply] using
+    congrArg (fun w => w.ofLp a) hby
 
 /-- For `U * ancEmbed e = V`, conjugating `ρ ⊗ |0⟩⟨0|` by `U` is conjugating `ρ` by `V`. -/
 theorem unitary_conj_kr_ancProj (e : Fin (d * r) ≃ Fin D) {U : Matrix (Fin D) (Fin D) ℂ}

@@ -12,20 +12,27 @@ public import Mathlib.Data.Fin.VecNotation
 public import Mathlib.Data.Fin.Tuple.Basic
 
 /-!
-# Tensor Products for QComp
+# Tensor products for `QComp`
 
 Defines bipartite quantum registers via tensor products on `QComp (d₁ * d₂)`.
 
-## Main Definitions
+## Main definitions
 
 * `finProdEquiv` — `Fin d₁ × Fin d₂ ≃ Fin (d₁ * d₂)` for matrix indexing
 * `kronecker` — Kronecker (tensor) product of matrices
 * `tensorPure` — tensor of pure states: `qpure a ⊗ qpure b = qpure (a, b)`
-* `extractBlock` — extract (i₂, j₂)-block from bipartite matrix
-* `localOp₁` — apply QComp on first register only
-* `localOp₂` — apply QComp on second register only
+* `extractBlock`, `extractBlock₁` — blocks of a bipartite matrix with one register fixed
+* `localOp₁` — apply a `QComp` on the first register only
+* `localOp₂` — apply a `QComp` on the second register only
 
-## Mathematical Background
+## Main results
+
+* `trace_kronecker`, `kronecker_mul_kronecker`, `conjTranspose_kronecker`
+* `localOp₁_kronecker` — `localOp₁` acts on the first factor of a Kronecker product
+* `trace_kronecker_one_mul`, `trace_one_kronecker_mul` — traces against local
+  observables as sums of block traces
+
+## Mathematical background
 
 The tensor product of `ℂ^d₁` and `ℂ^d₂` is `ℂ^(d₁·d₂)`. We represent
 matrices on this space as `Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ`,
@@ -41,7 +48,8 @@ The Kronecker product `A ⊗ B` satisfies:
 
 ## References
 
-* Watrous — The Theory of Quantum Information, Chapter 2
+* J. Watrous, *The Theory of Quantum Information*, Cambridge University Press,
+  2018, Chapter 2
 -/
 
 @[expose] public section
@@ -49,7 +57,7 @@ The Kronecker product `A ⊗ B` satisfies:
 set_option autoImplicit false
 
 open scoped Matrix ComplexOrder ENNReal
-open Matrix Classical Quantum
+open Matrix Quantum
 
 noncomputable section
 
@@ -81,6 +89,7 @@ def kronecker
     let ⟨j₁, j₂⟩ := (finProdEquiv d₁ d₂).symm j
     A i₁ j₁ * B i₂ j₂
 
+/-- Infix notation for `kronecker`. -/
 infixl:70 " ⊗ₖ " => kronecker
 
 /-- Kronecker product entry decomposition. -/
@@ -215,9 +224,9 @@ theorem kronecker_conjTranspose_mul_self {A : Matrix (Fin d₁) (Fin d₁) ℂ}
 
 /-! ## Tensor Pure States -/
 
-/-- The tensor of two pure QComp values.
-
-    Maps `(a, b)` to the branch that applies both pure branches. -/
+open Classical in
+/-- The tensor of two pure `QComp` values: the identity branch at `(a, b)` and the
+zero branch elsewhere. -/
 def tensorPure (a : α) (b : β) : QComp (d₁ * d₂) (α × β) where
   branch := fun ⟨a', b'⟩ =>
     if a' = a ∧ b' = b then LinearMap.id else 0
@@ -258,6 +267,7 @@ def extractBlock
   Matrix.of fun i₁ j₁ =>
     ρ (finProdEquiv d₁ d₂ (i₁, i₂)) (finProdEquiv d₁ d₂ (j₁, j₂))
 
+/-- Entries of `extractBlock`. -/
 @[grind =]
 theorem extractBlock_apply
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
@@ -266,13 +276,16 @@ theorem extractBlock_apply
       ρ (finProdEquiv d₁ d₂ (i₁, i₂)) (finProdEquiv d₁ d₂ (j₁, j₂)) := by
   simp [extractBlock, Matrix.of_apply]
 
+/-- `extractBlock` is additive. -/
 @[grind =]
 theorem extractBlock_add
     (ρ₁ ρ₂ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₂ j₂ : Fin d₂) :
-    extractBlock (ρ₁ + ρ₂) i₂ j₂ = extractBlock ρ₁ i₂ j₂ + extractBlock ρ₂ i₂ j₂ := by
+    extractBlock (ρ₁ + ρ₂) i₂ j₂ =
+      extractBlock ρ₁ i₂ j₂ + extractBlock ρ₂ i₂ j₂ := by
   ext i₁ j₁; simp [extractBlock_apply, Matrix.add_apply]
 
+/-- `extractBlock` commutes with scalar multiplication. -/
 @[grind =]
 theorem extractBlock_smul
     (c : ℂ) (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
@@ -280,7 +293,8 @@ theorem extractBlock_smul
     extractBlock (c • ρ) i₂ j₂ = c • extractBlock ρ i₂ j₂ := by
   ext i₁ j₁; simp [extractBlock_apply, Matrix.smul_apply]
 
-/-- Kronecker product block extraction: `extractBlock (A ⊗ₖ B) i₂ j₂ = B i₂ j₂ • A`. -/
+/-- Kronecker product block extraction:
+`extractBlock (A ⊗ₖ B) i₂ j₂ = B i₂ j₂ • A`. -/
 @[grind =]
 theorem extractBlock_kronecker
     (A : Matrix (Fin d₁) (Fin d₁) ℂ)
@@ -322,7 +336,8 @@ private theorem extractBlock₂_diag_psd
 private theorem sum_extractBlock₂_diag_trace
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     ∑ k : Fin d₁, (Matrix.of fun i₂ j₂ =>
-      ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂))).trace = ρ.trace := by
+      ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂))).trace =
+      ρ.trace := by
   simp only [Matrix.trace, Matrix.diag, Matrix.of_apply]
   -- ∑ k : Fin d₁, ∑ i₂ : Fin d₂, ρ (e (k,i₂)) (e (k,i₂)) = ∑ i, ρ i i
   rw [← Fintype.sum_prod_type
@@ -413,15 +428,13 @@ def localOp₁ (op : QComp d₁ α) (hcp : ∀ a, IsCPMap (op.branch a)) :
         ((finProdEquiv d₁ d₂).symm j).2))
       ((finProdEquiv d₁ d₂).symm i).1) ((finProdEquiv d₁ d₂).symm j).1
   branch_stp := fun ρ hρ => by
-    show (∑' a, (localOp₁_fun op a ρ).trace).re ≤ ρ.trace.re
+    change (∑' a, (localOp₁_fun op a ρ).trace).re ≤ ρ.trace.re
     simp_rw [trace_localOp₁_fun]
     have h_summ : ∀ k : Fin d₂,
         Summable (fun a => (op.branch a (extractBlock ρ k k)).trace) := by
       intro k
       simp only [Matrix.trace, Matrix.diag]
-      exact (hasSum_sum (fun i _ =>
-        (Pi.summable.mp (Pi.summable.mp
-          (op.branch_summable (extractBlock ρ k k)) i) i).hasSum)).summable
+      exact summable_sum fun i _ => Pi.summable.mp (Pi.summable.mp (op.branch_summable _) i) i
     rw [Summable.tsum_finsetSum (fun k _ => h_summ k)]
     calc (∑ k : Fin d₂, ∑' a, (op.branch a (extractBlock ρ k k)).trace).re
         = ∑ k : Fin d₂, (∑' a, (op.branch a (extractBlock ρ k k)).trace).re :=
@@ -447,17 +460,21 @@ def localOp₂ (op : QComp d₂ β) (hcp : ∀ b, IsCPMap (op.branch b)) :
       set i₁ := ((finProdEquiv d₁ d₂).symm i).1
       set j₁ := ((finProdEquiv d₁ d₂).symm j).1
       set M := fun (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) =>
-        Matrix.of fun i₂' j₂' => ρ (finProdEquiv d₁ d₂ (i₁, i₂')) (finProdEquiv d₁ d₂ (j₁, j₂'))
-      show (op.branch b (M (ρ₁ + ρ₂))) _ _ = (op.branch b (M ρ₁)) _ _ + (op.branch b (M ρ₂)) _ _
-      have : M (ρ₁ + ρ₂) = M ρ₁ + M ρ₂ := by ext; simp [M, Matrix.of_apply, Matrix.add_apply]
+        Matrix.of fun i₂' j₂' =>
+          ρ (finProdEquiv d₁ d₂ (i₁, i₂')) (finProdEquiv d₁ d₂ (j₁, j₂'))
+      change (op.branch b (M (ρ₁ + ρ₂))) _ _ =
+        (op.branch b (M ρ₁)) _ _ + (op.branch b (M ρ₂)) _ _
+      have : M (ρ₁ + ρ₂) = M ρ₁ + M ρ₂ := by
+        ext; simp [M, Matrix.of_apply, Matrix.add_apply]
       rw [this, map_add, Matrix.add_apply]
     map_smul' := fun c ρ => by
       ext i j; simp only [localOp₂_fun, Matrix.of_apply, Matrix.smul_apply, RingHom.id_apply]
       set i₁ := ((finProdEquiv d₁ d₂).symm i).1
       set j₁ := ((finProdEquiv d₁ d₂).symm j).1
       set M := fun (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) =>
-        Matrix.of fun i₂' j₂' => ρ (finProdEquiv d₁ d₂ (i₁, i₂')) (finProdEquiv d₁ d₂ (j₁, j₂'))
-      show (op.branch b (M (c • ρ))) _ _ = c • (op.branch b (M ρ)) _ _
+        Matrix.of fun i₂' j₂' =>
+          ρ (finProdEquiv d₁ d₂ (i₁, i₂')) (finProdEquiv d₁ d₂ (j₁, j₂'))
+      change (op.branch b (M (c • ρ))) _ _ = c • (op.branch b (M ρ)) _ _
       have : M (c • ρ) = c • M ρ := by ext; simp [M, Matrix.of_apply, Matrix.smul_apply]
       rw [this, map_smul, Matrix.smul_apply]
   }
@@ -475,17 +492,14 @@ def localOp₂ (op : QComp d₂ β) (hcp : ∀ b, IsCPMap (op.branch b)) :
     exact Pi.summable.mp (Pi.summable.mp h
       ((finProdEquiv d₁ d₂).symm i).2) ((finProdEquiv d₁ d₂).symm j).2
   branch_stp := fun ρ hρ => by
-    show (∑' b, (localOp₂_fun op b ρ).trace).re ≤ ρ.trace.re
+    change (∑' b, (localOp₂_fun op b ρ).trace).re ≤ ρ.trace.re
     simp_rw [trace_localOp₂_fun]
     have h_summ : ∀ k : Fin d₁,
         Summable (fun b => (op.branch b (Matrix.of fun i₂ j₂ =>
           ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂)))).trace) := by
       intro k
       simp only [Matrix.trace, Matrix.diag]
-      exact (hasSum_sum (fun i _ =>
-        (Pi.summable.mp (Pi.summable.mp
-          (op.branch_summable (Matrix.of fun i₂ j₂ =>
-            ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂)))) i) i).hasSum)).summable
+      exact summable_sum fun i _ => Pi.summable.mp (Pi.summable.mp (op.branch_summable _) i) i
     rw [Summable.tsum_finsetSum (fun k _ => h_summ k)]
     calc (∑ k : Fin d₁, ∑' b, (op.branch b (Matrix.of fun i₂ j₂ =>
             ρ (finProdEquiv d₁ d₂ (k, i₂)) (finProdEquiv d₁ d₂ (k, j₂)))).trace).re
@@ -540,7 +554,8 @@ theorem kronecker_finset_sum_right [Fintype ι]
 
 /-- Trace of `(E ⊗ₖ I) * localOp₁.branch a ρ` decomposes into diagonal block traces.
 
-    `tr((E ⊗ I) * localOp₁(C).branch(a)(ρ)) = ∑_k tr(E * C.branch(a)(extractBlock ρ k k))` -/
+    `tr((E ⊗ I) * localOp₁(C).branch(a)(ρ)) =
+      ∑_k tr(E * C.branch(a)(extractBlock ρ k k))` -/
 theorem trace_kronecker_one_mul_localOp₁ (op : QComp d₁ α)
     (hcp : ∀ a, IsCPMap (op.branch a))
     (E : Matrix (Fin d₁) (Fin d₁) ℂ)
@@ -612,13 +627,11 @@ theorem trace_kronecker_one_mul (E : Matrix (Fin d₁) (Fin d₁) ℂ)
     Finset.sum_ite_eq, Finset.mem_univ, ite_true,
     Matrix.mul_apply]
 
-/-! ## First-Register-Fixed Block Extraction
+/-! ## First-register-fixed block extraction
 
-This is the mirror of `extractBlock`: it fixes the FIRST register and returns
-the second-register slice. Together with `trace_one_kronecker_mul` below it
-plays the role of the "left" companion to `extractBlock` /
-`trace_kronecker_one_mul`, letting us decompose `tr((1 ⊗ M) * ρ)` in the same
-way the existing API decomposes `tr((E ⊗ 1) * ρ)`. -/
+`extractBlock₁` fixes the first register and returns the second-register slice,
+mirroring `extractBlock`. With `trace_one_kronecker_mul` it decomposes
+`tr((1 ⊗ M) * ρ)` as `trace_kronecker_one_mul` decomposes `tr((E ⊗ 1) * ρ)`. -/
 
 /-- Extract the `(i₁, j₁)`-block from a bipartite matrix, fixing the **first**
 register and returning the second-register slice.
@@ -632,6 +645,7 @@ def extractBlock₁
   Matrix.of fun i₂ j₂ =>
     ρ (finProdEquiv d₁ d₂ (i₁, i₂)) (finProdEquiv d₁ d₂ (j₁, j₂))
 
+/-- Entries of `extractBlock₁`. -/
 @[grind =]
 theorem extractBlock₁_apply
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
