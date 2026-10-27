@@ -23,3 +23,8 @@ public import QuantumFoundations.FuchsVanDeGraaf
 public import QuantumFoundations.PetzRecovery
 public import QuantumFoundations.QuantumBayes
 public import QuantumFoundations.QuantumMarkovChain
+public import QuantumFoundations.MinEntropy
+public import QuantumFoundations.MinEntropyProduct
+public import QuantumFoundations.MinEntropySplit
+public import QuantumFoundations.LeftoverHash
+public import QuantumFoundations.PrivacyAmplification
