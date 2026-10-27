@@ -65,7 +65,7 @@ channel*. `IsTNI` alone is not a physicality condition: the map `-id` satisfies 
 * `Quantum.MatrixMap.traceRight A R`: the partial trace over the right factor of `A × R`.
 
 Positivity is Mathlib's `Matrix.PosSemidef`, read with the `ComplexOrder` partial order on `ℂ`.
-Branch families for classical outcomes are developed in `VCVio.Quantum.MatrixMap.Family`.
+Branch families for classical outcomes are developed in `QuantumFoundations.MatrixMap.Family`.
 
 ## References
 

@@ -207,7 +207,7 @@ semidefinite `ρ`. The output system of `Φ i` may depend on `i`.
 
 The bound is joint, not per member: on a nonzero-dimensional system, two copies of the identity
 map form no such family. These are the branch families of the instruments in
-`VCVio.Quantum.SubInstrument` and `VCVio.Quantum.DSubInstrument`. -/
+`QuantumFoundations.SubInstrument` and `QuantumFoundations.DSubInstrument`. -/
 structure IsCPTNIFamily (Φ : (i : ι) → MatrixMap A (B i)) : Prop where
   /-- Every member is completely positive. -/
   isCP : ∀ i, (Φ i).IsCP

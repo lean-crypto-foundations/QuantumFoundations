@@ -13,7 +13,7 @@ public import QuantumFoundations.Pure.Vector
 
 The estimates that vector-level query-complexity arguments are assembled from, for operators
 `Matrix B A ℂ` with the operator norm `Matrix.Norms.L2Operator` acting on `EuclideanSpace ℂ A`.
-Vector, adjoint, and matrix-order conventions are in `VCVio.Quantum.Pure.Vector`.
+Vector, adjoint, and matrix-order conventions are in `QuantumFoundations.Pure.Vector`.
 
 ## Main results
 

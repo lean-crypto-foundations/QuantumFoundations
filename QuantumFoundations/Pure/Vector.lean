@@ -12,10 +12,10 @@ public import QuantumFoundations.MatrixMap
 /-!
 # State vectors and operators
 
-The core (`VCVio.Quantum.SubInstrument`) describes states by density matrices. Many quantum
+The core (`QuantumFoundations.SubInstrument`) describes states by density matrices. Many quantum
 query arguments are instead written with state vectors, operator norms and the triangle
-inequality. This file and the others in `VCVio.Quantum.Pure` provide that vocabulary, and prove
-that it agrees with the density-matrix semantics, so that a proof can argue with vectors and
+inequality. This file and the others in `QuantumFoundations/Pure/` provide that vocabulary, and
+prove that it agrees with the density-matrix semantics, so that a proof can argue with vectors and
 conclude a statement about `outcomeMeasure`.
 
 ## Conventions
@@ -49,8 +49,8 @@ produce a mixed state: the same measurement on `|0⟩` leaves `|0⟩⟨0|`. Dens
 core compose both kinds of computation while retaining the quantum state needed by later steps.
 
 The bridge is the pure substate `|ψ⟩⟨ψ|` (`Quantum.SubState.ofVector`, in
-`VCVio.Quantum.Pure.State`) together with the Born rule for Kraus measurements
-(`VCVio.Quantum.Pure.Instrument`). Both descriptions use the same operator matrices.
+`QuantumFoundations.Pure.State`) together with the Born rule for Kraus measurements
+(`QuantumFoundations.Pure.Instrument`). Both descriptions use the same operator matrices.
 
 ## Main results
 
@@ -66,7 +66,7 @@ The bridge is the pure substate `|ψ⟩⟨ψ|` (`Quantum.SubState.ofVector`, in
 * `Quantum.norm_sq_applyVec_add_norm_sq_one_sub_applyVec`: Pythagoras for an orthogonal
   projection, which Mathlib calls a star projection (`IsStarProjection`).
 
-Tensor order and untouched registers are in `VCVio.Quantum.Pure.Tensor`.
+Tensor order and untouched registers are in `QuantumFoundations.Pure.Tensor`.
 -/
 
 public section

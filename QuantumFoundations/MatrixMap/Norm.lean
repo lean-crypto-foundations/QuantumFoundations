@@ -27,7 +27,7 @@ facts, collected here so that they depend on Mathlib and `Quantum.MatrixMap` onl
   `re tr (X Y Xᴴ) ≤ ‖X‖² re tr Y` for positive semidefinite `Y`
   (`Quantum.MatrixMap.re_trace_conj_le`). The identity and isometries have norm at most one
   (`Matrix.l2_opNorm_one_le`, `Matrix.l2_opNorm_le_one_of_conjTranspose_mul_self`, in
-  `VCVio.Quantum.MatrixMap.OpNorm`). The norm is invariant under isometries
+  `QuantumFoundations.MatrixMap.OpNorm`). The norm is invariant under isometries
   (`Quantum.MatrixMap.l2_opNorm_isometry_mul`, `Quantum.MatrixMap.l2_opNorm_mul_coisometry`),
   orthogonal projections have norm at most one (`Quantum.MatrixMap.l2_opNorm_le_one_of_proj`),
   and the deviation of a conjugate from the original is a commutator

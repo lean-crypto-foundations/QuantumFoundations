@@ -17,7 +17,7 @@ subnormalized vector `ψ` is `Quantum.SubState.ofVector ψ`, with density matrix
 which is how a statement about vectors becomes a statement about the density matrices of
 `Quantum.SubInstrument`.
 
-Vector, adjoint, and matrix-order conventions are in `VCVio.Quantum.Pure.Vector`.
+Vector, adjoint, and matrix-order conventions are in `QuantumFoundations.Pure.Vector`.
 
 ## Main definitions
 
@@ -134,7 +134,7 @@ Definition 2.5 (PDF p. 70); allowing trace below one records unsuccessful comput
 
 Vectors differing by a scalar of modulus one give the same substate (`ofVector_smul`). General
 mixed substates need not have a vector representative. `conj_matrix_ofVector` proves that
-`K |ψ⟩⟨ψ| K† = |Kψ⟩⟨Kψ|`. Vector and adjoint conventions are in `VCVio.Quantum.Pure.Vector`. -/
+`K |ψ⟩⟨ψ| K† = |Kψ⟩⟨Kψ|`. Vector and adjoint conventions are in `QuantumFoundations.Pure.Vector`. -/
 @[expose]
 def SubState.ofVector (ψ : EuclideanSpace ℂ A) (hψ : ‖ψ‖ ≤ 1) : SubState A where
   matrix := ketBra ψ ψ

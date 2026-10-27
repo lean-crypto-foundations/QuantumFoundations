@@ -27,7 +27,7 @@ It is a countably supported, possibly lossy extension of the finite instruments 
 On a fixed register `M`, `SubInstrument M M` is a lawful monad, and the operations mean what they
 mean for `OracleComp`, with completely positive maps in place of probabilities. `OracleComp`
 is free-monad syntax interpreted by `simulateQ`; subinstruments are semantic state
-transformations, observed as measures by `outcomeMeasure` in `VCVio.Quantum.Observe`:
+transformations, observed as measures by `outcomeMeasure` in `QuantumFoundations.Observe`:
 
 * `pure a` reports `a` and leaves the state unchanged.
 * `p.bind k` runs `p`, and on outcome `a` runs `k a` on the state `p` left behind:

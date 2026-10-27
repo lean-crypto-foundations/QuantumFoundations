@@ -21,7 +21,7 @@ These statements are about one Kraus operator per outcome. A branch that sums se
 or a computation that forgets an outcome, can produce a mixed state, and a pure-state argument
 about it must track the individual Kraus contributions (`Quantum.MatrixMap.conj`).
 
-Vector, adjoint, and matrix-order conventions are in `VCVio.Quantum.Pure.Vector`.
+Vector, adjoint, and matrix-order conventions are in `QuantumFoundations.Pure.Vector`.
 `Quantum.DSubInstrument` is an atomic, possibly trace-losing instrument whose output system
 can depend on the outcome. `Quantum.SubInstrument` abbreviates the constant-output case.
 

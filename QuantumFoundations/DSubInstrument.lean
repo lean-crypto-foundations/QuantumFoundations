@@ -19,7 +19,7 @@ traces of the branches over every finite set of outcomes sum to at most the trac
 As for `Quantum.SubInstrument`, the family is summable rather than finitely supported, and no
 countability assumption is made on `ι`; only countably many branches are nonzero
 (`Quantum.DSubInstrument.countable_support_branch`). The finite-instrument reference is in the
-module doc of `VCVio.Quantum.SubInstrument`; outcome dependence, countable support and possible
+module doc of `QuantumFoundations.SubInstrument`; outcome dependence, countable support and possible
 trace loss extend that finite textbook definition.
 
 The branches have different codomains, so they cannot be summed as maps. Trace nonincrease is
@@ -47,7 +47,7 @@ Kraus maps along paths, with the later operator multiplying on the left.
 
 ## The constant-codomain case
 
-`Quantum.SubInstrument A B α` is defined in `VCVio.Quantum.SubInstrument` as an abbreviation
+`Quantum.SubInstrument A B α` is defined in `QuantumFoundations.SubInstrument` as an abbreviation
 for `DSubInstrument A α (fun _ ↦ B)`. This API applies to it directly. Only the total map,
 the one-outcome `ofMap` constructor and the fixed-register `Monad` instance need a constant
 codomain. In general this is an indexed monad, since `ret B i` changes the input system to `B i`.

@@ -46,7 +46,7 @@ family of post-states, one on the system `B i` for each outcome `i`, and
 `Quantum.DSubInstrument.outcomeMeasure_bind`. The same API applies directly to the
 constant-codomain abbreviation `SubInstrument`. The bundled semantics built from the outcome
 measure,
-`Quantum.SubInstrument.semanticsVia`, is in `VCVio.Quantum.Semantics`.
+`Quantum.SubInstrument.semanticsVia`, is in VCVio (`VCVio.Quantum.Semantics`).
 
 ## References
 

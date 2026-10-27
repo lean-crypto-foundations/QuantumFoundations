@@ -23,9 +23,9 @@ neither prepares nor discards `R`, and the input may be entangled with it
 The norm of `K ⊗ₖ 1` is the norm of `K` when `R` is nonempty (`Quantum.l2_opNorm_kronecker_one`),
 and at most the norm of `K` in general (`Quantum.l2_opNorm_kronecker_one_le`; it is `0` when `R`
 is empty). The norm is taken over all vectors on `A × R`, entangled ones included. So
-contractions, isometries and the norm estimates of `VCVio.Quantum.Pure.Norm` hold for an operator
-that leaves a register untouched. `1 ⊗ₖ K`, with the untouched register on the left, has the same
-norm (`Quantum.l2_opNorm_one_kronecker`).
+contractions, isometries and the norm estimates of `QuantumFoundations.Pure.Norm` hold for an
+operator that leaves a register untouched. `1 ⊗ₖ K`, with the untouched register on the left, has
+the same norm (`Quantum.l2_opNorm_one_kronecker`).
 
 ## Main definitions
 
