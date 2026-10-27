@@ -20,7 +20,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `UnitaryChannel` | unitary channels |
 | `Instrument` | `QComp d α`: instruments with summable, jointly trace-nonincreasing branches; the lawful monad |
 | `InstrumentCP` | complete positivity of instrument branches, tensor products of instruments |
-| `QRHL` | quantum relational Hoare logic over instruments |
+| `QRHL` | a relational Hoare judgment on joint final states with outcomes summed out (not Unruh's coupling-based qRHL) |
 
 The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
 types, CP branches) are separate pull requests.

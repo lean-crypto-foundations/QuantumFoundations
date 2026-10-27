@@ -12,28 +12,41 @@ public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.CPMap
 
 /-!
-# Quantum Relational Hoare Logic (qRHL)
+# A relational Hoare judgment for `QComp` programs
 
-Defines a quantum relational Hoare logic for relating two `QComp` programs,
-following Unruh (2019) and Barthe et al. (2020).
+Defines a relational judgment `{Φ} C₁ ~ C₂ {Ψ}` between a program `C₁` on a
+`d₁`-dimensional register and a program `C₂` on a `d₂`-dimensional register. The
+pre- and postconditions `Φ`, `Ψ` are arbitrary predicates on `(d₁ * d₂) × (d₁ * d₂)`
+complex matrices.
 
-## Mathematical Background
+## Semantics
 
-A qRHL judgment `{Φ} C₁ ~ C₂ {Ψ}` operates on a **bipartite** quantum system
-H₁ ⊗ H₂ where C₁ acts on register 1 and C₂ acts on register 2. The pre/post-
-conditions Φ, Ψ are predicates on bipartite density matrices.
+`{Φ} C₁ ~ C₂ {Ψ}` holds when, for every positive semidefinite `ρ` satisfying `Φ`,
+the matrix `∑'_{(a, b)} (C₁.branch a ⊗ C₂.branch b)(ρ)` satisfies `Ψ`. This is the
+joint final state with the classical outcomes `a`, `b` summed out, so `Ψ` cannot
+refer to the values the two programs return.
 
-Semantically: `{Φ} C₁ ~ C₂ {Ψ}` means for all joint states ρ on H₁ ⊗ H₂
-satisfying Φ(ρ), applying C₁ on register 1 and C₂ on register 2 yields a
-state satisfying Ψ.
+This is not Unruh's quantum relational Hoare logic, nor the logic of Barthe et al.,
+although it is modelled on them: there is no coupling of the two output states,
+predicates are not restricted to subspaces, classical outputs are erased, and no
+theorem relates a judgment to output probabilities or to `qIndist`. For example,
+`qrhl_skip` proves `{Φ} pure true ~ pure false {Φ}` for every `Φ`, although the two
+programs return different bits.
+
+The branches of a `QComp` are only required to be positive, so for programs that are
+not completely positive the joint final state of a positive semidefinite `ρ` need
+not be positive semidefinite. The sequencing rule `qrhl_seq_one_sided_left` assumes
+completely positive branches, and `qrhl_one_sided_left` assumes a trace-preserving
+program.
 
 ## Main definitions
 
-* `BipartitePred` — predicate on bipartite density matrices
+* `BipartitePred` — predicate on bipartite matrices
 * `BipartitePred.productState` — the matrix is a single product `ρ₁ ⊗ ρ₂`
 * `jointBranch` — the branch of the joint evolution for an outcome pair
-* `qrHoare` — the qRHL judgment
-* `qIndist` — ε-indistinguishability of two programs
+* `qrHoare` — the relational judgment
+* `qIndist` — ε-indistinguishability of two programs, defined from acceptance
+  probabilities and independent of `qrHoare`
 
 ## Main results
 
@@ -44,6 +57,8 @@ state satisfying Ψ.
 * `qIndist_refl`, `qIndist_symm`, `qIndist_triangle`
 
 ## References
+
+The coupling-based logics this judgment is modelled on:
 
 * D. Unruh, *Quantum Relational Hoare Logic*, POPL 2019
 * G. Barthe, J. Hsu, M. Ying, N. Yu, L. Zhou, *Relational Proofs for Quantum
@@ -69,7 +84,7 @@ open Quantum.UnitaryChannel
 
 /-! ## Bipartite Predicates -/
 
-/-- A predicate on bipartite density matrices. -/
+/-- A predicate on matrices of the bipartite system of dimension `d₁ * d₂`. -/
 def BipartitePred (d₁ d₂ : ℕ) :=
   Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ → Prop
 
@@ -180,19 +195,18 @@ theorem jointBranch_smul (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) 
   simp only [jointBranch_unfold, Matrix.smul_apply, smul_eq_mul]
   rw [innerMatrix_smul, map_smul, Matrix.smul_apply, smul_eq_mul]
 
-/-! ## The qRHL Judgment -/
+/-! ## The Relational Judgment -/
 
-/-- **Quantum Relational Hoare Logic judgment** `{Φ} C₁ ~ C₂ {Ψ}`.
+/-- **Relational Hoare judgment** `{Φ} C₁ ~ C₂ {Ψ}`.
 
-    For programs C₁ on d₁-dim and C₂ on d₂-dim, with bipartite pre/post-
-    conditions on the joint system d₁ × d₂:
+    For programs C₁ on d₁-dim and C₂ on d₂-dim, with pre/postconditions on
+    matrices of the joint system d₁ × d₂: for every PSD ρ satisfying Φ, the
+    state `∑'_{a,b} jointBranch(C₁,C₂,a,b)(ρ)` satisfies Ψ, where `jointBranch`
+    applies `C₁.branch a` on register 1 and `C₂.branch b` on register 2.
 
-    For all joint PSD states ρ satisfying Φ, the post-evolution state
-    (summing over all outcome pairs) satisfies Ψ.
-
-    The post-evolution state is `∑'_{a,b} jointBranch(C₁,C₂,a,b)(ρ)` where
-    `jointBranch` applies `C₁.branch a` on register 1 and `C₂.branch b`
-    on register 2. -/
+    The outcomes `a`, `b` are summed out, so Ψ cannot depend on them. There is no
+    output coupling and no adequacy theorem linking this judgment to output
+    probabilities; it is not Unruh's qRHL judgment. -/
 def qrHoare
     (Φ : BipartitePred d₁ d₂)
     (C₁ : QComp d₁ α)
@@ -241,7 +255,8 @@ theorem jointBranch_qpure_ne {a a' : α} {b b' : β}
 /-! ## Structural Rules -/
 
 /-- **Skip-Skip rule**: `{Φ} pure a ~ pure b {Φ}`.
-    Pure computations do not change the quantum state. -/
+    Pure computations do not change the quantum state. The returned values `a`, `b`
+    are arbitrary: the judgment does not see classical outcomes. -/
 theorem qrhl_skip (Φ : BipartitePred d₁ d₂) (a : α) (b : β) :
     qrHoare Φ (QComp.qpure a) (QComp.qpure b) Φ := by
   intro ρ _hρ hΦ
@@ -531,7 +546,7 @@ theorem qrhl_unitary
   rw [tsum_jointBranch_unitaryChannel]
   exact ⟨ρ, hρ, hΦ, rfl⟩
 
-/-! ## Quantum Indistinguishability via qRHL -/
+/-! ## Quantum Indistinguishability -/
 
 /-- **Quantum indistinguishability (induced / Helstrom distance).** Two programs
     are ε-indistinguishable if no distinguisher `D` and input `ρ` *on the
@@ -542,7 +557,10 @@ theorem qrhl_unitary
     At dimension `d₁ = 0` there is no density matrix (the trace of the empty
     matrix is `0`, not `1`), so `qIndist C₁ C₂ ε` holds for all `C₁`, `C₂` and
     `ε`. A statement about `qIndist` carries information only for `d₁ ≠ 0`,
-    which a caller over a variable dimension states as `[NeZero d₁]`. -/
+    which a caller over a variable dimension states as `[NeZero d₁]`.
+
+    The definition is direct; no theorem derives `qIndist` from a `qrHoare`
+    judgment. -/
 def qIndist (C₁ C₂ : QComp d₁ α) (ε : ℝ≥0∞) : Prop :=
   ∀ (D : α → QComp d₁ Bool) (ρ : DensityMatrix d₁),
     absDiff (prTrue_Q (QComp.qbind C₁ D) ρ) (prTrue_Q (QComp.qbind C₂ D) ρ) ≤ ε
