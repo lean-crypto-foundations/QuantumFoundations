@@ -15,15 +15,17 @@ the guessing probability of the product distribution factors:
 
   `guessProb (fun (x,y) => p₀ x * p₁ y) = guessProb p₀ * guessProb p₁`,
 
-so the min-entropy is **additive**:
+so, when both guessing probabilities are positive, the min-entropy is **additive**:
 
   `Hₘᵢₙ(p₀ ⊗ p₁) = Hₘᵢₙ(p₀) + Hₘᵢₙ(p₁)`.
+
+(With the convention `minEntropy 0 = 0` this fails for a zero factor.)
 
 Iterating this gives the min-entropy of `n` *independent* conjugate-basis BB84
 measurements: each contributes `1` bit (`minEntropy_uniform_two`), so the
 joint min-entropy of the independent case is `n`. This covers independent registers only.
-The DFRSS uncertainty relation (`H_∞^ε(X|Θ) ≥ (½−2λ)n`), which holds for adversarially prepared
-states, is not formalized here.
+The DFRSS uncertainty relation (full version, Corollary 3.4: `H_∞^ε(X|Θ) ≥ (½−2λ)n`), which
+holds for adversarially prepared states, is not formalized here.
 -/
 
 @[expose] public section

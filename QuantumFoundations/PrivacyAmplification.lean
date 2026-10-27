@@ -15,7 +15,7 @@ Combines the classical leftover hash lemma (`leftover_hash_lemma`), stated via
 the collision probability `∑ₓ p(x)²`, with the guessing probability
 `guessProb p = maxₓ p(x)`. Since `∑ₓ p(x)² ≤ (maxₓ p x)·∑ₓ p(x) = guessProb p`
 for a probability distribution, hashing `X ~ p` with a seed `h` drawn uniformly
-from a 2-universal family gives
+from a 2-universal family, independently of `X`, gives
 
   `hashStatDist F p ≤ ½·√(|Y|·guessProb p) = ½·2^{(log₂|Y| − H_min(p))/2}`,
 
@@ -51,7 +51,7 @@ theorem collisionProb_le_guessProb {p : X → ℝ} (hp : ∀ x, 0 ≤ p x)
 
 /-- **Leftover hash lemma in min-entropy form.** For a probability distribution
 `p`, the pair `(h, h(X))`, with `h` uniform over a 2-universal family and
-`X ~ p`, is within statistical distance `½·√(|Y|·guessProb p)` of `(h, U_Y)`,
+`X ~ p` independent of `h`, is within statistical distance `½·√(|Y|·guessProb p)` of `(h, U_Y)`,
 i.e. `½·2^{(log₂|Y| − H_min(p))/2}`. No side information is modelled. -/
 theorem leftover_hash_guessProb_bound (F : TwoUniversalHashFamily X Y)
     (p : X → ℝ) (hp : ∀ x, 0 ≤ p x) (hsum : ∑ x, p x = 1) :

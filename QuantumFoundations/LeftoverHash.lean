@@ -33,7 +33,7 @@ For a probability vector `p : X → ℝ` the **collision probability** is
 
 * `TwoUniversalHashFamily` — the bundled structure (family + 2-universal axiom).
 * `collisionProb` — `∑_x (p x)²`; `collisionProb_nonneg`, monotone facts.
-* `expected_collision_le` (**the engine of the LHL**) — the expected collision
+* `expectedCollision_le` (**the engine of the LHL**) — the expected collision
   probability of the hashed variable `h(X)`, averaged over a uniform choice of
   `h` from a 2-universal family, satisfies
 
