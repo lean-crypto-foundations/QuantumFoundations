@@ -15,7 +15,7 @@ public import QuantumFoundations.UnitaryChannel
 # Completely Positive Maps and Duality
 
 This file defines positive, completely positive, and trace-preserving linear
-maps on complex matrices, along with the dual (adjoint) map construction.
+maps on complex matrices, along with the trace dual of a linear map on matrices.
 
 ## Main Definitions
 
@@ -23,7 +23,7 @@ maps on complex matrices, along with the dual (adjoint) map construction.
 * `IsCPMap` — completely positive (positive under tensoring with identity)
 * `IsTP` — trace-preserving
 * `CPTPMap` — bundled CPTP channel
-* `dualMap` — dual/adjoint w.r.t. Hilbert-Schmidt inner product
+* `dualMap` — the dual with respect to the bilinear trace pairing `(A, B) ↦ tr(A * B)`
 
 ## Main Results
 
@@ -36,6 +36,8 @@ maps on complex matrices, along with the dual (adjoint) map construction.
   `UnitaryChannel.conjugate K`
 * `tp_iff_dual_unital` — TP ↔ dual map is unital
 * `dual_positive_of_positive` — dual of positive map is positive
+* `IsPositiveMap.map_conjTranspose`, `dual_spec_conjTranspose` — a positive map commutes
+  with `conjTranspose`, and for such maps the trace dual is the Hilbert–Schmidt adjoint
 * `dual_cp_of_cp` — dual of CP map is CP (via block-level duality)
 * `cpu_preserves_effect` — CPU maps preserve effects
 
@@ -119,7 +121,13 @@ theorem linearMap_expand
   simp only [map_sum, LinearMapClass.map_smul, Finset.sum_matrix_entry,
     Matrix.smul_apply, smul_eq_mul]
 
-/-- Dual of a linear map on matrices: defined by `tr(Φ†(A) * B) = tr(A * Φ(B))`.
+/-- The trace dual of a linear map on matrices: the unique linear map `Φ†` with
+    `tr(Φ†(A) * B) = tr(A * Φ(B))` for all `A`, `B` (`dual_spec`). The pairing
+    `(A, B) ↦ tr(A * B)` is complex-bilinear, so this is the transpose of `Φ` for it, not the
+    Hilbert–Schmidt adjoint `Φ*`, which satisfies `tr(Φ*(A)ᴴ * B) = tr(Aᴴ * Φ(B))`.
+    The two coincide when `Φ` commutes with `conjTranspose` (`dual_spec_conjTranspose`),
+    in particular when `Φ` is positive (`IsPositiveMap.map_conjTranspose`); for
+    `Φ = i • id` they differ.
     Constructed entry-wise: `(Φ†(A))_{i,j} = ∑_k ∑_l A_{k,l} * (Φ(matUnit j i))_{l,k}`. -/
 def dualMap
     (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ) :
@@ -140,7 +148,7 @@ theorem dualMap_apply
     (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ) (A : Matrix ι ι ℂ) (i j : ι) :
     dualMap Φ A i j = ∑ k : ι, ∑ l : ι, A k l * (Φ (matUnit j i)) l k := rfl
 
-/-- Defining property of the dual map:
+/-- Defining property of the trace dual:
     `tr(Φ†(A) * B) = tr(A * Φ(B))` for all `A`, `B`. -/
 theorem dual_spec
     (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ)
@@ -372,6 +380,31 @@ theorem dual_positive_of_positive
     rw [quadForm_eq_trace]
     rw [dual_spec]
     exact trace_psd_mul_psd_nonneg A _ hA (hΦ _ (posSemidef_outer_product x))
+
+omit [Fintype ι] [DecidableEq ι] in
+/-- A positive map commutes with `conjTranspose`: `Φ(Xᴴ) = Φ(X)ᴴ`. -/
+theorem IsPositiveMap.map_conjTranspose [Finite ι] {Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ}
+    (hΦ : IsPositiveMap Φ) (X : Matrix ι ι ℂ) : Φ Xᴴ = (Φ X)ᴴ := by
+  classical
+  have := Fintype.ofFinite ι
+  ext l k
+  rw [linearMap_expand, conjTranspose_apply, linearMap_expand]
+  simp_rw [star_sum, star_mul', conjTranspose_apply]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun p _ => Finset.sum_congr rfl fun q _ => ?_
+  have h := congr_fun₂ (positive_map_conjTranspose_matUnit Φ hΦ p q) l k
+  rw [conjTranspose_apply] at h
+  rw [← h]
+
+/-- For a map commuting with `conjTranspose`, the trace dual is the Hilbert–Schmidt
+    adjoint: `tr(Φ†(A)ᴴ * B) = tr(Aᴴ * Φ(B))`. -/
+theorem dual_spec_conjTranspose (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ)
+    (hΦ : ∀ X, Φ Xᴴ = (Φ X)ᴴ) (A B : Matrix ι ι ℂ) :
+    ((dualMap Φ A)ᴴ * B).trace = (Aᴴ * Φ B).trace := by
+  have h := congrArg star (dual_spec Φ A Bᴴ)
+  rw [← trace_conjTranspose, ← trace_conjTranspose, conjTranspose_mul, conjTranspose_mul,
+    hΦ, conjTranspose_conjTranspose, conjTranspose_conjTranspose] at h
+  rw [trace_mul_comm, h, trace_mul_comm]
 
 end General
 

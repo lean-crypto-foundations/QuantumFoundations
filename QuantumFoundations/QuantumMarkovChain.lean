@@ -121,13 +121,17 @@ def IsQuantumMarkovChain
 
 /-! ## Approximate Markov Chains
 
-The Fawzi–Renner bound — `I(A:C|B) ≤ ε` implies that the Petz-recovered state
-is within trace distance `2√(2ε ln 2)` of ρ_{ABC} — is not stated here. Its
-conclusion needs the ampliation `id_A ⊗ R` of the Petz map and the trace
-distance between the recovered and the original state, neither of which this
-module constructs.
+The Fawzi–Renner theorem is not stated here. It says that for every ρ_{ABC} there exists
+some channel `R : B → BC` with `F(ρ_{ABC}, (id_A ⊗ R)(ρ_{AB})) ≥ 2^{-I(A:C|B)/2}`, where `F`
+is the fidelity `‖√ρ √σ‖₁` and `I(A:C|B)` is measured in bits; with the natural logarithms of
+`condMutualInfo` the bound reads `exp(-I(A:C|B)/2)`. Fawzi and Renner prove existence of a
+channel, not that the Petz map achieves the bound; Junge, Renner, Sutter, Wilde and Winter
+show that a universal recovery map, an average of rotated Petz maps, does. Stating it needs the
+ampliation `id_A ⊗ R` and the fidelity, neither of which this module constructs.
 
-**Reference**: O. Fawzi, R. Renner, "Quantum Conditional Mutual Information
-and Approximate Markov Chains", Comm. Math. Phys. 340 (2015), 575-611. -/
+**References**: O. Fawzi, R. Renner, "Quantum Conditional Mutual Information
+and Approximate Markov Chains", Comm. Math. Phys. 340 (2015), 575-611;
+M. Junge, R. Renner, D. Sutter, M. M. Wilde, A. Winter, "Universal recovery maps and
+approximate sufficiency of quantum relative entropy", Ann. Henri Poincaré 19 (2018). -/
 
 end Quantum.QuantumMarkovChain
