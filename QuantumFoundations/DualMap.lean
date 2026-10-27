@@ -8,12 +8,15 @@ module
 public import QuantumFoundations.CPMap
 
 /-!
-# Functoriality of the Heisenberg dual
+# Functoriality of the trace dual
 
 `dualMap Φ` (`QuantumFoundations.CPMap`) is the dual of a linear map on
-matrices with respect to the Hilbert–Schmidt pairing, `tr(Φ†(A) B) = tr(A Φ(B))`
-(`dual_spec`). This module proves that the dual is a contravariant monoid
-morphism on such maps.
+matrices with respect to the bilinear trace pairing, `tr(Φ†(A) B) = tr(A Φ(B))`
+(`dual_spec`). It agrees with the Hilbert–Schmidt adjoint (the Heisenberg-picture
+map) on maps that commute with `conjTranspose`, such as positive maps
+(`dual_spec_conjTranspose`, `IsPositiveMap.map_conjTranspose`), but not in general.
+This module proves that the dual is a contravariant monoid morphism on linear maps on
+matrices.
 
 ## Main results
 
