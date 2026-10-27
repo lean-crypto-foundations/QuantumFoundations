@@ -26,7 +26,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PetzRecovery` | the Petz recovery map, its exact recovery of the prior and compositionality |
 | `QuantumBayes` | quantum Bayesian inversion by the Petz map, the Lüders (Jeffrey) update |
 | `QuantumMarkovChain` | conditional quantum mutual information and quantum Markov chains |
-| `ForMathlib/MatrixPosSemidef` | positivity lemmas for complex matrices |
+| `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
 The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
 types, CP branches) are separate pull requests.
