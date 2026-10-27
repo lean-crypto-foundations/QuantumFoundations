@@ -139,7 +139,7 @@ def jeffreyUpdate (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) 
   let unnormalized := E_half * σ * E_half
   (unnormalized.trace)⁻¹ • unnormalized
 
-/-- When the Born probability `tr(E σ)` is nonzero, the Lüders update of a PSD `σ` is PSD
+/-- When the Born probability `tr(E σ)` is nonzero, the Lüders update of a density matrix `σ` is PSD
     with unit trace. -/
 theorem jeffreyUpdate_density
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef) (_hσ_tr : σ.trace = 1)

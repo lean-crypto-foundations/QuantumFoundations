@@ -54,8 +54,9 @@ standard quantum analogue of the Bayesian inverse of `Φ` with respect to the pr
 Parzygnat and Buscemi list properties a retrodiction should have. Their Theorem 6.5 shows
 that, among the rotated Petz recovery maps, only the unrotated Petz map gives an involutive
 retrodiction family; whether it is the unique retrodiction functor is their open
-Question 7.1. That the Petz map gives conjoints in a framed bicategory built on `QComp`, in the
-sense of Smithe's Bayesian lenses, is a remark that is not formalized here.
+Question 7.1. The original development proposed, without proof, that the Petz map gives
+conjoints in a framed bicategory built on `QComp` (after Smithe's Bayesian lenses); this is not
+formalized here.
 
 ## References
 
