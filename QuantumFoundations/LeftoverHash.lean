@@ -51,7 +51,8 @@ The statistical distance here is the `ℓ¹`/total-variation form
 * Impagliazzo, Levin, Luby — *Pseudo-random generation from one-way functions*,
   STOC 1989 (origin of the LHL).
 * Renner, R. — *Security of Quantum Key Distribution*, PhD thesis, ETH 2005
-  (LHL for privacy amplification, in the form used here).
+  (the conditional, quantum-side-information LHL; this file proves only its classical
+  unconditional special case).
 * Tomamichel — *Quantum Information Processing with Finite Resources*, §5
   (collision-entropy / ℓ² formulation).
 -/
