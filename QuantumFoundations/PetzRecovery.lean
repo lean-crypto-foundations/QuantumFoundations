@@ -24,7 +24,9 @@ the Petz recovery map `R_{σ,Φ}` satisfies the quantum analogue of Bayes' theor
 R_{σ,Φ}(X) = σ^{1/2} Φ†[ Φ(σ)^{-1/2} X Φ(σ)^{-1/2} ] σ^{1/2}
 ```
 
-where `Φ†` is the Hilbert-Schmidt adjoint.
+where `Φ†` is the trace dual `dualMap Φ`, the linear map with `tr(Φ†(A) B) = tr(A Φ(B))`.
+For a positive `Φ`, the only case used here, it is the Hilbert–Schmidt adjoint
+(`dual_spec_conjTranspose`, `IsPositiveMap.map_conjTranspose`).
 
 ## Key properties
 
@@ -308,16 +310,6 @@ private lemma linearMap_eq_zero_of_posSemidef
     linear_combination (1 / 2 : ℂ) * (B i j - Bᴴ i j) * Complex.I_sq
   rw [hB, map_add, herm _ h1, map_smul, herm _ h2, smul_zero, add_zero]
 
-/-! ## Hilbert-Schmidt Adjoint
-
-The dual map `Φ†` is already formalized in `CPMap.lean` as `dualMap`. -/
-
-/-- The dual (Hilbert-Schmidt adjoint) of a linear map on matrices.
-    Alias for the existing `dualMap` from `CPMap.lean`. -/
-noncomputable def hsAdjoint (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ) :
-    Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ :=
-  dualMap Φ
-
 /-! ## Petz Recovery Map -/
 
 /-- The Petz recovery map for a quantum channel Φ at reference state σ.
@@ -335,7 +327,7 @@ noncomputable def petzRecovery
   let Φσ := Φ σ
   let hΦσ : Φσ.PosSemidef := hΦ_cp σ hσ
   let Φσ_inv_half := psdInvSqrt Φσ hΦσ
-  let Φ_dag := hsAdjoint Φ
+  let Φ_dag := dualMap Φ
   -- R(X) = σ^{1/2} Φ†[ Φ(σ)^{-1/2} X Φ(σ)^{-1/2} ] σ^{1/2}
   { toFun := fun X => σ_half * (Φ_dag (Φσ_inv_half * X * Φσ_inv_half)) * σ_half
     map_add' := by
@@ -356,7 +348,7 @@ theorem petzRecovery_cp
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
     (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (hsAdjoint Φ ρ).PosSemidef)
+    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
     (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ_cp σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) :
     ∀ ρ, ρ.PosSemidef → (petzRecovery σ hσ Φ hΦ_cp ρ).PosSemidef := by
   intro ρ hρ
@@ -374,8 +366,8 @@ theorem petzRecovery_cp
   -- Step 3: outer sandwich σ^{1/2} * PSD * σ^{1/2} is PSD
   have h_sqrt_sa : (psdSqrt σ hσ)ᴴ = psdSqrt σ hσ :=
     (psdSqrt_posSemidef σ hσ).isHermitian
-  rw [show psdSqrt σ hσ * hsAdjoint Φ _ * psdSqrt σ hσ =
-    psdSqrt σ hσ * hsAdjoint Φ _ * (psdSqrt σ hσ)ᴴ from by rw [h_sqrt_sa]]
+  rw [show psdSqrt σ hσ * dualMap Φ _ * psdSqrt σ hσ =
+    psdSqrt σ hσ * dualMap Φ _ * (psdSqrt σ hσ)ᴴ from by rw [h_sqrt_sa]]
   exact h2.mul_mul_conjTranspose_same _
 
 /-- The Petz recovery map is sub-trace-preserving on PSD inputs, for every positive `Φ`.
@@ -406,7 +398,7 @@ theorem petzRecovery_stp
           cfc_mul_self_of_idem _ _ (fun x => by by_cases h : x = 0 <;> simp [h])
   have htr : (petzRecovery σ hσ Φ hΦ_cp ρ).trace
       = (ρ * cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ)).trace := by
-    simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk, hsAdjoint]
+    simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk]
     rw [trace_mul_comm, ← Matrix.mul_assoc, psdSqrt_mul_psdSqrt, trace_mul_comm, dual_spec,
       ← hJMJ]
     simp only [Matrix.mul_assoc]
@@ -429,7 +421,7 @@ theorem petzRecovery_exact
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
     (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
     (hU : IsUnit (Φ σ))
-    (h_unital : hsAdjoint Φ 1 = 1) :
+    (h_unital : dualMap Φ 1 = 1) :
     petzRecovery σ hσ Φ hΦ_cp (Φ σ) = σ := by
   have hΦσ : (Φ σ).PosSemidef := hΦ_cp σ hσ
   -- Step 1: Φ(σ)^{-1/2} · Φ(σ) · Φ(σ)^{-1/2} = 1
@@ -537,7 +529,7 @@ theorem petzRecovery_comp
     ∀ X, petzRecovery σ hσ (Φ₂.comp Φ₁) (fun ρ hρ => hΦ₂ _ (hΦ₁ ρ hρ)) X =
       petzRecovery σ hσ Φ₁ hΦ₁ (petzRecovery (Φ₁ σ) (hΦ₁ σ hσ) Φ₂ hΦ₂ X) := by
   intro X
-  simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk, hsAdjoint]
+  simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk]
   rw [dualMap_comp, LinearMap.comp_apply,
     show ∀ A B Y C D : Matrix (Fin d) (Fin d) ℂ, A * (B * Y * C) * D = (A * B) * Y * (C * D)
       from fun _ _ _ _ _ => by simp only [Matrix.mul_assoc],
@@ -553,7 +545,7 @@ noncomputable def petzQComp
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
     (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (hsAdjoint Φ ρ).PosSemidef)
+    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
     (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ_cp σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) :
     QComp d Unit where
   branch _ := petzRecovery σ hσ Φ hΦ_cp

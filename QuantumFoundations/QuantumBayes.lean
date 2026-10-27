@@ -104,7 +104,7 @@ theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (F
 
     `R_{σ,Φ}(A) = σ^{1/2} Φ†[Φ(σ)^{-1/2} A Φ(σ)^{-1/2}] σ^{1/2}`
 
-    where `Φ† = hsAdjoint Φ` is the Hilbert-Schmidt adjoint. -/
+    where `Φ† = dualMap Φ` is the trace dual of `Φ`. -/
 theorem quantum_bayes_rule
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
     (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
@@ -112,7 +112,7 @@ theorem quantum_bayes_rule
     (A : Matrix (Fin d) (Fin d) ℂ) :
     petzRecovery σ hσ Φ hΦ_cp A =
       psdSqrt σ hσ *
-        hsAdjoint Φ (psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * A *
+        dualMap Φ (psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * A *
           psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) *
         psdSqrt σ hσ :=
   rfl
