@@ -49,8 +49,7 @@ public import QuantumFoundations.Pure.Vector
 public import QuantumFoundations.Register
 public import QuantumFoundations.SubInstrument
 
--- Observation and its dependent modules, with Devon Tuma's measure extension.
-public import QuantumFoundations.ForMathlib.MeasureTheory.Measure.Subprobability
+-- Observation and its dependent modules.
 public import QuantumFoundations.Observe
 public import QuantumFoundations.Oracle.Basis
 public import QuantumFoundations.Oracle.Unitary
