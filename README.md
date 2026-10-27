@@ -8,8 +8,8 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 
 | Module | Content |
 |---|---|
-| `CPMap` | completely positive maps on `Fin n` matrices, effects, the dual map of a CP map |
-| `DualMap` | the Hilbert–Schmidt adjoint of a linear map on matrices |
+| `CPMap` | completely positive maps on `Fin n` matrices, effects, the trace dual of a linear map |
+| `DualMap` | functoriality of the trace dual (the Hilbert–Schmidt adjoint for positive maps) |
 | `ChoiKraus` | the Choi matrix; every CP map has a Kraus form |
 | `Stinespring` | the Stinespring dilation of a CPTP map by an ancilla |
 | `PartialTrace` | partial traces over `Fin (d₁ * d₂)` |
@@ -18,9 +18,9 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `TraceNorm` | the trace norm and its bounds |
 | `Measurement` | general and projective measurements as instruments |
 | `UnitaryChannel` | unitary channels |
-| `Instrument` | `QComp d α`: instruments with summable, jointly trace-nonincreasing branches; the lawful monad |
+| `Instrument` | `QComp d α`: summable positive (not necessarily CP) sub-TP branches; the monad |
 | `InstrumentCP` | complete positivity of instrument branches, tensor products of instruments |
-| `QRHL` | quantum relational Hoare logic over instruments |
+| `QRHL` | a relational judgment on joint final states, outcomes summed out (not Unruh's qRHL) |
 | `GentleMeasurement` | the gentle-measurement lemma for projective measurements |
 | `FuchsVanDeGraaf` | `1 − F(P, ρ) ≤ traceDist P ρ` for a pure target `P` (one Fuchs–van de Graaf inequality) |
 | `PetzRecovery` | the Petz recovery map, its exact recovery of the prior and compositionality |

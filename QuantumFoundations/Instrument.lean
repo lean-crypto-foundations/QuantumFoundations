@@ -21,19 +21,28 @@ public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import Mathlib.Algebra.Order.Chebyshev
 
 /-!
-# Quantum instruments and the `QComp` monad
+# Positive instruments and the `QComp` monad
 
-A quantum instrument on a `d`-dimensional system with outcomes in `α` is a
-family `{E_a}_{a ∈ α}` of positivity-preserving linear maps on `d × d` complex
-matrices whose sum is trace-non-increasing; the missing trace is the
-probability of abort. This file defines the type `QComp d α` of such
-instruments with countably summable branches, its unit and Kleisli
-composition, and proves that it is a lawful monad.
+This file defines the type `QComp d α` of families `{E_a}_{a ∈ α}` of linear maps
+on `d × d` complex matrices that are positive (each `E_a` maps positive
+semidefinite matrices to positive semidefinite matrices), summable, and whose sum
+is trace-non-increasing on positive semidefinite inputs; the missing trace is the
+probability of abort. It defines the unit and Kleisli composition and proves that
+`QComp d` is a lawful monad.
+
+A quantum instrument in the physical sense also requires every branch to be
+completely positive. `QComp` does not: it contains positive maps that are not
+completely positive, such as the one-outcome transpose map `ρ ↦ ρᵀ`, which does not
+describe a physical operation on half of an entangled state. The unit, Kleisli
+composition, monad laws and the results of this file need only positivity. Results
+that need complete positivity, such as the local lifts `TensorProduct.localOp₁`,
+`TensorProduct.localOp₂` and `QComp.tensor`, take it as a hypothesis on the branches.
 
 ## Main definitions
 
 * `Quantum.DensityMatrix`: a positive semidefinite matrix of trace one.
-* `Quantum.QComp`: a sub-trace-preserving instrument with outcomes in `α`.
+* `Quantum.QComp`: a summable family of positive maps with outcomes in `α` whose sum
+  is trace-non-increasing; complete positivity is not required.
 * `Quantum.QComp.qpure`, `Quantum.QComp.qbind`: the unit and the Kleisli
   composition of instruments.
 * `Quantum.QComp.qfail`: the instrument that aborts with probability one.
@@ -98,9 +107,12 @@ structure DensityMatrix (d : ℕ) where
 
 /-! ## QComp Definition -/
 
-/-- A quantum instrument on a `d`-dimensional system with outcomes in `α`: a
-family of positivity-preserving linear maps on `d × d` complex matrices whose
-sum is trace-non-increasing on positive semidefinite inputs. -/
+/-- A positive instrument on a `d`-dimensional system with outcomes in `α`: a
+summable family of positive linear maps on `d × d` complex matrices whose sum is
+trace-non-increasing on positive semidefinite inputs. The branches need not be
+completely positive (the transpose map is a one-outcome `QComp`), so a `QComp` is
+a quantum instrument in the physical sense only when every branch satisfies
+`IsCPMap`; results that need this take it as a hypothesis. -/
 structure QComp (d : ℕ) (α : Type) where
   /-- The linear map applied on outcome `a`. -/
   branch : α → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
@@ -310,7 +322,7 @@ theorem trace_re_summable {f : α → Matrix (Fin d) (Fin d) ℂ} (hf : Summable
 
 /-! ## Operator Norm Bounds for Instruments
 
-Proved bounds for completely positive sub-trace-preserving (sub-TP) maps:
+Proved bounds for positive sub-trace-preserving (sub-TP) maps:
 
 * `single_stp_re`: A single branch of a sub-TP instrument has trace ≤ input trace.
 * `subTP_opNorm_le`: `‖L(M)‖ ≤ 2d(2d+1) · ‖M‖` for a single branch.
