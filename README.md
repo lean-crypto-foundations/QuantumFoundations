@@ -18,7 +18,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `TraceNorm` | the trace norm and its bounds |
 | `Measurement` | general and projective measurements as instruments |
 | `UnitaryChannel` | unitary channels |
-| `Instrument` | `QComp d α`: summable positive (not necessarily CP) branches, jointly sub-TP; the monad |
+| `Instrument` | `QComp d α`: summable positive (not necessarily CP) sub-TP branches; the monad |
 | `InstrumentCP` | complete positivity of instrument branches, tensor products of instruments |
 | `QRHL` | a relational judgment on joint final states, outcomes summed out (not Unruh's qRHL) |
 
