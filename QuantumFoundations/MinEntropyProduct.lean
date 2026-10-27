@@ -22,7 +22,7 @@ so the min-entropy is **additive**:
 Iterating this gives the min-entropy of `n` *independent* conjugate-basis BB84
 measurements: each contributes `1` bit (`minEntropy_uniform_two`), so the
 joint min-entropy of the independent case is `n`. This covers independent registers only.
-The DFRSS uncertainty relation (`H_∞^ε ≥ (½−2λ)n`), which holds for adversarially prepared
+The DFRSS uncertainty relation (`H_∞^ε(X|Θ) ≥ (½−2λ)n`), which holds for adversarially prepared
 states, is not formalized here.
 -/
 

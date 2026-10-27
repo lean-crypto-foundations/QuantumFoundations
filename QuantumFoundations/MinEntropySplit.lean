@@ -180,7 +180,8 @@ if not. The selected guessing probability is therefore
 def condChoice (p : ι × κ → ℝ) : Bool :=
   decide (condGuessProb p ≤ condGuessProb' p)
 
-@[deprecated condChoice (since := "2026-10-27")] alias splitChoice := condChoice
+@[deprecated condChoice (since := "2026-10-27")]
+alias splitChoice := condChoice
 
 /-- The guessing probability selected by `condChoice` is the minimum of the two
 conditional guessing probabilities. -/
