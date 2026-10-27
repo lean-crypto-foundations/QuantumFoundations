@@ -36,8 +36,8 @@ programs return different bits.
 The branches of a `QComp` are only required to be positive, so for programs that are
 not completely positive the joint final state of a positive semidefinite `ρ` need
 not be positive semidefinite. The sequencing rule `qrhl_seq_one_sided_left` assumes
-that the branches of the first program are completely positive, and `qrhl_one_sided_left` assumes a trace-preserving
-program.
+that the branches of the first program are completely positive, and
+`qrhl_one_sided_left` assumes a trace-preserving program.
 
 ## Main definitions
 
