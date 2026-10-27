@@ -45,6 +45,7 @@ types, CP branches) are separate pull requests.
 | `MatrixMap/Norm`, `MatrixMap/OpNorm`, `MatrixMap/BlockNorm` | trace, operator and block norm bounds |
 | `MatrixMap/Completion` | matrix completion without increasing the operator norm (Parrott's theorem) |
 | `MatrixMap/Pinching`, `MatrixMap/Commutant` | pinching maps and commutation bounds |
+| `MatrixMap/Comparison` | replacing Kraus operators before a trace-nonincreasing finishing map |
 | `MatrixMap/ProjectorEvent`, `MatrixMap/ProjectorPair` | projector events and pairs of projectors |
 | `DSubInstrument`, `SubInstrument` | instruments with dependent or fixed output registers |
 | `Register` | finite quantum registers |
