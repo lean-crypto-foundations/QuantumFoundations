@@ -30,7 +30,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `MinEntropyProduct` | additivity of min-entropy over independent registers |
 | `MinEntropySplit` | conditional guessing probability; picking the better of two conditionings |
 | `LeftoverHash` | the leftover hash lemma for a 2-universal hash family |
-| `PrivacyAmplification` | privacy amplification in min-entropy form |
+| `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
 | `ForMathlib/MatrixPosSemidef` | positivity lemmas for complex matrices |
 
 The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
