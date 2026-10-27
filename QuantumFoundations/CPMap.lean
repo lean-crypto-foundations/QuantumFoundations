@@ -636,7 +636,8 @@ theorem dual_cp_of_cp
 
 /-! ## Corollaries -/
 
-/-- CPTP dual is CPU (completely positive + unital). -/
+/-- The dual of a CPTP map is positive and unital. Complete positivity of the dual is
+    `dual_cp_of_cp`. -/
 theorem cptp_dual_is_cpu (Φ : CPTPMap n) :
     IsPositiveMap (dualMap Φ.toLinearMap) ∧ dualMap Φ.toLinearMap 1 = 1 := by
   constructor
