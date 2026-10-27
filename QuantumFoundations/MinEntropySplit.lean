@@ -8,75 +8,49 @@ module
 public import QuantumFoundations.MinEntropy
 
 /-!
-# Min-Entropy Splitting (Classical Combinatorial Core)
+# Conditional guessing probability and choosing the better conditioning
 
-This file formalises the *classical* combinatorial core behind the **min-entropy
-splitting lemma** of Damgård–Fehr–Renner–Salvail–Schaffner (DFRSS, CRYPTO 2007,
-Lemma 3). We work entirely in the guessing-probability form of min-entropy
-developed in `Quantum.MinEntropy`.
+For a joint (sub-)distribution `p : ι × κ → ℝ` this file defines the two
+conditional guessing probabilities, proves that conditioning can only help the
+guesser, and studies the deterministic rule that picks whichever of the two
+conditionings has the smaller guessing probability. Everything is classical and
+stated in the guessing-probability form of `QuantumFoundations.MinEntropy`.
 
 ## Conditional guessing probability
 
-For a joint (sub-)distribution `p : ι × κ → ℝ` the **conditional guessing
-probability of the second coordinate given the first** is
+The **conditional guessing probability of the second coordinate given the
+first** is
 
-  `condGuessProb p = ∑_{x : ι} max_{y : κ} p (x, y)`.
+  `condGuessProb p = ∑_{x : ι} max_{y : κ} p (x, y)`,
 
-Operationally, this is the success probability of the optimal strategy that, on
-seeing the conditioning value `x`, outputs the `y` maximising `p (x, y)`; summed
-over the (unnormalised) weight that the joint distribution places on each `x`.
-The associated **conditional min-entropy** is
+the success probability of the guesser that, on seeing `x`, outputs the `y`
+maximising `p (x, y)`. The associated conditional min-entropy is
+`condMinEntropy p = - log₂ (condGuessProb p)`. The symmetric quantities
+`condGuessProb'` and `condMinEntropy'` condition on the second coordinate and
+guess the first.
 
-  `condMinEntropy p = - log₂ (condGuessProb p)`.
-
-(There is a symmetric `condGuessProb'` / `condMinEntropy'` conditioning on the
-*second* coordinate, used to state the binary-choice splitting result.)
-
-## What is proved here
-
-The honest, fully-proved combinatorial content is the **monotonicity chain**
-relating joint and conditional guessing probabilities:
+## Main results
 
 * `guessProb_le_condGuessProb` / `guessProb_le_condGuessProb'` —
-  `guessProb p ≤ condGuessProb p` (resp. `condGuessProb' p`): conditioning can
-  only *increase* the guessing probability. This is the single genuinely
-  combinatorial fact — the largest entry of the joint table is dominated by the
-  sum of the per-row (per-column) maxima.
+  `guessProb p ≤ condGuessProb p` (resp. `condGuessProb' p`): the largest entry
+  of the joint table is at most the sum of the per-row (per-column) maxima.
 * `condMinEntropy_le_minEntropy` / `condMinEntropy'_le_minEntropy` — the
-  min-entropy form: conditioning can only *decrease* min-entropy
-  (`condMinEntropy p ≤ minEntropy p`).
+  min-entropy form: `condMinEntropy p ≤ minEntropy p`.
+* `condChoice p : Bool` — one Boolean, fixed for the whole distribution, that
+  selects the conditioning with the smaller guessing probability.
+* `selectedGuessProb_eq_min` — the selected guessing probability is
+  `min (condGuessProb p) (condGuessProb' p)`.
+* `condMinEntropy_selected_eq_max` — the selected conditional min-entropy is
+  `max (condMinEntropy p) (condMinEntropy' p)`.
+* `condMinEntropy_le_selected` — each conditional min-entropy is at most the
+  selected one.
 
-and the **binary splitting selector**:
-
-* `splitChoice p : Bool` — the deterministic choice rule, picking the coordinate
-  whose conditional guessing probability is the smaller of `condGuessProb p`,
-  `condGuessProb' p`.
-* `selectedGuessProb_eq_min` — the selected conditional guessing probability is
-  exactly `min (condGuessProb p) (condGuessProb' p)`.
-* `condMinEntropy_selected_eq_max` — equivalently, the selected conditional
-  min-entropy is `max (condMinEntropy p) (condMinEntropy' p)`: the splitting
-  choice keeps the coordinate with the *larger* conditional min-entropy.
-* `condMinEntropy_le_selected` — each individual conditional min-entropy is `≤`
-  the selected one.
-
-## Scope / honesty note (what is NOT proved)
-
-This file proves the *tight* combinatorial core: the monotonicity chain and the
-fact that the binary selector achieves `max (condMinEntropy p) (condMinEntropy'
-p)`. It does **not** prove the full DFRSS bound `H_min(X_{1-C} | C) ≥ α/2`.
-
-That bound requires the `√`-trick `PG(X₀) ≤ √ PG(X₀X₁)` (a Cauchy–Schwarz /
-concavity step relating a marginal guessing probability to the square root of
-the joint one), which turns the additive `α` into the `α/2` after the `-log₂`.
-That square-root step over `Real.logb`/`sup'` is *not* formalised here. The
-selector and the `max`/`min` chain delivered here are the exact (no-loss) part
-of the argument; the `α/2` weakening is the separate, looser consequence that
-the `√`-step would add on top, and it is explicitly out of scope.
+This is not the min-entropy splitting lemma of Damgård–Fehr–Renner–Salvail–
+Schaffner (CRYPTO 2007, Lemma 3), which bounds the joint smooth min-entropy of
+`(X_{1-C}, C)` for a sample-dependent selector `C`.
 
 ## References
 
-* Damgård, Fehr, Renner, Salvail, Schaffner — *A Tight High-Order Entropic
-  Quantum Uncertainty Relation with Applications*, CRYPTO 2007, Lemma 3.
 * König, Renner, Schaffner — *The operational meaning of min- and max-entropy*,
   IEEE Trans. Inf. Theory 2009.
 -/
@@ -134,10 +108,8 @@ theorem condGuessProb'_nonneg {p : ι × κ → ℝ} (h : ∀ q, 0 ≤ p q) :
 
 /-! ### Conditioning increases guessing probability (decreases min-entropy)
 
-The single genuinely combinatorial fact: the largest entry of the whole joint
-table is at most the *sum*, over rows `x`, of the largest entry in each row,
-provided all entries are nonnegative. This is the monotonicity that conditioning
-can only help the guesser. -/
+The largest entry of the whole joint table is at most the *sum*, over rows `x`,
+of the largest entry in each row, provided all entries are nonnegative. -/
 
 /-- **Conditioning increases guessing probability.** For a nonnegative joint
 sub-distribution `p`, `guessProb p ≤ condGuessProb p`. The maximal single entry
@@ -194,63 +166,56 @@ theorem condMinEntropy'_le_minEntropy {p : ι × κ → ℝ} (h : ∀ q, 0 ≤ p
   rw [neg_le_neg_iff]
   exact Real.logb_le_logb_of_le (by norm_num) hpos hmono
 
-/-! ### Binary splitting selector
+/-! ### Choosing the better conditioning
 
-The splitting lemma chooses a coordinate `C ∈ {0,1}` to *keep*; the adversary is
-then handed the *other* coordinate as side information. We take the coordinate
-whose conditional guessing probability (when it is the *guessed* side) is
-smaller — equivalently, the kept side retains more min-entropy. -/
+Of the two conditionings, keep the one whose guessing probability is smaller,
+equivalently whose conditional min-entropy is larger. The choice is a single
+Boolean depending on `p` as a whole, not on a sample. -/
 
-/-- **Deterministic splitting choice.** Returns `true` to keep the *second*
-coordinate (condition on the first, i.e. use `condGuessProb`) when that gives the
-smaller guessing probability, and `false` to keep the first coordinate
-otherwise. The kept coordinate is the one whose conditional guessing probability
-is `min (condGuessProb p) (condGuessProb' p)`. -/
-def splitChoice (p : ι × κ → ℝ) : Bool :=
+/-- **Choice of conditioning.** Returns `true` (condition on the first
+coordinate and guess the second, i.e. use `condGuessProb`) when that guessing
+probability is at most the other one, and `false` (use `condGuessProb'`)
+if not. The selected guessing probability is therefore
+`min (condGuessProb p) (condGuessProb' p)`. -/
+def condChoice (p : ι × κ → ℝ) : Bool :=
   decide (condGuessProb p ≤ condGuessProb' p)
 
-/-- The guessing probability selected by `splitChoice` is the minimum of the two
+@[deprecated condChoice (since := "2026-10-27")] alias splitChoice := condChoice
+
+/-- The guessing probability selected by `condChoice` is the minimum of the two
 conditional guessing probabilities. -/
 theorem selectedGuessProb_eq_min (p : ι × κ → ℝ) :
-    (if splitChoice p then condGuessProb p else condGuessProb' p)
+    (if condChoice p then condGuessProb p else condGuessProb' p)
       = min (condGuessProb p) (condGuessProb' p) := by
-  unfold splitChoice
+  unfold condChoice
   by_cases hle : condGuessProb p ≤ condGuessProb' p
   · simp [hle]
   · have hle' : condGuessProb' p ≤ condGuessProb p := le_of_not_ge hle
     simp [hle, min_eq_right hle']
 
-/-- The selected conditional guessing probability is bounded above by **both**
-conditional guessing probabilities (it is their minimum). In particular it is at
-most each, so the kept side never has *less* min-entropy than either conditional
-min-entropy. -/
+/-- The selected conditional guessing probability is at most `condGuessProb p`. -/
 theorem selectedGuessProb_le_left (p : ι × κ → ℝ) :
-    (if splitChoice p then condGuessProb p else condGuessProb' p)
+    (if condChoice p then condGuessProb p else condGuessProb' p)
       ≤ condGuessProb p := by
   rw [selectedGuessProb_eq_min]; exact min_le_left _ _
 
+/-- The selected conditional guessing probability is at most `condGuessProb' p`. -/
 theorem selectedGuessProb_le_right (p : ι × κ → ℝ) :
-    (if splitChoice p then condGuessProb p else condGuessProb' p)
+    (if condChoice p then condGuessProb p else condGuessProb' p)
       ≤ condGuessProb' p := by
   rw [selectedGuessProb_eq_min]; exact min_le_right _ _
 
-/-- **Selected conditional min-entropy.** The conditional min-entropy of the
-coordinate kept by `splitChoice`: `- log₂` of the *smaller* of the two
-conditional guessing probabilities. By `condMinEntropy_selected_eq_max` below
-this equals `max (condMinEntropy p) (condMinEntropy' p)`, i.e. the selector
-keeps whichever coordinate carries the larger conditional min-entropy.
-
-Each of `condMinEntropy p`, `condMinEntropy' p` is in turn `≤ minEntropy p`
-(`condMinEntropy_le_minEntropy`), so conditioning lowers entropy on each side;
-the selector's job is only to keep the *better* of the two sides. The further
-`α/2` lower bound of DFRSS is out of scope (see module docstring). -/
+/-- **Selected conditional min-entropy.** `- log₂` of the guessing probability
+selected by `condChoice`, i.e. of the smaller of the two conditional guessing
+probabilities. By `condMinEntropy_selected_eq_max` it equals
+`max (condMinEntropy p) (condMinEntropy' p)` when both guessing probabilities
+are positive. -/
 def condMinEntropy_selected (p : ι × κ → ℝ) : ℝ :=
-  - Real.logb 2 (if splitChoice p then condGuessProb p else condGuessProb' p)
+  - Real.logb 2 (if condChoice p then condGuessProb p else condGuessProb' p)
 
 /-- The selected conditional min-entropy is the **maximum** of the two
-conditional min-entropies (since it minimises the guessing probability and
-`-logb` is antitone). Thus the splitting choice keeps the coordinate with the
-*more* conditional min-entropy — the operational point of the lemma. -/
+conditional min-entropies, since it minimises the guessing probability and
+`- logb 2` is antitone on positive reals. -/
 theorem condMinEntropy_selected_eq_max (p : ι × κ → ℝ)
     (h0 : 0 < condGuessProb p) (h1 : 0 < condGuessProb' p) :
     condMinEntropy_selected p = max (condMinEntropy p) (condMinEntropy' p) := by
@@ -268,8 +233,8 @@ theorem condMinEntropy_selected_eq_max (p : ι × κ → ℝ)
     rw [neg_le_neg_iff]
     exact Real.logb_le_logb_of_le (by norm_num) h1 hle
 
-/-- **Splitting selector keeps the larger-entropy coordinate.** The selected
-conditional min-entropy is `≥` each individual conditional min-entropy. -/
+/-- The selected conditional min-entropy is `≥` each individual conditional
+min-entropy. -/
 theorem condMinEntropy_le_selected (p : ι × κ → ℝ)
     (h0 : 0 < condGuessProb p) (h1 : 0 < condGuessProb' p) :
     condMinEntropy p ≤ condMinEntropy_selected p ∧
