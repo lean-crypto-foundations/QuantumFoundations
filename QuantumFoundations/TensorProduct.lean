@@ -20,7 +20,8 @@ Defines bipartite quantum registers via tensor products on `QComp (d₁ * d₂)`
 
 * `finProdEquiv` — `Fin d₁ × Fin d₂ ≃ Fin (d₁ * d₂)` for matrix indexing
 * `kronecker` — Kronecker (tensor) product of matrices
-* `tensorPure` — tensor of pure states: `qpure a ⊗ qpure b = qpure (a, b)`
+* `tensorPure` — tensor of pure computations (deterministic returns):
+  `qpure a ⊗ qpure b = qpure (a, b)`
 * `extractBlock`, `extractBlock₁` — blocks of a bipartite matrix with one register fixed
 * `localOp₁` — apply a `QComp` on the first register only
 * `localOp₂` — apply a `QComp` on the second register only
@@ -222,11 +223,11 @@ theorem kronecker_conjTranspose_mul_self {A : Matrix (Fin d₁) (Fin d₁) ℂ}
     (A ⊗ₖ B)ᴴ * (A ⊗ₖ B) = 1 := by
   rw [conjTranspose_kronecker, kronecker_mul_kronecker, hA, hB, kronecker_one_one]
 
-/-! ## Tensor Pure States -/
+/-! ## Tensor of Pure Computations -/
 
 open Classical in
-/-- The tensor of two pure `QComp` values: the identity branch at `(a, b)` and the
-zero branch elsewhere. -/
+/-- The tensor of two pure computations (deterministic returns, not pure states): the identity
+branch at `(a, b)` and the zero branch elsewhere. -/
 def tensorPure (a : α) (b : β) : QComp (d₁ * d₂) (α × β) where
   branch := fun ⟨a', b'⟩ =>
     if a' = a ∧ b' = b then LinearMap.id else 0
