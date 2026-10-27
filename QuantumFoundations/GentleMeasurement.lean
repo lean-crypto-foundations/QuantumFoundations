@@ -32,15 +32,16 @@ measurement when the measurement outcome has high probability.
 * `Projector.gentle_decomposition` — `ρ - PρP = (I-P)ρ + Pρ(I-P)`
 * `Projector.gentle_diff_hermitian` — `ρ - PρP` is Hermitian
 * `Projector.PρP_psd` — `PρP` is PSD
-* `trace_product_cs_bound` — Cauchy-Schwarz: `|tr(AρB†)|² ≤ tr(AρA†)·tr(BρB†)` (fully proved)
+* `trace_product_cs_bound` — Cauchy-Schwarz: `|tr(AρB†)|² ≤ tr(AρA†)·tr(BρB†)`
 * `gentle_measurement` — `‖ρ - PρP‖₁ ≤ 2√ε`
 
 ## Mathematical Background
 
-The gentle measurement lemma (Winter 1999, Ogawa-Nagaoka 2007) states:
-for density matrix ρ and projector P, if `tr(Pρ) ≥ 1 - ε`, then the
-post-measurement state `PρP/tr(PρP)` is close to ρ in trace distance.
-Specifically, `½‖ρ - PρP‖₁ ≤ √ε`.
+The gentle measurement lemma (Winter 1999, Ogawa-Nagaoka 2007) bounds the disturbance of a
+likely measurement outcome. For a density matrix ρ and a projector P with `tr(Pρ) ≥ 1 - ε`,
+the unnormalized post-measurement state `PρP` satisfies `‖ρ - PρP‖₁ ≤ 2√ε`, that is,
+`½‖ρ - PρP‖₁ ≤ √ε`. This is the form proved here; the normalized post-measurement state
+`PρP / tr(Pρ)` is not treated.
 
 The proof decomposes `ρ - PρP = (I-P)ρ + Pρ(I-P)` and bounds each term
 using Cauchy-Schwarz for the Hilbert-Schmidt inner product weighted by ρ.
@@ -336,12 +337,10 @@ theorem gentle_measurement_traceDist (P : Projector d)
   have h := gentle_measurement P ρ hρ htr ε hε h_meas h_herm
   linarith
 
-/-! ## Complement Trace Bound (Fully Proved) -/
+/-! ## Complement Trace Bound -/
 
-/-- The complement trace bound (fully proved): `tr((I-P)ρ(I-P)) ≤ ε`.
-
-    This weaker bound (compared to the trace norm bound) is fully proved
-    and suffices for many applications in the O2H proof chain. -/
+/-- The complement trace bound: `tr((I-P)ρ(I-P)) ≤ ε` for a density matrix `ρ` with
+    `tr(Pρ) ≥ 1 - ε`. -/
 theorem complement_sandwich_trace_le (P : Projector d)
     (ρ : Matrix (Fin d) (Fin d) ℂ) (htr : ρ.trace = 1)
     (ε : ℝ) (h_meas : (P.val * ρ).trace.re ≥ 1 - ε) :
