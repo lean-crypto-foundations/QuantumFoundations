@@ -23,7 +23,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `QRHL` | a relational judgment on joint final states, outcomes summed out (not Unruh's qRHL) |
 | `GentleMeasurement` | the gentle-measurement lemma for projective measurements |
 | `FuchsVanDeGraaf` | `1 − F(P, ρ) ≤ traceDist P ρ` for a pure target `P` (one Fuchs–van de Graaf inequality) |
-| `PetzRecovery` | the Petz recovery map: complete positivity, its trace, exact recovery of the prior, compositionality |
+| `PetzRecovery` | the Petz recovery map: complete positivity, trace, exact recovery, composition |
 | `QuantumBayes` | the defining equation of the Petz map, the Lüders update by an effect |
 | `QuantumMarkovChain` | conditional quantum mutual information and quantum Markov chains |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
