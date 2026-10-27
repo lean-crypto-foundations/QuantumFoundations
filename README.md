@@ -26,6 +26,11 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PetzRecovery` | the Petz recovery map: complete positivity, trace, exact recovery, composition |
 | `QuantumBayes` | the defining equation of the Petz map, the Lüders update by an effect |
 | `QuantumMarkovChain` | conditional quantum mutual information and quantum Markov chains |
+| `MinEntropy` | the guessing probability and min-entropy of a finite distribution |
+| `MinEntropyProduct` | additivity of min-entropy over independent registers |
+| `MinEntropySplit` | conditional guessing probability; picking the better of two conditionings |
+| `LeftoverHash` | the leftover hash lemma for a 2-universal hash family |
+| `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
 The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
