@@ -14,8 +14,9 @@ public import QuantumFoundations.CPMap
 matrices with respect to the bilinear trace pairing, `tr(Φ†(A) B) = tr(A Φ(B))`
 (`dual_spec`). It agrees with the Hilbert–Schmidt adjoint (the Heisenberg-picture
 map) on maps that commute with `conjTranspose`, such as positive maps
-(`dual_spec_conjTranspose`, `IsPositiveMap.map_conjTranspose`), but not in general. This module proves that the
-dual is a contravariant monoid morphism on linear maps on matrices.
+(`dual_spec_conjTranspose`, `IsPositiveMap.map_conjTranspose`), but not in general.
+This module proves that the dual is a contravariant monoid morphism on linear maps on
+matrices.
 
 ## Main results
 
