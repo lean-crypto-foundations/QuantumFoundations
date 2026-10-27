@@ -8,7 +8,7 @@ module
 public import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!
-# Conditional Min-Entropy (Classical Guessing-Probability Form)
+# Min-Entropy (Classical Guessing-Probability Form)
 
 This file develops the *classical* min-entropy of a finite probability vector in
 its guessing-probability form, the foundation for the BB84/QKD min-entropy
@@ -28,6 +28,11 @@ that simply guesses the most likely outcome, and `Hₘᵢₙ` measures the numbe
 bits of uniform randomness in `p` from the adversary's worst-case (i.e. best-
 guess) viewpoint.
 
+Since `Real.log 0 = 0`, the zero vector gets `minEntropy 0 = - log₂ 0 = 0`
+(`minEntropy_zero`), not the value `+∞` of the extended-real convention. Results
+that use `Real.logb` algebraically, such as additivity over products, therefore
+assume a strictly positive guessing probability.
+
 ## Main definitions
 
 * `guessProb p` — the maximum entry `max_x p x` (via `Finset.sup'`).
@@ -37,6 +42,8 @@ guess) viewpoint.
 
 * `guessProb_le_one` — for a sub-distribution (`p x ≤ 1`), `guessProb p ≤ 1`.
 * `minEntropy_nonneg` — `Hₘᵢₙ ≥ 0` when `0 < guessProb p ≤ 1`.
+* `minEntropy_zero` — the zero vector has `Hₘᵢₙ = 0` under this real-valued
+  convention.
 * `guessProb_const` — `guessProb` of a constant vector is that constant.
 * `minEntropy_uniform_two` — the uniform two-point distribution `fun _ => 1/2`
   has `Hₘᵢₙ = 1` (one bit).
@@ -95,7 +102,8 @@ theorem guessProb_const (c : ℝ) : guessProb (fun _ : ι => c) = c := by
     exact le_guessProb (fun _ : ι => c) x
 
 /-- **Min-entropy** (classical guessing-probability form):
-`Hₘᵢₙ(p) = - log₂ (guessProb p)`. -/
+`Hₘᵢₙ(p) = - log₂ (guessProb p)`. This is real-valued: when `guessProb p = 0` it is
+`- Real.logb 2 0 = 0` rather than `+∞`. -/
 def minEntropy (p : ι → ℝ) : ℝ :=
   - Real.logb 2 (guessProb p)
 
@@ -112,6 +120,14 @@ theorem minEntropy_nonneg {p : ι → ℝ} (hpos : 0 < guessProb p)
 theorem minEntropy_const (c : ℝ) : minEntropy (fun _ : ι => c) = - Real.logb 2 c := by
   unfold minEntropy
   rw [guessProb_const]
+
+/-- The zero vector has min-entropy `0`, because `Real.logb 2 0 = 0`; the
+extended-real convention would give `+∞`. -/
+@[simp]
+theorem minEntropy_zero : minEntropy (0 : ι → ℝ) = 0 := by
+  have h := minEntropy_const (ι := ι) 0
+  rw [Real.logb_zero, neg_zero] at h
+  exact h
 
 end
 

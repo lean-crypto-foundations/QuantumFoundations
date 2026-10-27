@@ -62,7 +62,9 @@ theorem guessProb_product {ι₀ ι₁ : Type*} [Fintype ι₀] [Fintype ι₁]
     rw [hxy]
     exact le_guessProb (fun q : ι₀ × ι₁ => p₀ q.1 * p₁ q.2) (x, y)
 
-/-- **Min-entropy is additive over independent registers.** -/
+/-- **Min-entropy is additive over independent registers.** The positivity
+hypotheses exclude a zero factor: `minEntropy` of the zero vector is `0`
+(`minEntropy_zero`), so additivity fails there. -/
 theorem minEntropy_product {ι₀ ι₁ : Type*} [Fintype ι₀] [Fintype ι₁]
     [Nonempty ι₀] [Nonempty ι₁] (p₀ : ι₀ → ℝ) (p₁ : ι₁ → ℝ)
     (h₀ : ∀ x, 0 ≤ p₀ x) (h₁ : ∀ y, 0 ≤ p₁ y)
