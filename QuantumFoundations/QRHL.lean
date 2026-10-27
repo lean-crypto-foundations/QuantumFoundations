@@ -30,6 +30,7 @@ state satisfying Ψ.
 ## Main definitions
 
 * `BipartitePred` — predicate on bipartite density matrices
+* `BipartitePred.productState` — the matrix is a single product `ρ₁ ⊗ ρ₂`
 * `jointBranch` — the branch of the joint evolution for an outcome pair
 * `qrHoare` — the qRHL judgment
 * `qIndist` — ε-indistinguishability of two programs
@@ -87,11 +88,16 @@ def BipartitePred.eq (σ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     BipartitePred d₁ d₂ :=
   fun ρ => ρ = σ
 
-/-- Separability predicate: state is a product state ρ₁ ⊗ ρ₂. -/
-def BipartitePred.separable : BipartitePred d₁ d₂ :=
+/-- Product-state predicate: the joint matrix is a single Kronecker product `ρ₁ ⊗ ρ₂` of
+    positive semidefinite matrices. Separable states are the sums (convex mixtures) of such
+    products; this predicate does not cover them (e.g. `(|00⟩⟨00| + |11⟩⟨11|) / 2`). -/
+def BipartitePred.productState : BipartitePred d₁ d₂ :=
   fun ρ => ∃ (ρ₁ : Matrix (Fin d₁) (Fin d₁) ℂ)
     (ρ₂ : Matrix (Fin d₂) (Fin d₂) ℂ),
     ρ₁.PosSemidef ∧ ρ₂.PosSemidef ∧ ρ = TensorProduct.kronecker ρ₁ ρ₂
+
+@[deprecated BipartitePred.productState (since := "2026-10-27")]
+alias BipartitePred.separable := BipartitePred.productState
 
 /-! ## Joint Evolution -/
 
