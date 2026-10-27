@@ -8,8 +8,8 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 
 | Module | Content |
 |---|---|
-| `CPMap` | completely positive maps on `Fin n` matrices, effects, the dual map of a CP map |
-| `DualMap` | the Hilbert–Schmidt adjoint of a linear map on matrices |
+| `CPMap` | completely positive maps on `Fin n` matrices, effects, the trace dual of a linear map |
+| `DualMap` | functoriality of the trace dual (the Hilbert–Schmidt adjoint for positive maps) |
 | `ChoiKraus` | the Choi matrix; every CP map has a Kraus form |
 | `Stinespring` | the Stinespring dilation of a CPTP map by an ancilla |
 | `PartialTrace` | partial traces over `Fin (d₁ * d₂)` |
