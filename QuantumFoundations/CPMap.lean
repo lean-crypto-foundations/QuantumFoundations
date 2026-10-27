@@ -122,7 +122,8 @@ theorem linearMap_expand
     Matrix.smul_apply, smul_eq_mul]
 
 /-- The trace dual of a linear map on matrices: the unique linear map `Φ†` with
-    `tr(Φ†(A) * B) = tr(A * Φ(B))` for all `A`, `B` (`dual_spec`). The pairing
+    `tr(Φ†(A) * B) = tr(A * Φ(B))` for all `A`, `B` (`dual_spec`; uniqueness by
+    `ext_of_trace_mul`). The pairing
     `(A, B) ↦ tr(A * B)` is complex-bilinear, so this is the transpose of `Φ` for it, not the
     Hilbert–Schmidt adjoint `Φ*`, which satisfies `tr(Φ*(A)ᴴ * B) = tr(Aᴴ * Φ(B))`.
     The two coincide when `Φ` commutes with `conjTranspose` (`dual_spec_conjTranspose`),
