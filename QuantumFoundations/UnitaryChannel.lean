@@ -48,7 +48,7 @@ namespace Quantum.UnitaryChannel
 
 variable {d : ℕ}
 
-/-- Conjugation by a matrix: `ρ ↦ U ρ U*ᴴ` as a linear map. -/
+/-- Conjugation by a matrix: `ρ ↦ U ρ Uᴴ` as a linear map. -/
 def conjugate (U : Matrix (Fin d) (Fin d) ℂ) :
     Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ where
   toFun ρ := U * ρ * Uᴴ

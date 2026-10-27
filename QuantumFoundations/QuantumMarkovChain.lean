@@ -25,6 +25,9 @@ information `I(A:C|B) = 0`.
 
 * `condMutualInfo` — conditional quantum mutual information I(A:C|B)
 * `IsQuantumMarkovChain` — A → B → C Markov chain property
+
+The entropies and `condMutualInfo` are defined for every positive semidefinite matrix; they
+have their information-theoretic meaning on density matrices (trace one).
 The recovery-channel characterisation of a Markov chain and the Fawzi–Renner
 approximate-recovery bound are not stated; the comments in the recovery and
 approximate-chain sections record what each needs.
@@ -54,7 +57,8 @@ variable {dA dB dC : ℕ}
 
 /-! ## Von Neumann Entropy -/
 
-/-- Von Neumann entropy of a density matrix: `S(ρ) = -tr(ρ log ρ)`.
+/-- Von Neumann entropy of a positive semidefinite matrix (a density matrix when `tr ρ = 1`):
+    `S(ρ) = -tr(ρ log ρ)`.
     Defined via eigenvalues: `S(ρ) = -∑_i λ_i log(λ_i)` where `λ_i` are
     the eigenvalues of the Hermitian part of `ρ`.
 

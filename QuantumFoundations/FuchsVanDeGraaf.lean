@@ -8,7 +8,7 @@ module
 public import QuantumFoundations.TraceNorm
 
 /-!
-# Fuchs–van de Graaf: fidelity ↔ trace distance (pure target)
+# Pure-target overlap lower bound for trace distance (one Fuchs–van de Graaf inequality)
 
 For a pure target — a rank-one projector `P` (Hermitian idempotent with unit
 trace, i.e. `|ψ⟩⟨ψ|`) — and a density matrix `ρ`, the **overlap fidelity** is
