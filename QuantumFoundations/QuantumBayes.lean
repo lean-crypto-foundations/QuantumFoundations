@@ -107,13 +107,13 @@ theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (F
     where `Φ† = dualMap Φ` is the trace dual of `Φ`. -/
 theorem quantum_bayes_rule
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (A : Matrix (Fin d) (Fin d) ℂ) :
-    petzRecovery σ hσ Φ hΦ_cp A =
+    petzRecovery σ hσ Φ hΦ A =
       psdSqrt σ hσ *
-        dualMap Φ (psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * A *
-          psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) *
+        dualMap Φ (psdInvSqrt (Φ σ) (hΦ σ hσ) * A *
+          psdInvSqrt (Φ σ) (hΦ σ hσ)) *
         psdSqrt σ hσ :=
   rfl
 

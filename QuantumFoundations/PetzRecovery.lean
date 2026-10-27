@@ -58,8 +58,8 @@ framed bicategory of QComp, combining:
 
 ## Properties of the Petz map
 
-* `petzRecovery_cp`: positivity, given positivity of `Φ†` and Hermiticity of
-  `Φ(σ)^{-1/2}` as hypotheses
+* `petzRecovery_isCPMap`: complete positivity, for completely positive `Φ`
+* `petzRecovery_isPositiveMap`: positivity, for positive `Φ`
 * `petzRecovery_stp`: sub-trace-preservation, for every positive `Φ`
 * `petzRecovery_exact`: exact recovery `R(Φ(σ)) = σ`, for invertible `Φ(σ)` and unital `Φ†`
 * `petzRecovery_comp`: compositionality, for positive `Φ₁`, `Φ₂`
@@ -254,6 +254,14 @@ private lemma cfc_conjTranspose (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → �
   rwa [IsSelfAdjoint, Matrix.star_eq_conjTranspose] at h
 
 open scoped MatrixOrder in
+/-- `psdInvSqrt M` is Hermitian: it is the functional calculus of a real function. -/
+theorem psdInvSqrt_isHermitian (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    (psdInvSqrt M hM).IsHermitian := by
+  change (psdInvSqrt M hM)ᴴ = psdInvSqrt M hM
+  simp only [psdInvSqrt, ← hM.isHermitian.cfc_eq]
+  exact cfc_conjTranspose M _
+
+open scoped MatrixOrder in
 /-- The functional calculus of a nonnegative real function is PSD. -/
 private lemma cfc_posSemidef_of_nonneg (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → ℝ)
     (hf : ∀ x, 0 ≤ f x) : (cfc f M).PosSemidef :=
@@ -321,11 +329,11 @@ private lemma linearMap_eq_zero_of_posSemidef
 noncomputable def petzRecovery
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
     Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ :=
   let σ_half := psdSqrt σ hσ
   let Φσ := Φ σ
-  let hΦσ : Φσ.PosSemidef := hΦ_cp σ hσ
+  let hΦσ : Φσ.PosSemidef := hΦ σ hσ
   let Φσ_inv_half := psdInvSqrt Φσ hΦσ
   let Φ_dag := dualMap Φ
   -- R(X) = σ^{1/2} Φ†[ Φ(σ)^{-1/2} X Φ(σ)^{-1/2} ] σ^{1/2}
@@ -339,36 +347,70 @@ noncomputable def petzRecovery
 
 /-! ## Properties of the Petz Map -/
 
-/-- The Petz recovery map is completely positive.
+/-- The Petz recovery map is positive (it maps PSD matrices to PSD matrices), given that `Φ†`
+    is positive and `Φ(σ)^{-1/2}` is Hermitian. Both hypotheses hold for every positive `Φ`;
+    `petzRecovery_isPositiveMap` drops them, and `petzRecovery_isCPMap` proves complete
+    positivity for completely positive `Φ`.
 
-    The proof uses: (1) psdInvSqrt is Hermitian, so sandwiching preserves PSD,
-    (2) the dual map Φ† preserves PSD (added as hypothesis), and
-    (3) psdSqrt is Hermitian (PSD → Hermitian), so outer sandwich preserves PSD. -/
-theorem petzRecovery_cp
+    The inner and outer sandwiches by the Hermitian matrices `Φ(σ)^{-1/2}` and `σ^{1/2}`
+    preserve PSD, and `Φ†` does by hypothesis. -/
+theorem petzRecovery_positive
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
-    (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ_cp σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) :
-    ∀ ρ, ρ.PosSemidef → (petzRecovery σ hσ Φ hΦ_cp ρ).PosSemidef := by
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
+    (hΦ_dual : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
+    (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ σ hσ)) :
+    ∀ ρ, ρ.PosSemidef → (petzRecovery σ hσ Φ hΦ ρ).PosSemidef := by
   intro ρ hρ
   simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk]
   -- Step 1: inner sandwich Φ(σ)^{-1/2} * ρ * Φ(σ)^{-1/2} is PSD
-  have h1 : (psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * ρ *
-    psdInvSqrt (Φ σ) (hΦ_cp σ hσ)).PosSemidef := by
-    rw [show psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * ρ *
-      psdInvSqrt (Φ σ) (hΦ_cp σ hσ) =
-      psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * ρ *
-      (psdInvSqrt (Φ σ) (hΦ_cp σ hσ))ᴴ from by rw [h_invSqrt_sa]]
+  have h1 : (psdInvSqrt (Φ σ) (hΦ σ hσ) * ρ *
+    psdInvSqrt (Φ σ) (hΦ σ hσ)).PosSemidef := by
+    rw [show psdInvSqrt (Φ σ) (hΦ σ hσ) * ρ *
+      psdInvSqrt (Φ σ) (hΦ σ hσ) =
+      psdInvSqrt (Φ σ) (hΦ σ hσ) * ρ *
+      (psdInvSqrt (Φ σ) (hΦ σ hσ))ᴴ from by rw [h_invSqrt_sa]]
     exact hρ.mul_mul_conjTranspose_same _
   -- Step 2: Φ†(PSD) is PSD
-  have h2 := hΦ_dual_cp _ h1
+  have h2 := hΦ_dual _ h1
   -- Step 3: outer sandwich σ^{1/2} * PSD * σ^{1/2} is PSD
   have h_sqrt_sa : (psdSqrt σ hσ)ᴴ = psdSqrt σ hσ :=
     (psdSqrt_posSemidef σ hσ).isHermitian
   rw [show psdSqrt σ hσ * dualMap Φ _ * psdSqrt σ hσ =
     psdSqrt σ hσ * dualMap Φ _ * (psdSqrt σ hσ)ᴴ from by rw [h_sqrt_sa]]
   exact h2.mul_mul_conjTranspose_same _
+
+@[deprecated petzRecovery_positive (since := "2026-10-27")]
+alias petzRecovery_cp := petzRecovery_positive
+
+/-- For a positive map `Φ` and PSD `σ`, the Petz recovery map is positive. -/
+theorem petzRecovery_isPositiveMap
+    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (hΦ : IsPositiveMap Φ) :
+    IsPositiveMap (petzRecovery σ hσ Φ hΦ) :=
+  petzRecovery_positive σ hσ Φ hΦ (dual_positive_of_positive Φ hΦ)
+    (psdInvSqrt_isHermitian _ _)
+
+/-- For a completely positive map `Φ` and PSD `σ`, the Petz recovery map is completely
+    positive: it is conjugation by `Φ(σ)^{-1/2}`, followed by `Φ†` (completely positive by
+    `dual_cp_of_cp`), followed by conjugation by `σ^{1/2}`. -/
+theorem petzRecovery_isCPMap
+    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (hΦ : IsCPMap Φ) :
+    IsCPMap (petzRecovery σ hσ Φ hΦ.isPositiveMap) := by
+  have hS : (psdSqrt σ hσ)ᴴ = psdSqrt σ hσ := (psdSqrt_posSemidef σ hσ).isHermitian
+  have hJ := psdInvSqrt_isHermitian (Φ σ) (hΦ.isPositiveMap σ hσ)
+  have h : petzRecovery σ hσ Φ hΦ.isPositiveMap =
+      (UnitaryChannel.conjugate (psdSqrt σ hσ)).comp ((dualMap Φ).comp
+        (UnitaryChannel.conjugate (psdInvSqrt (Φ σ) (hΦ.isPositiveMap σ hσ)))) := by
+    ext1 X
+    simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.comp_apply,
+      UnitaryChannel.conjugate_apply, hS, hJ.eq]
+  rw [h]
+  exact isCPMap_comp (isCPMap_conjugate _)
+    (isCPMap_comp (dual_cp_of_cp Φ hΦ) (isCPMap_conjugate _))
 
 /-- The Petz recovery map is sub-trace-preserving on PSD inputs, for every positive `Φ`.
 
@@ -379,11 +421,11 @@ theorem petzRecovery_cp
 theorem petzRecovery_stp
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
     ∀ ρ, ρ.PosSemidef →
-      (petzRecovery σ hσ Φ hΦ_cp ρ).trace.re ≤ ρ.trace.re := by
+      (petzRecovery σ hσ Φ hΦ ρ).trace.re ≤ ρ.trace.re := by
   intro ρ hρ
-  have hM : (Φ σ).PosSemidef := hΦ_cp σ hσ
+  have hM : (Φ σ).PosSemidef := hΦ σ hσ
   have hJMJ : psdInvSqrt (Φ σ) hM * Φ σ * psdInvSqrt (Φ σ) hM
       = cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ) := by
     calc psdInvSqrt (Φ σ) hM * Φ σ * psdInvSqrt (Φ σ) hM
@@ -396,7 +438,7 @@ theorem petzRecovery_stp
           rw [psdInvSqrt_mul_psdSqrt_eq_cfc, psdSqrt_mul_psdInvSqrt_eq_cfc]
       _ = cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ) :=
           cfc_mul_self_of_idem _ _ (fun x => by by_cases h : x = 0 <;> simp [h])
-  have htr : (petzRecovery σ hσ Φ hΦ_cp ρ).trace
+  have htr : (petzRecovery σ hσ Φ hΦ ρ).trace
       = (ρ * cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ)).trace := by
     simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk]
     rw [trace_mul_comm, ← Matrix.mul_assoc, psdSqrt_mul_psdSqrt, trace_mul_comm, dual_spec,
@@ -419,11 +461,11 @@ theorem petzRecovery_stp
 theorem petzRecovery_exact
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
     (hU : IsUnit (Φ σ))
     (h_unital : dualMap Φ 1 = 1) :
-    petzRecovery σ hσ Φ hΦ_cp (Φ σ) = σ := by
-  have hΦσ : (Φ σ).PosSemidef := hΦ_cp σ hσ
+    petzRecovery σ hσ Φ hΦ (Φ σ) = σ := by
+  have hΦσ : (Φ σ).PosSemidef := hΦ σ hσ
   -- Step 1: Φ(σ)^{-1/2} · Φ(σ) · Φ(σ)^{-1/2} = 1
   have h_inner : psdInvSqrt (Φ σ) hΦσ * Φ σ * psdInvSqrt (Φ σ) hΦσ = 1 := by
     calc psdInvSqrt (Φ σ) hΦσ * Φ σ * psdInvSqrt (Φ σ) hΦσ
@@ -539,23 +581,22 @@ theorem petzRecovery_comp
 
 /-! ## Petz as QComp Instrument -/
 
-/-- The Petz recovery as a QComp instrument (single outcome).
-    This wraps the Petz recovery linear map into the QComp monad. -/
+/-- The Petz recovery map of a completely positive `Φ` at a PSD `σ`, as a single-outcome
+    `QComp` instrument. Its branch is completely positive (`petzRecovery_isCPMap`) and
+    trace-nonincreasing on PSD inputs (`petzRecovery_stp`). -/
 noncomputable def petzQComp
     (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
     (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (hΦ_dual_cp : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
-    (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ_cp σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) :
+    (hΦ : IsCPMap Φ) :
     QComp d Unit where
-  branch _ := petzRecovery σ hσ Φ hΦ_cp
-  branch_psd _ := petzRecovery_cp σ hσ Φ hΦ_cp hΦ_dual_cp h_invSqrt_sa
+  branch _ := petzRecovery σ hσ Φ hΦ.isPositiveMap
+  branch_psd _ := petzRecovery_isPositiveMap σ hσ Φ hΦ.isPositiveMap
   branch_summable ρ := by
     apply summable_of_ne_finset_zero (s := {()})
     intro b hb; simp at hb
   branch_stp ρ hρ := by
     rw [tsum_eq_single () (fun b hb => absurd rfl hb)]
-    exact petzRecovery_stp σ hσ Φ hΦ_cp ρ hρ
+    exact petzRecovery_stp σ hσ Φ hΦ.isPositiveMap ρ hρ
 
 /-! ## Petz Recovery = Quantum Conjoint
 
