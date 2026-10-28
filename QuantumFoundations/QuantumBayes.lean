@@ -64,7 +64,7 @@ namespace Quantum.QuantumBayes
 
 open Quantum
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 -- Loewner order instances for CFC (inherited from PetzRecovery imports).
 attribute [local instance] instPartialOrder Matrix.instStarOrderedRing
@@ -77,7 +77,7 @@ private lemma complex_inv_of_real_im_zero (z : ℂ) (h_im : z.im = 0) :
   have h_eq : z = Complex.ofReal z.re := by apply Complex.ext <;> simp [h_im]
   rw [h_eq, ← Complex.ofReal_inv]; simp [Complex.ofReal_re]
 
-private lemma psd_smul_trace_inv (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef)
+private lemma psd_smul_trace_inv (M : Matrix d d ℂ) (hM : M.PosSemidef)
     (_h_ne : M.trace ≠ 0) :
     (M.trace⁻¹ • M).PosSemidef := by
   -- Trace of PSD is real (im = 0, re ≥ 0), so trace⁻¹ is a non-negative real.
@@ -92,7 +92,7 @@ private lemma psd_smul_trace_inv (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSem
 
 /-- The trace of the unnormalized Lüders update is the Born probability of the
     effect: `tr(E^{1/2} σ E^{1/2}) = tr(E σ)`. -/
-theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+theorem trace_sqrt_conj (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) :
     (psdSqrt E hE * σ * psdSqrt E hE).trace = (E * σ).trace := by
   have : (psdSqrt E hE * σ * psdSqrt E hE).trace =
@@ -110,10 +110,10 @@ theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (F
 
     where `Φ† = dualMap Φ` is the trace dual of `Φ`. -/
 theorem quantum_bayes_rule
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (A : Matrix (Fin d) (Fin d) ℂ) :
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (A : Matrix d d ℂ) :
     petzRecovery σ hσ Φ hΦ A =
       psdSqrt σ hσ *
         dualMap Φ (psdInvSqrt (Φ σ) (hΦ σ hσ) * A *
@@ -132,9 +132,9 @@ theorem quantum_bayes_rule
     convention `0⁻¹ = 0`; `jeffreyUpdate_density` assumes it is nonzero. Despite the name, this
     is the quantum analogue of conditioning on `E`, not of Jeffrey's rule, which updates toward
     a prescribed distribution of outcomes. The hypothesis `(1 - E).PosSemidef` is not used. -/
-def jeffreyUpdate (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+def jeffreyUpdate (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) (_h_le : (1 - E).PosSemidef) :
-    Matrix (Fin d) (Fin d) ℂ :=
+    Matrix d d ℂ :=
   let E_half := psdSqrt E hE
   let unnormalized := E_half * σ * E_half
   (unnormalized.trace)⁻¹ • unnormalized
@@ -142,8 +142,8 @@ def jeffreyUpdate (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) 
 /-- When the Born probability `tr(E σ)` is nonzero, the Lüders update of a density matrix `σ` is PSD
     with unit trace. -/
 theorem jeffreyUpdate_density
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef) (_hσ_tr : σ.trace = 1)
-    (E : Matrix (Fin d) (Fin d) ℂ) (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef) (_hσ_tr : σ.trace = 1)
+    (E : Matrix d d ℂ) (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef)
     (h_nonzero : (E * σ).trace ≠ 0) :
     (jeffreyUpdate σ E hE h_le).PosSemidef ∧
     (jeffreyUpdate σ E hE h_le).trace = 1 := by
@@ -166,7 +166,7 @@ theorem jeffreyUpdate_density
     This is the quantum form of the Bayes denominator `P(A)`. Both sides are zero when
     `tr(E σ) = 0`. -/
 theorem jeffreyUpdate_denominator
-    (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef) :
     jeffreyUpdate σ E hE h_le =
       (E * σ).trace⁻¹ • (psdSqrt E hE * σ * psdSqrt E hE) := by

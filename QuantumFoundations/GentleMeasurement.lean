@@ -65,13 +65,13 @@ noncomputable section
 
 namespace Quantum.GentleMeasurement
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-! ## Projector -/
 
 namespace Projector
 
-variable (P : Projector d) (ρ : Matrix (Fin d) (Fin d) ℂ)
+variable (P : Projector d) (ρ : Matrix d d ℂ)
 
 /-- A projector is positive semidefinite.
 
@@ -204,7 +204,7 @@ This is the key analytical tool for the gentle measurement bound.
     `0 ≤ tr(AρA†)` when ρ is PSD.
 
     Proof: `AρA† = A ρ^{1/2} (A ρ^{1/2})†`, which is PSD. -/
-theorem trace_AρAstar_nonneg {ρ A : Matrix (Fin d) (Fin d) ℂ}
+theorem trace_AρAstar_nonneg {ρ A : Matrix d d ℂ}
     (hρ : ρ.PosSemidef) :
     0 ≤ (A * ρ * Aᴴ).trace := by
   have h : (A * ρ * Aᴴ).PosSemidef := hρ.mul_mul_conjTranspose_same A
@@ -223,7 +223,7 @@ private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z
     Proof: use Mathlib's `toMatrixInnerProductSpace` (ρ-weighted inner product
     where `⟪A, B⟫ = tr(BρA†)`) and apply `norm_inner_le_norm` (Cauchy-Schwarz),
     then square both sides. -/
-theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
+theorem trace_product_cs_bound {ρ A B : Matrix d d ℂ}
     (hρ : ρ.PosSemidef) :
     Complex.normSq ((A * ρ * Bᴴ).trace) ≤
       (A * ρ * Aᴴ).trace.re * (B * ρ * Bᴴ).trace.re := by
@@ -236,9 +236,9 @@ theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
     rw [h, trace_conjTranspose, normSq_star]
   rw [h_nseq]
   -- Step 2: Set up the ρ-weighted inner product space
-  let _ : SeminormedAddCommGroup (Matrix (Fin d) (Fin d) ℂ) :=
+  let _ : SeminormedAddCommGroup (Matrix d d ℂ) :=
     ρ.toMatrixSeminormedAddCommGroup hρ
-  let _ : InnerProductSpace ℂ (Matrix (Fin d) (Fin d) ℂ) :=
+  let _ : InnerProductSpace ℂ (Matrix d d ℂ) :=
     ρ.toMatrixInnerProductSpace hρ
   -- ⟪A, B⟫ = (B * ρ * Aᴴ).trace (definitional)
   -- Step 3: Rewrite as normSq of inner product
@@ -275,7 +275,7 @@ theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
 
     **References**: Wilde, QIT Lemma 9.4.1; Winter 1999. -/
 theorem gentle_measurement (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (_hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
     (h_herm : (ρ - P.val * ρ * P.val).IsHermitian) :
@@ -329,7 +329,7 @@ theorem gentle_measurement (P : Projector d)
 /-- Gentle measurement in trace distance form:
     `traceDist ρ (PρP) ≤ √ε` (half the trace norm bound). -/
 theorem gentle_measurement_traceDist (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
     (h_herm : (ρ - P.val * ρ * P.val).IsHermitian) :
@@ -342,7 +342,7 @@ theorem gentle_measurement_traceDist (P : Projector d)
 /-- The complement trace bound: `tr((I-P)ρ(I-P)) ≤ ε` for a density matrix `ρ` with
     `tr(Pρ) ≥ 1 - ε`. -/
 theorem complement_sandwich_trace_le (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (htr : ρ.trace = 1)
     (ε : ℝ) (h_meas : (P.val * ρ).trace.re ≥ 1 - ε) :
     ((1 - P.val) * ρ * (1 - P.val)).trace.re ≤ ε := by
   rw [P.trace_QρQ_eq]

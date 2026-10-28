@@ -60,7 +60,7 @@ namespace Quantum
 
 All definitions and lemmas in this section work for matrices indexed by any
 `Fintype` with `DecidableEq`. This generality is needed to apply
-`dual_positive_of_positive` at `ι = Fin k × Fin n` in the proof of `dual_cp_of_cp`. -/
+`dual_positive_of_positive` at `ι = Fin k × n` in the proof of `dual_cp_of_cp`. -/
 
 section General
 
@@ -411,21 +411,21 @@ end General
 
 /-! ## Completely Positive Maps and Block Structure -/
 
-section FinN
+section Blocks
 
-variable {n : ℕ}
+variable {n : Type*} [Fintype n] [DecidableEq n]
 
-/-- Extract the `(a, b)`-th `n×n` block from a `(k×n)×(k×n)` block matrix. -/
-def blockMatrix {k : ℕ} (M : Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ)
-    (a b : Fin k) : Matrix (Fin n) (Fin n) ℂ :=
+/-- Extract the `(a, b)`-th `n×n` block from a `(κ×n)×(κ×n)` block matrix. -/
+def blockMatrix {κ : Type*} (M : Matrix (κ × n) (κ × n) ℂ)
+    (a b : κ) : Matrix n n ℂ :=
   fun i j => M (a, i) (b, j)
 
 /-- Apply `Φ` blockwise to a `(k×n)×(k×n)` matrix, implementing `id_k ⊗ Φ`:
     `((id_k ⊗ Φ)(M))_{(a,i),(b,j)} = (Φ(M_{a,b}))_{i,j}`. -/
 def tensorIdMap
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
-    (k : ℕ) : Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ →ₗ[ℂ]
-    Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ where
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
+    (k : ℕ) : Matrix (Fin k × n) (Fin k × n) ℂ →ₗ[ℂ]
+    Matrix (Fin k × n) (Fin k × n) ℂ where
   toFun M p q := (Φ (blockMatrix M p.1 q.1)) p.2 q.2
   map_add' M₁ M₂ := by
     funext ⟨a, i⟩ ⟨b, j⟩
@@ -443,22 +443,22 @@ def tensorIdMap
 
 /-- Entry formula of the blockwise map `id_k ⊗ Φ`. -/
 theorem tensorIdMap_apply
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) (k : ℕ)
-    (M : Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ) (p q : Fin k × Fin n) :
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
+    (M : Matrix (Fin k × n) (Fin k × n) ℂ) (p q : Fin k × n) :
     tensorIdMap Φ k M p q = (Φ (blockMatrix M p.1 q.1)) p.2 q.2 := rfl
 
 /-- A linear map is completely positive if `id_k ⊗ Φ` is positive for all `k`.
     Formulation: for all `k`, the induced blockwise map on `(k×n)×(k×n)` matrices
     preserves positive semidefiniteness. -/
 def IsCPMap
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) : Prop :=
-  ∀ (k : ℕ) (M : Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ),
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) : Prop :=
+  ∀ (k : ℕ) (M : Matrix (Fin k × n) (Fin k × n) ℂ),
     M.PosSemidef → (tensorIdMap Φ k M).PosSemidef
 
 /-- A completely positive map is positive: complete positivity at `k = 1`,
     with `A` embedded as the single block of a `(1×n)×(1×n)` matrix. -/
 theorem IsCPMap.isPositiveMap
-    {Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ}
+    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) : IsPositiveMap Φ := by
   intro A hA
   have h := hΦ 1 (A.submatrix Prod.snd Prod.snd) (hA.submatrix _)
@@ -470,19 +470,19 @@ theorem IsCPMap.isPositiveMap
 /-- `id_k ⊗ (Ψ ∘ Φ) = (id_k ⊗ Ψ) ∘ (id_k ⊗ Φ)`: the block-wise tensor with the
 identity commutes with composition. -/
 theorem tensorIdMap_comp
-    (Ψ Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) (k : ℕ)
-    (M : Matrix (Fin k × Fin n) (Fin k × Fin n) ℂ) :
+    (Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
+    (M : Matrix (Fin k × n) (Fin k × n) ℂ) :
     tensorIdMap (Ψ.comp Φ) k M = tensorIdMap Ψ k (tensorIdMap Φ k M) := by
   ext p q
   rfl
 
 /-- The identity map is completely positive. -/
 theorem isCPMap_id :
-    IsCPMap (LinearMap.id : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ]
-      Matrix (Fin n) (Fin n) ℂ) := by
+    IsCPMap (LinearMap.id : Matrix n n ℂ →ₗ[ℂ]
+      Matrix n n ℂ) := by
   intro k M hM
   have h : tensorIdMap
-      (LinearMap.id : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+      (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
       k M = M := by
     funext p q
     rfl
@@ -490,18 +490,18 @@ theorem isCPMap_id :
 
 /-- The sum of two completely positive maps is completely positive. -/
 theorem isCPMap_add
-    {Φ Ψ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ}
+    {Φ Ψ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) (hΨ : IsCPMap Ψ) : IsCPMap (Φ + Ψ) :=
   fun k M hM => (hΦ k M hM).add (hΨ k M hM)
 
 /-- A finite sum of completely positive maps is completely positive. -/
 theorem isCPMap_sum {ι : Type*} (s : Finset ι)
-    (Φ : ι → Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+    (Φ : ι → Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
     (h : ∀ i ∈ s, IsCPMap (Φ i)) : IsCPMap (∑ i ∈ s, Φ i) := by
   refine Finset.sum_induction _ IsCPMap (fun _ _ => isCPMap_add) ?_ h
   intro k M _
   have h0 : tensorIdMap
-      (0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) k M = 0 := by
+      (0 : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) k M = 0 := by
     funext p q
     rfl
   rw [h0]
@@ -509,7 +509,7 @@ theorem isCPMap_sum {ι : Type*} (s : Finset ι)
 
 /-- The composite of two completely positive maps is completely positive. -/
 theorem isCPMap_comp
-    {Ψ Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ}
+    {Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΨ : IsCPMap Ψ) (hΦ : IsCPMap Φ) : IsCPMap (Ψ.comp Φ) := by
   intro k M hM
   rw [tensorIdMap_comp]
@@ -517,8 +517,8 @@ theorem isCPMap_comp
 
 /-- A linear map `Φ` with `Φ ρ = K ρ Kᴴ` for every `ρ` is completely positive:
 its extension `id_k ⊗ Φ` is conjugation by `1ₖ ⊗ K`. -/
-theorem isCPMap_conj (K : Matrix (Fin n) (Fin n) ℂ)
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+theorem isCPMap_conj (K : Matrix n n ℂ)
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
     (hΦ : ∀ ρ, Φ ρ = K * ρ * Kᴴ) : IsCPMap Φ := by
   intro k M hM
   have key : tensorIdMap Φ k M =
@@ -535,7 +535,7 @@ theorem isCPMap_conj (K : Matrix (Fin n) (Fin n) ℂ)
   exact hM.mul_mul_conjTranspose_same _
 
 /-- Conjugation `ρ ↦ K ρ Kᴴ` by any matrix is completely positive. -/
-theorem isCPMap_conjugate (K : Matrix (Fin n) (Fin n) ℂ) :
+theorem isCPMap_conjugate (K : Matrix n n ℂ) :
     IsCPMap (UnitaryChannel.conjugate K) :=
   isCPMap_conj K _ (UnitaryChannel.conjugate_apply K)
 
@@ -543,8 +543,8 @@ theorem isCPMap_conjugate (K : Matrix (Fin n) (Fin n) ℂ) :
 
 /-- A CPTP (completely positive, trace-preserving) map.
     This represents a quantum channel. -/
-structure CPTPMap (n : ℕ) where
-  toLinearMap : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ
+structure CPTPMap (n : Type*) [Fintype n] [DecidableEq n] where
+  toLinearMap : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ
   cp : IsCPMap toLinearMap
   tp : IsTP toLinearMap
 
@@ -571,12 +571,12 @@ def cptp_comp (Φ Ψ : CPTPMap n) : CPTPMap n where
     rw [Ψ.tp, Φ.tp]
 
 /-- CPTP maps preserve PSD (complete positivity at `k = 1`). -/
-theorem cptp_preserves_psd (Φ : CPTPMap n) {ρ : Matrix (Fin n) (Fin n) ℂ}
+theorem cptp_preserves_psd (Φ : CPTPMap n) {ρ : Matrix n n ℂ}
     (hρ : ρ.PosSemidef) : (Φ.toLinearMap ρ).PosSemidef :=
   Φ.positive ρ hρ
 
 /-- CPTP maps preserve trace (from TP). -/
-theorem cptp_preserves_trace (Φ : CPTPMap n) (ρ : Matrix (Fin n) (Fin n) ℂ) :
+theorem cptp_preserves_trace (Φ : CPTPMap n) (ρ : Matrix n n ℂ) :
     (Φ.toLinearMap ρ).trace = ρ.trace :=
   Φ.tp ρ
 
@@ -596,9 +596,9 @@ private lemma sum_prod_fst_eq {α β M : Type*} [Fintype α] [Fintype β] [Decid
 /-- Block decomposition of matrix units in the product type:
     `blockMatrix (matUnit x y) d c` is `matUnit x.2 y.2` when `d = x.1 ∧ c = y.1`,
     and zero otherwise. Uses product-type arguments for `simp_rw` matching. -/
-private theorem blockMatrix_matUnit {k : ℕ} (x y : Fin k × Fin n) (c d : Fin k) :
+private theorem blockMatrix_matUnit {k : ℕ} (x y : Fin k × n) (c d : Fin k) :
     blockMatrix (matUnit x y) d c =
-      if d = x.1 ∧ c = y.1 then (matUnit x.2 y.2 : Matrix (Fin n) (Fin n) ℂ) else 0 := by
+      if d = x.1 ∧ c = y.1 then (matUnit x.2 y.2 : Matrix n n ℂ) else 0 := by
   obtain ⟨xk, xn⟩ := x; obtain ⟨yk, yn⟩ := y
   by_cases hd : d = xk <;> by_cases hc : c = yk
   · subst hd; subst hc; ext p q; unfold blockMatrix matUnit; simp [Prod.mk.injEq]
@@ -606,10 +606,10 @@ private theorem blockMatrix_matUnit {k : ℕ} (x y : Fin k × Fin n) (c d : Fin 
   · subst hc; ext p q; unfold blockMatrix matUnit; simp [hd]
   · ext p q; unfold blockMatrix matUnit; simp [hd]
 
-/-- The dual of `tensorIdMap Φ k` (at the `Fin k × Fin n` level) equals
+/-- The dual of `tensorIdMap Φ k` (at the `Fin k × n` level) equals
     `tensorIdMap (dualMap Φ) k`. This is the key lemma for `dual_cp_of_cp`. -/
 private theorem dualMap_tensorIdMap {k : ℕ}
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) :
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) :
     dualMap (tensorIdMap Φ k) = tensorIdMap (dualMap Φ) k := by
   ext M ⟨a, i⟩ ⟨b, j⟩
   simp only [dualMap_apply, tensorIdMap_apply]
@@ -627,7 +627,7 @@ private theorem dualMap_tensorIdMap {k : ℕ}
     (by CP). By `dual_positive_of_positive`, its dual is positive. By
     `dualMap_tensorIdMap`, this dual equals `tensorIdMap (dualMap Φ) k`. -/
 theorem dual_cp_of_cp
-    (Φ : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
     (hΦ : IsCPMap Φ) : IsCPMap (dualMap Φ) := by
   intro k M hM
   rw [show tensorIdMap (dualMap Φ) k = dualMap (tensorIdMap Φ k) from
@@ -647,7 +647,7 @@ theorem cptp_dual_is_cpu (Φ : CPTPMap n) :
 /-- CPU maps preserve effects: `0 ≤ E ≤ I → 0 ≤ Φ†(E) ≤ I`.
     Proof: CP ⟹ positive, so Φ†(E) ≥ 0.
            Φ†(I-E) = I - Φ†(E) ≥ 0, so Φ†(E) ≤ I. -/
-theorem cpu_preserves_effect (Φ : CPTPMap n) (E : Matrix (Fin n) (Fin n) ℂ)
+theorem cpu_preserves_effect (Φ : CPTPMap n) (E : Matrix n n ℂ)
     (hE : Quantum.IsEffect E) :
     Quantum.IsEffect (dualMap Φ.toLinearMap E) := by
   obtain ⟨hE_psd, hE_comp⟩ := hE
@@ -657,6 +657,6 @@ theorem cpu_preserves_effect (Φ : CPTPMap n) (E : Matrix (Fin n) (Fin n) ℂ)
       by rw [map_sub, (tp_iff_dual_unital _).mp Φ.tp]]
     exact dual_positive_of_positive _ Φ.positive _ hE_comp
 
-end FinN
+end Blocks
 
 end Quantum
