@@ -272,10 +272,12 @@ private lemma cfc_supp_add_ker (M : Matrix d d ℂ) (hM : M.IsHermitian) :
     cfc_congr (g := fun _ => (1 : ℝ)) (fun x _ => by by_cases h : x = 0 <;> simp [h]),
     cfc_const_one ℝ M hM.isSelfAdjoint]
 
+omit [DecidableEq d] in
 /-- For PSD `W` and a Hermitian idempotent `Q`, `tr(Q W) = 0` forces `Q * W = 0`. -/
 private lemma mul_eq_zero_of_trace_mul_eq_zero {Q W : Matrix d d ℂ}
     (hW : W.PosSemidef) (hQh : Qᴴ = Q) (hQQ : Q * Q = Q) (htr : (Q * W).trace = 0) :
     Q * W = 0 := by
+  classical
   have hSh : (psdSqrt W hW)ᴴ = psdSqrt W hW := (psdSqrt_posSemidef W hW).isHermitian
   have hA : Q * psdSqrt W hW = 0 := by
     rw [← trace_mul_conjTranspose_self_eq_zero_iff, conjTranspose_mul, hQh, hSh]
@@ -285,12 +287,15 @@ private lemma mul_eq_zero_of_trace_mul_eq_zero {Q W : Matrix d d ℂ}
     rw [h1, trace_mul_comm, Matrix.mul_assoc, hQQ, trace_mul_comm, htr]
   rw [← psdSqrt_mul_psdSqrt W hW, ← Matrix.mul_assoc, hA, Matrix.zero_mul]
 
+omit [Fintype d] [DecidableEq d] in
 open scoped MatrixOrder in
 /-- A linear map on matrices that vanishes on every PSD matrix vanishes identically:
     every matrix is a complex combination of four PSD matrices. -/
-private lemma linearMap_eq_zero_of_posSemidef
+private lemma linearMap_eq_zero_of_posSemidef [Finite d]
     (f : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hf : ∀ B, B.PosSemidef → f B = 0) (B : Matrix d d ℂ) : f B = 0 := by
+  have := Fintype.ofFinite d
+  classical
   have herm : ∀ H : Matrix d d ℂ, H.IsHermitian → f H = 0 := by
     intro H hH
     have hdec : H = cfc (fun x : ℝ => max x 0) H - cfc (fun x : ℝ => max (-x) 0) H := by

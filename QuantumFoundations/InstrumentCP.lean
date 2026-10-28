@@ -48,7 +48,7 @@ open Quantum.TensorProduct
 /-! ## The trivial branches -/
 
 /-- The zero map is completely positive. -/
-theorem isCPMap_zero {n : Type*} [Fintype n] [DecidableEq n] :
+theorem isCPMap_zero {n : Type*} :
     IsCPMap (0 : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) := by
   intro k M _
   have h : tensorIdMap

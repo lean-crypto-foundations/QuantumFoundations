@@ -200,6 +200,7 @@ weighted by a PSD matrix ρ:
 This is the key analytical tool for the gentle measurement bound.
 -/
 
+omit [DecidableEq d] in
 /-- Trace of a PSD-weighted outer product is non-negative:
     `0 ≤ tr(AρA†)` when ρ is PSD.
 
@@ -215,6 +216,7 @@ theorem trace_AρAstar_nonneg {ρ A : Matrix d d ℂ}
 private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z := by
   simp [Complex.normSq_apply]
 
+omit [DecidableEq d] in
 /-- **Cauchy-Schwarz for PSD-weighted trace products**.
 
     For PSD ρ and any matrices A, B:

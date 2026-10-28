@@ -109,8 +109,8 @@ structure DensityMatrix (d : Type*) [Fintype d] [DecidableEq d] where
 
 /-! ## QComp Definition -/
 
-/-- A positive instrument on a system with basis indexed by a finite type `d` with outcomes in `α`: a
-summable family of positive linear maps on complex matrices `Matrix d d ℂ` whose sum is
+/-- A positive instrument on a system with basis indexed by a finite type `d` with outcomes
+in `α`: a summable family of positive linear maps on complex matrices `Matrix d d ℂ` whose sum is
 trace-non-increasing on positive semidefinite inputs. The branches need not be
 completely positive (the transpose map is a one-outcome `QComp`), so a `QComp` is
 a quantum instrument in the physical sense only when every branch satisfies

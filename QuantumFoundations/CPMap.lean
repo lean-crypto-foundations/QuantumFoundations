@@ -441,6 +441,7 @@ def tensorIdMap
       ext; simp [blockMatrix, Matrix.smul_apply]
     rw [this, LinearMapClass.map_smul]; rfl
 
+omit [Fintype n] [DecidableEq n] in
 /-- Entry formula of the blockwise map `id_k ⊗ Φ`. -/
 theorem tensorIdMap_apply
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
@@ -455,6 +456,7 @@ def IsCPMap
   ∀ (k : ℕ) (M : Matrix (Fin k × n) (Fin k × n) ℂ),
     M.PosSemidef → (tensorIdMap Φ k M).PosSemidef
 
+omit [Fintype n] [DecidableEq n] in
 /-- A completely positive map is positive: complete positivity at `k = 1`,
     with `A` embedded as the single block of a `(1×n)×(1×n)` matrix. -/
 theorem IsCPMap.isPositiveMap
@@ -467,7 +469,8 @@ theorem IsCPMap.isPositiveMap
   rw [e]
   exact h.submatrix _
 
-/-- `id_k ⊗ (Ψ ∘ Φ) = (id_k ⊗ Ψ) ∘ (id_k ⊗ Φ)`: the block-wise tensor with the
+omit [Fintype n] [DecidableEq n] in
+/-- `id_k ⊗ (Ψ ∘ Φ) =(id_k ⊗ Ψ) ∘ (id_k ⊗ Φ)`: the block-wise tensor with the
 identity commutes with composition. -/
 theorem tensorIdMap_comp
     (Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
@@ -476,6 +479,7 @@ theorem tensorIdMap_comp
   ext p q
   rfl
 
+omit [Fintype n] [DecidableEq n] in
 /-- The identity map is completely positive. -/
 theorem isCPMap_id :
     IsCPMap (LinearMap.id : Matrix n n ℂ →ₗ[ℂ]
@@ -488,12 +492,14 @@ theorem isCPMap_id :
     rfl
   rwa [h]
 
+omit [Fintype n] [DecidableEq n] in
 /-- The sum of two completely positive maps is completely positive. -/
 theorem isCPMap_add
     {Φ Ψ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) (hΨ : IsCPMap Ψ) : IsCPMap (Φ + Ψ) :=
   fun k M hM => (hΦ k M hM).add (hΨ k M hM)
 
+omit [Fintype n] [DecidableEq n] in
 /-- A finite sum of completely positive maps is completely positive. -/
 theorem isCPMap_sum {ι : Type*} (s : Finset ι)
     (Φ : ι → Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
@@ -507,6 +513,7 @@ theorem isCPMap_sum {ι : Type*} (s : Finset ι)
   rw [h0]
   exact Matrix.PosSemidef.zero
 
+omit [Fintype n] [DecidableEq n] in
 /-- The composite of two completely positive maps is completely positive. -/
 theorem isCPMap_comp
     {Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
@@ -515,6 +522,7 @@ theorem isCPMap_comp
   rw [tensorIdMap_comp]
   exact hΨ k _ (hΦ k M hM)
 
+omit [DecidableEq n] in
 /-- A linear map `Φ` with `Φ ρ = K ρ Kᴴ` for every `ρ` is completely positive:
 its extension `id_k ⊗ Φ` is conjugation by `1ₖ ⊗ K`. -/
 theorem isCPMap_conj (K : Matrix n n ℂ)
@@ -534,6 +542,7 @@ theorem isCPMap_conj (K : Matrix n n ℂ)
   rw [key]
   exact hM.mul_mul_conjTranspose_same _
 
+omit [DecidableEq n] in
 /-- Conjugation `ρ ↦ K ρ Kᴴ` by any matrix is completely positive. -/
 theorem isCPMap_conjugate (K : Matrix n n ℂ) :
     IsCPMap (UnitaryChannel.conjugate K) :=
@@ -593,6 +602,7 @@ private lemma sum_prod_fst_eq {α β M : Type*} [Fintype α] [Fintype β] [Decid
     intro a'; split_ifs <;> simp
   simp_rw [hfact, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
 
+omit [Fintype n] in
 /-- Block decomposition of matrix units in the product type:
     `blockMatrix (matUnit x y) d c` is `matUnit x.2 y.2` when `d = x.1 ∧ c = y.1`,
     and zero otherwise. Uses product-type arguments for `simp_rw` matching. -/

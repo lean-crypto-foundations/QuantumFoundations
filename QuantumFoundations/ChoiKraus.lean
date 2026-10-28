@@ -61,6 +61,7 @@ def choi (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) :
     Matrix (n × n) (n × n) ℂ :=
   fun p q => Φ (matUnit p.1 q.1) p.2 q.2
 
+omit [Fintype n] in
 /-- Entry formula of the Choi matrix. -/
 theorem choi_apply (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
     (a i b j : n) : choi Φ (a, i) (b, j) = Φ (matUnit a b) i j := rfl
@@ -68,6 +69,7 @@ theorem choi_apply (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
 /-- The unnormalised maximally entangled vector `∑ a, e_a ⊗ e_a`. -/
 def maxEntVec : n × n → ℂ := fun p => if p.1 = p.2 then 1 else 0
 
+omit [Fintype n] in
 /-- The `(a, b)` block of `|Ω⟩⟨Ω|` is the matrix unit `matUnit a b`. -/
 theorem blockMatrix_maxEnt (a b : n) :
     blockMatrix (vecMulVec (maxEntVec (n := n)) (star maxEntVec)) a b = matUnit a b := by
@@ -75,6 +77,7 @@ theorem blockMatrix_maxEnt (a b : n) :
   simp only [blockMatrix, vecMulVec_apply, Pi.star_apply, maxEntVec, matUnit_apply]
   by_cases hai : a = i <;> by_cases hbj : b = j <;> simp [hai, hbj, eq_comm]
 
+omit [Fintype n] in
 /-- The Choi matrix is `(id_k ⊗ Φ) |Ω⟩⟨Ω|`, with the first factor of `n × n`
 relabelled along an equivalence `e : n ≃ Fin k`. -/
 theorem choi_eq_tensorIdMap {k : ℕ} (e : n ≃ Fin k)
@@ -91,9 +94,11 @@ theorem choi_eq_tensorIdMap {k : ℕ} (e : n ≃ Fin k)
   rw [hblock, blockMatrix_maxEnt]
   rfl
 
+omit [Fintype n] in
 /-- The Choi matrix of a completely positive map is positive semidefinite. -/
-theorem choi_posSemidef {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
+theorem choi_posSemidef [Finite n] {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) : (choi Φ).PosSemidef := by
+  have := Fintype.ofFinite n
   rw [choi_eq_tensorIdMap (Fintype.equivFin n)]
   exact (hΦ _ _ ((posSemidef_vecMulVec_self_star _).submatrix _)).submatrix _
 
@@ -145,14 +150,17 @@ theorem exists_kraus_of_choi_posSemidef
   obtain ⟨B, hB⟩ := exists_eq_conjTranspose_mul_self_of_posSemidef hΦ
   exact ⟨krausOfFactor B, eq_kraus_of_choi_eq Φ B hB⟩
 
+omit [DecidableEq n] in
 /-- Kraus representation: a completely positive map is a Kraus sum over
 `n × n`. -/
 theorem exists_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) :
     ∃ K : n × n → Matrix n n ℂ,
-      ∀ ρ, Φ ρ = ∑ x, K x * ρ * (K x)ᴴ :=
-  exists_kraus_of_choi_posSemidef (choi_posSemidef hΦ)
+      ∀ ρ, Φ ρ = ∑ x, K x * ρ * (K x)ᴴ := by
+  classical
+  exact exists_kraus_of_choi_posSemidef (choi_posSemidef hΦ)
 
+omit [DecidableEq n] in
 /-- Kraus representation with `|n| * |n|` operators indexed by
 `Fin (Fintype.card n * Fintype.card n)`. -/
 theorem exists_kraus_fin {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
@@ -195,6 +203,7 @@ theorem kraus_sum_conjTranspose_mul_self_eq_one {r : Type*} [Fintype r]
 
 /-! ## Kraus sums are completely positive -/
 
+omit [DecidableEq n] in
 /-- A Kraus sum `ρ ↦ ∑ x, K x * ρ * (K x)ᴴ` is completely positive. -/
 theorem isCPMap_of_kraus {r : Type*} [Fintype r]
     {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
@@ -216,6 +225,7 @@ theorem isCPMap_of_kraus {r : Type*} [Fintype r]
 
 /-! ## Characterisations of complete positivity -/
 
+omit [DecidableEq n] in
 /-- A linear map is completely positive iff it is a Kraus sum over `n × n`. -/
 theorem isCPMap_iff_exists_kraus
     {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ} :
@@ -223,12 +233,14 @@ theorem isCPMap_iff_exists_kraus
       ∀ ρ, Φ ρ = ∑ x, K x * ρ * (K x)ᴴ :=
   ⟨exists_kraus, fun ⟨K, hK⟩ => isCPMap_of_kraus K hK⟩
 
+omit [Fintype n] in
 /-- Choi's theorem: a linear map is completely positive iff its Choi matrix is
 positive semidefinite. -/
-theorem isCPMap_iff_choi_posSemidef
+theorem isCPMap_iff_choi_posSemidef [Finite n]
     {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ} :
-    IsCPMap Φ ↔ (choi Φ).PosSemidef :=
-  ⟨choi_posSemidef, fun h =>
+    IsCPMap Φ ↔ (choi Φ).PosSemidef := by
+  have := Fintype.ofFinite n
+  exact ⟨choi_posSemidef, fun h =>
     let ⟨K, hK⟩ := exists_kraus_of_choi_posSemidef h
     isCPMap_of_kraus K hK⟩
 

@@ -77,6 +77,7 @@ private lemma complex_inv_of_real_im_zero (z : ℂ) (h_im : z.im = 0) :
   have h_eq : z = Complex.ofReal z.re := by apply Complex.ext <;> simp [h_im]
   rw [h_eq, ← Complex.ofReal_inv]; simp [Complex.ofReal_re]
 
+omit [DecidableEq d] in
 private lemma psd_smul_trace_inv (M : Matrix d d ℂ) (hM : M.PosSemidef)
     (_h_ne : M.trace ≠ 0) :
     (M.trace⁻¹ • M).PosSemidef := by
