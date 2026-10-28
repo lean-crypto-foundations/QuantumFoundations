@@ -28,6 +28,7 @@ public import QuantumFoundations.MinEntropyProduct
 public import QuantumFoundations.MinEntropySplit
 public import QuantumFoundations.LeftoverHash
 public import QuantumFoundations.PrivacyAmplification
+public import QuantumFoundations.ForPhyslib.TraceDistance
 
 -- From VCVio.
 public import QuantumFoundations.ForMathlib.Analysis.Matrix.PosSemidef
