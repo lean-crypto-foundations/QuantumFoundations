@@ -57,3 +57,6 @@ public import QuantumFoundations.Oracle.Unitary
 public import QuantumFoundations.Pure.Instrument
 public import QuantumFoundations.Pure.State
 public import QuantumFoundations.Pure.Tensor
+
+-- Agreement of the CPMap and MatrixMap developments.
+public import QuantumFoundations.Bridge.CPMap
