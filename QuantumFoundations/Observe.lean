@@ -5,7 +5,7 @@ Authors: Quang Dao
 -/
 
 module
-public import QuantumFoundations.ForMathlib.MeasureTheory.Measure.Subprobability
+public import Mathlib.MeasureTheory.Measure.Dirac.Basic
 public import QuantumFoundations.DSubInstrument
 public import QuantumFoundations.SubInstrument
 
@@ -190,11 +190,6 @@ theorem outcomeMeasure_apply_univ_le_one (p : DSubInstrument A ι B) (ρ : SubSt
   rw [outcomeMeasure_apply_univ, p.isCPTNIFamily.familyTrace_apply,
     p.isCPTNIFamily.re_tsum_trace_apply]
   exact ENNReal.ofReal_le_one.mpr ((p.tsum_trace_re_le ρ.posSemidef).trans ρ.trace_re_le_one)
-
-/-- Outcome measures of dependent subinstruments are subprobability measures. -/
-instance outcomeMeasure.instIsSubprobabilityMeasure (p : DSubInstrument A ι B)
-    (ρ : SubState A) : IsSubprobabilityMeasure (p.outcomeMeasure ρ) :=
-  ⟨p.outcomeMeasure_apply_univ_le_one ρ⟩
 
 /-- A lossless dependent subinstrument preserves total mass: its outcome measure has the trace
 of the input substate as total mass. -/

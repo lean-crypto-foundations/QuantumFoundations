@@ -52,7 +52,6 @@ types, CP branches) are separate pull requests.
 | `Pure/Vector`, `Pure/Norm` | state vectors, matrix actions, and norm bounds |
 | `ForMathlib/Analysis/Matrix/PosSemidef` | bounds for positive semidefinite matrices |
 | `ForMathlib/Analysis/Normed/Ring/Commutator` | norm bounds for commutators |
-| `ForMathlib/MeasureTheory/Measure/Subprobability` | subprobability measures, by Devon Tuma |
 | `Observe` | substates, post-measurement states, and Born outcome measures |
 | `Pure/State`, `Pure/Instrument`, `Pure/Tensor` | pure states, measurements, and tensors |
 | `Oracle/Basis`, `Oracle/Unitary` | computational-basis operations and unitary oracle gates |
