@@ -34,7 +34,12 @@ This file proves that the overlapping definitions agree.
   in `QuantumFoundations.Bridge.ToQComp`), and the map is injective. Its image is the set of
   `QComp`s whose branches are completely positive (`QComp.toSubInstrument`,
   `SubInstrument.equivCP`). The map is not onto: a `QComp` admits positive branches that are
-  not completely positive, such as the transpose map.
+  not completely positive, such as the transpose map. The branches of the image are also
+  completely positive in the sense of `Quantum.IsCPMap`, whose ancilla is on the left
+  (`SubInstrument.isCPMap_toQComp_branch`); the comparison of the two predicates swaps the
+  factors of the index, following Quang Dao's `Bridge/CPMap`.
+* **Channels.** A `CPTPMap d` is a subinstrument with one outcome (`CPTPMap.toSubInstrument`),
+  whose branch is the channel.
 * **Monad structure.** `SubInstrument.toQComp` commutes with `pure`, `bind`, `map` and failure,
   so it is a monad morphism `SubInstrument d d ⟶ QComp d`.
 * **Observation.** `prTrue_Q` of the image of `p` is the outcome measure of `p` at `{true}`.
@@ -50,6 +55,7 @@ This file proves that the overlapping definitions agree.
 
 * `Quantum.DensityMatrix.toSubState_injective`
 * `Quantum.SubInstrument.toQComp_injective`, `Quantum.SubInstrument.equivCP`
+* `Quantum.SubInstrument.isCPMap_toQComp_branch`, `Quantum.CPTPMap.toSubInstrument`
 * `Quantum.SubInstrument.toQComp_pure`, `Quantum.SubInstrument.toQComp_bind`,
   `Quantum.SubInstrument.toQComp_map`, `Quantum.SubInstrument.toQComp_fail`
 * `Quantum.SubInstrument.prTrue_Q_toQComp`
@@ -124,6 +130,55 @@ theorem isCP_toQComp_branch (p : SubInstrument d d α) (a : α) :
   p.isCP_branch a
 
 end SubInstrument
+
+omit [Fintype d] in
+/-- Complete positivity with the ancilla on the left (`IsCPMap`, amplification `id_k ⊗ Φ` on
+`Fin k × d`) is complete positivity with the ancilla on the right (`MatrixMap.IsCP`,
+amplification `Φ ⊗ id_k` on `d × Fin k`): swapping the two factors of the index conjugates one
+amplification into the other and preserves positive semidefiniteness. Quang Dao's pull request
+14 to QuantumFoundations adds the public theorem `Quantum.isCPMap_iff_isCP`, which replaces this
+lemma once it is merged. -/
+private theorem isCPMap_iff_isCP_aux (Φ : MatrixMap d d) : IsCPMap Φ ↔ MatrixMap.IsCP Φ := by
+  have swap (k : ℕ) (ρ : Matrix (d × Fin k) (d × Fin k) ℂ) :
+      tensorIdMap Φ k (ρ.submatrix Prod.swap Prod.swap) =
+        (Φ.amplify (Fin k) ρ).submatrix Prod.swap Prod.swap := rfl
+  constructor
+  · intro hΦ k ρ hρ
+    have h := (hΦ k _ (hρ.submatrix Prod.swap)).submatrix Prod.swap
+    rwa [swap, submatrix_submatrix, Prod.swap_swap_eq, submatrix_id_id] at h
+  · intro hΦ k M hM
+    have h := (hΦ k _ (hM.submatrix Prod.swap)).submatrix Prod.swap
+    rwa [← swap, submatrix_submatrix, Prod.swap_swap_eq, submatrix_id_id] at h
+
+namespace SubInstrument
+
+/-- Every branch of the image of a subinstrument is completely positive with the ancilla on the
+left (`IsCPMap`). -/
+theorem isCPMap_toQComp_branch (p : SubInstrument d d α) (a : α) :
+    IsCPMap (p.toQComp.branch a) :=
+  (isCPMap_iff_isCP_aux _).2 (p.isCP_toQComp_branch a)
+
+end SubInstrument
+
+namespace CPTPMap
+
+/-- A quantum channel as a subinstrument with one outcome. -/
+def toSubInstrument (Φ : CPTPMap d) : SubInstrument d d Unit :=
+  SubInstrument.ofMap Φ.toLinearMap (by exact (isCPMap_iff_isCP_aux _).1 Φ.cp)
+    (MatrixMap.IsTP.isTNI Φ.tp)
+
+/-- The branch of `Φ.toSubInstrument` is `Φ`. -/
+@[simp]
+theorem toSubInstrument_branch (Φ : CPTPMap d) (u : Unit) :
+    Φ.toSubInstrument.branch u = Φ.toLinearMap :=
+  rfl
+
+/-- The branch of the image of `Φ.toSubInstrument` as a positive instrument is `Φ`. -/
+theorem toQComp_toSubInstrument_branch (Φ : CPTPMap d) (u : Unit) :
+    Φ.toSubInstrument.toQComp.branch u = Φ.toLinearMap :=
+  rfl
+
+end CPTPMap
 
 namespace QComp
 
