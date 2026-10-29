@@ -6,6 +6,7 @@ Authors: Bas Spitters
 module
 
 public import QuantumFoundations.QRHL
+public import QuantumFoundations.Bridge.ToQComp
 
 /-!
 # Completely positive branches of basic instruments
@@ -116,9 +117,9 @@ open Quantum Quantum.GentleMeasurement
 
 /-- The projective measurement `{P, 1 - P}` as a quantum instrument: outcome
 `true` is the branch `P ρ P`, outcome `false` the branch
-`(1 - P) ρ (1 - P)`. -/
+`(1 - P) ρ (1 - P)`. It is the image of the Kraus subinstrument of `P` and `1 - P`. -/
 def measureProj {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d) : QComp d Bool :=
-  QComp.ofKraus (fun b => if b then P.val else 1 - P.val)
+  SubInstrument.toQComp <| SubInstrument.ofKraus (fun b => if b then P.val else 1 - P.val)
     (by
       rw [Fintype.sum_bool]
       change P.valᴴ * P.val + (1 - P.val)ᴴ * (1 - P.val) = 1

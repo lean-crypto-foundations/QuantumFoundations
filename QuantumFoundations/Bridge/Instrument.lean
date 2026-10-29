@@ -5,7 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
-public import QuantumFoundations.Instrument
+public import QuantumFoundations.Bridge.ToQComp
 public import QuantumFoundations.Measurement
 public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.InstrumentCP
@@ -30,19 +30,21 @@ This file proves that the overlapping definitions agree.
 
 * **States.** A `DensityMatrix d` is a `SubState d` of trace one (`DensityMatrix.toSubState`,
   injective, with inverse `DensityMatrix.ofSubState` on trace-one substates).
-* **Instruments.** A `SubInstrument d d α` is a `QComp d α` (`SubInstrument.toQComp`), and the
-  map is injective. Its image is the set of `QComp`s whose branches are completely positive
-  (`QComp.toSubInstrument`, `SubInstrument.equivCP`). The map is not onto: a `QComp` admits
-  positive branches that are not completely positive, such as the transpose map.
+* **Instruments.** A `SubInstrument d d α` is a `QComp d α` (`SubInstrument.toQComp`, defined
+  in `QuantumFoundations.Bridge.ToQComp`), and the map is injective. Its image is the set of
+  `QComp`s whose branches are completely positive (`QComp.toSubInstrument`,
+  `SubInstrument.equivCP`). The map is not onto: a `QComp` admits positive branches that are
+  not completely positive, such as the transpose map.
 * **Monad structure.** `SubInstrument.toQComp` commutes with `pure`, `bind`, `map` and failure,
   so it is a monad morphism `SubInstrument d d ⟶ QComp d`.
 * **Observation.** `prTrue_Q` of the image of `p` is the outcome measure of `p` at `{true}`.
 * **Measurements.** `QComp.ofKraus`, `Measurement.measureOps`,
-  `Measurement.projectiveMeasure`, `measureProj` and `UnitaryChannel.unitaryChannel` are the
-  images of `SubInstrument.ofKraus`, `SubInstrument.ofProjective` and
-  `SubInstrument.ofUnitary`; `UnitaryChannel.conjugate` is `MatrixMap.conj`. The effects
-  `Mᴴ M` of measurement operators form a POVM (`Measurement.MeasurementOps.toPOVM`) whose Born
-  probabilities are the outcome weights of the Kraus subinstrument.
+  `Measurement.projectiveMeasure`, `measureProj` and `UnitaryChannel.unitaryChannel` are
+  defined as images of `SubInstrument.ofKraus`. The projective ones are the images of
+  `SubInstrument.ofProjective`, and the unitary channel is the image of
+  `SubInstrument.ofUnitary`. The effects `Mᴴ M` of measurement operators form a POVM
+  (`Measurement.MeasurementOps.toPOVM`) whose Born probabilities are the outcome weights of the
+  Kraus subinstrument.
 
 ## Main results
 
@@ -51,8 +53,7 @@ This file proves that the overlapping definitions agree.
 * `Quantum.SubInstrument.toQComp_pure`, `Quantum.SubInstrument.toQComp_bind`,
   `Quantum.SubInstrument.toQComp_map`, `Quantum.SubInstrument.toQComp_fail`
 * `Quantum.SubInstrument.prTrue_Q_toQComp`
-* `Quantum.QComp.ofKraus_eq_toQComp`, `Quantum.Measurement.measureOps_eq_toQComp`,
-  `Quantum.Measurement.projectiveMeasure_eq_toQComp`, `Quantum.measureProj_eq_toQComp`,
+* `Quantum.Measurement.projectiveMeasure_eq_toQComp`, `Quantum.measureProj_eq_toQComp`,
   `Quantum.UnitaryChannel.unitaryChannel_eq_toQComp`
 * `Quantum.Measurement.outcomeMeasure_ofKraus_singleton`
 -/
@@ -112,21 +113,6 @@ end DensityMatrix
 /-! ## Instruments -/
 
 namespace SubInstrument
-
-/-- A subinstrument on `d` as a positive instrument: the same branches, which are positive
-because they are completely positive. -/
-def toQComp (p : SubInstrument d d α) : QComp d α where
-  branch := p.branch
-  branch_psd a _ hρ := p.posSemidef_branch_apply a hρ
-  branch_summable := p.summable_branch_apply
-  branch_stp ρ hρ := by
-    rw [p.isCPTNIFamily.re_tsum_trace_apply]
-    exact p.tsum_trace_re_le hρ
-
-/-- The branches of `p.toQComp` are those of `p`. -/
-@[simp]
-theorem toQComp_branch (p : SubInstrument d d α) : p.toQComp.branch = p.branch :=
-  rfl
 
 /-- Distinct subinstruments are distinct positive instruments. -/
 theorem toQComp_injective : Function.Injective (toQComp (d := d) (α := α)) :=
@@ -228,20 +214,9 @@ end SubInstrument
 
 /-! ## Measurements -/
 
-/-- The positive instrument of Kraus operators is the image of their subinstrument. -/
-theorem QComp.ofKraus_eq_toQComp [DecidableEq d] [Fintype α] (M : α → Matrix d d ℂ)
-    (h : ∑ a, (M a)ᴴ * M a = 1) :
-    QComp.ofKraus M h = (SubInstrument.ofKraus M h).toQComp :=
-  QComp.ext_fun fun _ _ ↦ rfl
-
 namespace Measurement
 
 variable [DecidableEq d]
-
-/-- The instrument of measurement operators is the image of their Kraus subinstrument. -/
-theorem measureOps_eq_toQComp [Fintype α] (M : MeasurementOps d α) :
-    measureOps M = (SubInstrument.ofKraus M.op M.completeness).toQComp :=
-  QComp.ofKraus_eq_toQComp M.op M.completeness
 
 /-- Every operator of a projective measurement is a star projection. -/
 theorem ProjectiveMeasurement.isStarProjection [Fintype α] (P : ProjectiveMeasurement d α)
@@ -294,10 +269,6 @@ theorem measureProj_eq_toQComp [DecidableEq d] (P : Projector d) :
   · simp [measureProj_branch_true, P.self_adjoint]
 
 namespace UnitaryChannel
-
-/-- Conjugation by `U` is the Kraus map of `U`. -/
-theorem conjugate_eq_conj (U : Matrix d d ℂ) : conjugate U = MatrixMap.conj U :=
-  LinearMap.ext fun _ ↦ rfl
 
 /-- The unitary channel of `U` is the image of the unitary subinstrument of `U`. -/
 theorem unitaryChannel_eq_toQComp [DecidableEq d] (U : Matrix.unitaryGroup d ℂ) :
