@@ -31,6 +31,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `MinEntropySplit` | conditional guessing probability; picking the better of two conditionings |
 | `LeftoverHash` | the leftover hash lemma for a 2-universal hash family |
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
+| `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi matrices, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
 States, instruments, measurements and CP maps take the index of the system as any finite type;
