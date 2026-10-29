@@ -57,3 +57,6 @@ public import QuantumFoundations.Oracle.Unitary
 public import QuantumFoundations.Pure.Instrument
 public import QuantumFoundations.Pure.State
 public import QuantumFoundations.Pure.Tensor
+
+-- Agreement of the two developments.
+public import QuantumFoundations.Bridge.Instrument

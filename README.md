@@ -57,6 +57,12 @@ and `SubInstrument` (CP branches) are separate pull requests.
 | `Pure/State`, `Pure/Instrument`, `Pure/Tensor` | pure states, measurements, and tensors |
 | `Oracle/Basis`, `Oracle/Unitary` | computational-basis operations and unitary oracle gates |
 
+## Agreement of the two developments
+
+| Module | Content |
+|---|---|
+| `Bridge/Instrument` | density matrices are the trace-one substates; instruments with completely positive branches are exactly the `QComp`s whose branches are completely positive (`SubInstrument.equivCP`), compatibly with `pure`, `bind`, `map` and `fail`; acceptance probability is the outcome measure of `{true}`; the Kraus, general, projective and unitary measurements of both sides agree |
+
 ## License
 
 Dual-licensed under the MIT license (`LICENSE-MIT`) or the Apache License 2.0
