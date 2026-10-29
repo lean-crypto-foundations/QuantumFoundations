@@ -59,4 +59,5 @@ public import QuantumFoundations.Pure.State
 public import QuantumFoundations.Pure.Tensor
 
 -- Agreement of the two developments.
+public import QuantumFoundations.Bridge.ToQComp
 public import QuantumFoundations.Bridge.Instrument

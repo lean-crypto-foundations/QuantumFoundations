@@ -5,7 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
-public import QuantumFoundations.Instrument
+public import QuantumFoundations.Bridge.ToQComp
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -77,10 +77,10 @@ structure MeasurementOps (d : Type*) [Fintype d] [DecidableEq d] (α : Type) [Fi
   /-- Completeness: `∑_a M_aᴴ M_a = 1`. -/
   completeness : ∑ a, (op a)ᴴ * op a = 1
 
-/-- The instrument of a family of measurement operators: branch `a` maps
-`ρ ↦ M_a ρ M_aᴴ`. -/
+/-- The instrument of a family of measurement operators, the image of their Kraus
+subinstrument: branch `a` maps `ρ ↦ M_a ρ M_aᴴ`. -/
 def measureOps [Fintype α] (M : MeasurementOps d α) : QComp d α :=
-  QComp.ofKraus M.op M.completeness
+  (SubInstrument.ofKraus M.op M.completeness).toQComp
 
 /-! ## Projective Measurement -/
 
@@ -93,10 +93,11 @@ structure ProjectiveMeasurement (d : Type*) [Fintype d] [DecidableEq d] (α : Ty
   /-- Every operator is idempotent. -/
   idempotent : ∀ a, op a * op a = op a
 
-/-- The instrument of a projective measurement. -/
+/-- The instrument of a projective measurement, the image of the Kraus subinstrument of its
+projectors. -/
 def projectiveMeasure [Fintype α] (P : ProjectiveMeasurement d α) :
     QComp d α :=
-  measureOps P.toMeasurementOps
+  (SubInstrument.ofKraus P.op P.completeness).toQComp
 
 /-! ## Born Rule -/
 
