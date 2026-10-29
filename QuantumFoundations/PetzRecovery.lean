@@ -14,8 +14,8 @@ public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 /-!
 # The Petz recovery map
 
-For a positive linear map `Φ` on `d × d` complex matrices and a PSD reference matrix `σ`, the
-Petz recovery map is
+For a positive linear map `Φ` on complex matrices `Matrix d d ℂ` and a PSD reference matrix `σ`,
+the Petz recovery map is
 
 ```
 R_{σ,Φ}(X) = σ^{1/2} Φ†[ Φ(σ)^{-1/2} X Φ(σ)^{-1/2} ] σ^{1/2}

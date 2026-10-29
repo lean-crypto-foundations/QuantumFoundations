@@ -8,7 +8,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 
 | Module | Content |
 |---|---|
-| `CPMap` | completely positive maps on `Fin n` matrices, effects, the trace dual of a linear map |
+| `CPMap` | completely positive maps on matrices over a finite index type, effects, the trace dual of a linear map |
 | `DualMap` | functoriality of the trace dual (the Hilbert–Schmidt adjoint for positive maps) |
 | `ChoiKraus` | the Choi matrix; every CP map has a Kraus form |
 | `Stinespring` | the Stinespring dilation of a CPTP map by an ancilla |
@@ -33,8 +33,9 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
-The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
-types, CP branches) are separate pull requests.
+States, instruments, measurements and CP maps take the index of the system as any finite type;
+bipartite systems are encoded as `Fin (d₁ * d₂)`. The planned merges with VCVio's `MatrixMap`
+and `SubInstrument` (CP branches) are separate pull requests.
 
 ## From VCVio
 

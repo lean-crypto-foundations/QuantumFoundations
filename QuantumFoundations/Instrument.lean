@@ -216,7 +216,7 @@ theorem psd_entry_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef)
   have hdiag_nn : ∀ k, 0 ≤ (M k k).re :=
     fun k => (Complex.nonneg_iff.mp (hM.diag_nonneg)).1
   have htrace_re : M.trace.re = ∑ k : d, (M k k).re := by
-    unfold Matrix.trace Matrix.diag; exact map_sum Complex.reAddGroupHom _ _
+    simp [Matrix.trace]
   have htrace_nn : 0 ≤ M.trace.re := trace_re_nonneg_of_psd hM
   have hcs := psd_cauchy_schwarz hM i j
   have hai : (M i i).re ≤ M.trace.re := by
@@ -310,13 +310,7 @@ omit [DecidableEq d] in
 /-- Trace commutes with tsum for summable matrix families. -/
 theorem trace_tsum {f : α → Matrix d d ℂ} (hf : Summable f) :
     (∑' a, f a).trace = ∑' a, (f a).trace := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ j : d, (∑' a, f a) j j) =
-      (∑ j : d, ∑' a, f a j j) from by
-    congr 1; ext j; exact tsum_entry hf j j]
-  rw [show (∑ j ∈ Finset.univ, ∑' a, (fun j' a' => f a' j' j') j a) =
-      (∑ j : d, ∑' a, f a j j) from by simp]
-  rw [← Summable.tsum_finsetSum (fun j _ => summable_entry hf j j)]
+  simp [Matrix.trace, tsum_entry hf, Summable.tsum_finsetSum fun j _ => summable_entry hf j j]
 
 /-- The trace, as a ContinuousLinearMap from matrices to ℂ. -/
 def traceCLM (d : Type*) [Fintype d] : Matrix d d ℂ →L[ℂ] ℂ :=
@@ -491,9 +485,7 @@ private lemma hermitian_shift_psd {d : Type*} [Fintype d] [DecidableEq d] {H : M
 /-- `trace(M).re ≤ d · ‖M‖` for any `d×d` complex matrix. -/
 private lemma trace_re_le_dim_mul_norm {d : Type*} [Fintype d] (M : Matrix d d ℂ) :
     M.trace.re ≤ ↑(Fintype.card d) * ‖M‖ := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ x : d, M x x).re = ∑ x : d, (M x x).re from
-    map_sum Complex.reAddGroupHom _ _]
+  simp only [Matrix.trace, Matrix.diag, Complex.re_sum]
   calc ∑ i : d, (M i i).re
       ≤ ∑ i : d, ‖M i i‖ := Finset.sum_le_sum fun i _ => Complex.re_le_norm _
     _ ≤ ∑ i : d, ‖M‖ := Finset.sum_le_sum fun i _ => norm_entry_le_entrywise_sup_norm M
@@ -507,10 +499,7 @@ private lemma trace_add_smul_one_re {d : Type*} [Fintype d] [DecidableEq d] (H :
     (c : ℝ) :
     (H + (↑c : ℂ) • (1 : Matrix d d ℂ)).trace.re =
     H.trace.re + c * ↑(Fintype.card d) := by
-  rw [Matrix.trace_add, Matrix.trace_smul, smul_eq_mul]
-  have : (1 : Matrix d d ℂ).trace = (↑(Fintype.card d) : ℂ) := by
-    simp [Matrix.trace, Matrix.diag, Finset.sum_const, nsmul_eq_mul]
-  rw [this]; simp
+  simp
 
 /-- Core Hermitian bound: `‖L(H)‖ ≤ d(2d+1)·‖H‖` for Hermitian H and sub-TP L.
     Uses shift trick: L(H) = L(H+c·I) - c·L(I) where c = d·‖H‖. -/
@@ -885,10 +874,8 @@ instance : LawfulMonad (QComp d) := LawfulMonad.mk'
 /-- Composing any instrument with the failing continuation fails. -/
 theorem QComp.qbind_fail (c : QComp d α) :
     QComp.qbind c (fun _ => (QComp.qfail : QComp d β)) = QComp.qfail := by
-  apply QComp.ext_fun; intro b ρ
-  change ∑' a, ((0 : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
-    (c.branch a ρ)) = 0
-  simp only [LinearMap.zero_apply, tsum_zero]
+  ext
+  simp [QComp.qbind, QComp.qfail]
 
 /-- The failing instrument followed by any continuation fails. -/
 theorem QComp.qfail_qbind (f : α → QComp d β) :
@@ -1028,11 +1015,8 @@ omit [DecidableEq d] in
 /-- Imaginary part of the trace of a Hermitian matrix is zero. -/
 theorem trace_im_zero_of_hermitian {M : Matrix d d ℂ}
     (hH : M.IsHermitian) : M.trace.im = 0 := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ x : d, M x x).im = ∑ x : d, (M x x).im from
-    map_sum Complex.imAddGroupHom _ _]
-  apply Finset.sum_eq_zero; intro i _
-  exact Complex.conj_eq_iff_im.mp (congr_fun (congr_fun hH i) i)
+  simpa [Matrix.trace] using
+    Finset.sum_eq_zero fun i _ => Complex.conj_eq_iff_im.mp (congr_fun (congr_fun hH i) i)
 
 /-- Weighted average bound for prTrue_Q under qbind.
     The core technical lemma: post-composition with ε-close continuations
