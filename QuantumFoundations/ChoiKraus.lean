@@ -28,8 +28,8 @@ square root) yields `|n|·|n|` Kraus operators.
 * `choi_posSemidef` — `IsCPMap Φ → (choi Φ).PosSemidef`.
 * `exists_kraus_of_choi_posSemidef`, `exists_kraus` — a map with PSD Choi matrix,
   in particular a CP map, is a Kraus sum over `n × n`.
-* `exists_kraus_fin` — the same with index set `Fin (|n| * |n|)`;
-  `exists_kraus_fin_fin` is its form at `n = Fin d` with index set `Fin (d * d)`.
+* `exists_kraus_fin_card` — the same with index set `Fin (|n| * |n|)`;
+  `exists_kraus_fin` is the form at `n = Fin d` with index set `Fin (d * d)`.
 * `kraus_sum_conjTranspose_mul_self_eq_one` — the Kraus operators of a
   trace-preserving map satisfy `∑ i, (K i)ᴴ * K i = 1`.
 * `isCPMap_of_kraus` — a Kraus sum is completely positive.
@@ -163,7 +163,7 @@ theorem exists_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
 omit [DecidableEq n] in
 /-- Kraus representation with `|n| * |n|` operators indexed by
 `Fin (Fintype.card n * Fintype.card n)`. -/
-theorem exists_kraus_fin {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
+theorem exists_kraus_fin_card {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) :
     ∃ K : Fin (Fintype.card n * Fintype.card n) → Matrix n n ℂ,
       ∀ ρ, Φ ρ = ∑ i, K i * ρ * (K i)ᴴ := by
@@ -176,7 +176,7 @@ theorem exists_kraus_fin {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
 
 /-- Kraus representation of a map on `Fin d`-indexed matrices with `d * d`
 operators indexed by `Fin (d * d)`. -/
-theorem exists_kraus_fin_fin {d : ℕ}
+theorem exists_kraus_fin {d : ℕ}
     {Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ} (hΦ : IsCPMap Φ) :
     ∃ K : Fin (d * d) → Matrix (Fin d) (Fin d) ℂ,
       ∀ ρ, Φ ρ = ∑ i, K i * ρ * (K i)ᴴ := by

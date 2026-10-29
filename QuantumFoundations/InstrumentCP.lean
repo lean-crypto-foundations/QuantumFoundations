@@ -63,7 +63,7 @@ theorem isCPMap_zero {n : Type*} :
 open Classical in
 /-- Every branch of the trivial instrument `qpure a₀` is completely positive:
 it is `id` on the outcome `a₀` and `0` elsewhere. -/
-theorem qpure_branch_isCPMap {n : Type*} [Fintype n] [DecidableEq n] {α : Type} (a₀ : α) :
+theorem qpure_branch_isCPMap {n : Type*} [Fintype n] {α : Type} (a₀ : α) :
     ∀ a, IsCPMap ((QComp.qpure (d := n) a₀).branch a) := by
   intro a
   change IsCPMap (if a = a₀ then LinearMap.id else 0)
@@ -100,7 +100,7 @@ end Quantum
 namespace Quantum.GentleMeasurement
 
 /-- A projector on a system with basis indexed by `d`: self-adjoint and idempotent. -/
-structure Projector (d : Type*) [Fintype d] [DecidableEq d] where
+structure Projector (d : Type*) [Fintype d] where
   /-- The underlying matrix. -/
   val : Matrix d d ℂ
   /-- The matrix is self-adjoint. -/

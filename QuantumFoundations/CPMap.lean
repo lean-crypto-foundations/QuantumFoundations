@@ -59,12 +59,13 @@ namespace Quantum
 /-! ## General Theory (arbitrary Fintype index)
 
 All definitions and lemmas in this section work for matrices indexed by any
-`Fintype` with `DecidableEq`. This generality is needed to apply
-`dual_positive_of_positive` at `ι = Fin k × n` in the proof of `dual_cp_of_cp`. -/
+`Fintype`; the matrix units and the dual map also take `DecidableEq`. This generality
+is needed to apply `dual_positive_of_positive` at `ι = Fin k × n` in the proof of
+`dual_cp_of_cp`. -/
 
 section General
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type*} [Fintype ι]
 
 /-- A linear map on matrices is positive if it preserves PSD. -/
 def IsPositiveMap
@@ -82,6 +83,8 @@ def IsSTP
   ∀ A, A.PosSemidef → (Φ A).trace.re ≤ A.trace.re
 
 /-! ## Dual Map -/
+
+variable [DecidableEq ι]
 
 /-- Standard matrix unit: 1 at position (i, j), 0 elsewhere. -/
 def matUnit (i j : ι) : Matrix ι ι ℂ :=
@@ -413,7 +416,7 @@ end General
 
 section Blocks
 
-variable {n : Type*} [Fintype n] [DecidableEq n]
+variable {n : Type*} [Fintype n]
 
 /-- Extract the `(a, b)`-th `n×n` block from a `(κ×n)×(κ×n)` block matrix. -/
 def blockMatrix {κ : Type*} (M : Matrix (κ × n) (κ × n) ℂ)
@@ -441,7 +444,7 @@ def tensorIdMap
       ext; simp [blockMatrix, Matrix.smul_apply]
     rw [this, LinearMapClass.map_smul]; rfl
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- Entry formula of the blockwise map `id_k ⊗ Φ`. -/
 theorem tensorIdMap_apply
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
@@ -456,7 +459,7 @@ def IsCPMap
   ∀ (k : ℕ) (M : Matrix (Fin k × n) (Fin k × n) ℂ),
     M.PosSemidef → (tensorIdMap Φ k M).PosSemidef
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- A completely positive map is positive: complete positivity at `k = 1`,
     with `A` embedded as the single block of a `(1×n)×(1×n)` matrix. -/
 theorem IsCPMap.isPositiveMap
@@ -469,8 +472,8 @@ theorem IsCPMap.isPositiveMap
   rw [e]
   exact h.submatrix _
 
-omit [Fintype n] [DecidableEq n] in
-/-- `id_k ⊗ (Ψ ∘ Φ) =(id_k ⊗ Ψ) ∘ (id_k ⊗ Φ)`: the block-wise tensor with the
+omit [Fintype n] in
+/-- `id_k ⊗ (Ψ ∘ Φ) = (id_k ⊗ Ψ) ∘ (id_k ⊗ Φ)`: the block-wise tensor with the
 identity commutes with composition. -/
 theorem tensorIdMap_comp
     (Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) (k : ℕ)
@@ -479,7 +482,7 @@ theorem tensorIdMap_comp
   ext p q
   rfl
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- The identity map is completely positive. -/
 theorem isCPMap_id :
     IsCPMap (LinearMap.id : Matrix n n ℂ →ₗ[ℂ]
@@ -492,14 +495,14 @@ theorem isCPMap_id :
     rfl
   rwa [h]
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- The sum of two completely positive maps is completely positive. -/
 theorem isCPMap_add
     {Φ Ψ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
     (hΦ : IsCPMap Φ) (hΨ : IsCPMap Ψ) : IsCPMap (Φ + Ψ) :=
   fun k M hM => (hΦ k M hM).add (hΨ k M hM)
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- A finite sum of completely positive maps is completely positive. -/
 theorem isCPMap_sum {ι : Type*} (s : Finset ι)
     (Φ : ι → Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
@@ -513,7 +516,7 @@ theorem isCPMap_sum {ι : Type*} (s : Finset ι)
   rw [h0]
   exact Matrix.PosSemidef.zero
 
-omit [Fintype n] [DecidableEq n] in
+omit [Fintype n] in
 /-- The composite of two completely positive maps is completely positive. -/
 theorem isCPMap_comp
     {Ψ Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
@@ -522,7 +525,6 @@ theorem isCPMap_comp
   rw [tensorIdMap_comp]
   exact hΨ k _ (hΦ k M hM)
 
-omit [DecidableEq n] in
 /-- A linear map `Φ` with `Φ ρ = K ρ Kᴴ` for every `ρ` is completely positive:
 its extension `id_k ⊗ Φ` is conjugation by `1ₖ ⊗ K`. -/
 theorem isCPMap_conj (K : Matrix n n ℂ)
@@ -542,7 +544,6 @@ theorem isCPMap_conj (K : Matrix n n ℂ)
   rw [key]
   exact hM.mul_mul_conjTranspose_same _
 
-omit [DecidableEq n] in
 /-- Conjugation `ρ ↦ K ρ Kᴴ` by any matrix is completely positive. -/
 theorem isCPMap_conjugate (K : Matrix n n ℂ) :
     IsCPMap (UnitaryChannel.conjugate K) :=
@@ -552,7 +553,7 @@ theorem isCPMap_conjugate (K : Matrix n n ℂ) :
 
 /-- A CPTP (completely positive, trace-preserving) map.
     This represents a quantum channel. -/
-structure CPTPMap (n : Type*) [Fintype n] [DecidableEq n] where
+structure CPTPMap (n : Type*) [Fintype n] where
   toLinearMap : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ
   cp : IsCPMap toLinearMap
   tp : IsTP toLinearMap
@@ -606,7 +607,7 @@ omit [Fintype n] in
 /-- Block decomposition of matrix units in the product type:
     `blockMatrix (matUnit x y) d c` is `matUnit x.2 y.2` when `d = x.1 ∧ c = y.1`,
     and zero otherwise. Uses product-type arguments for `simp_rw` matching. -/
-private theorem blockMatrix_matUnit {k : ℕ} (x y : Fin k × n) (c d : Fin k) :
+private theorem blockMatrix_matUnit [DecidableEq n] {k : ℕ} (x y : Fin k × n) (c d : Fin k) :
     blockMatrix (matUnit x y) d c =
       if d = x.1 ∧ c = y.1 then (matUnit x.2 y.2 : Matrix n n ℂ) else 0 := by
   obtain ⟨xk, xn⟩ := x; obtain ⟨yk, yn⟩ := y
@@ -618,7 +619,7 @@ private theorem blockMatrix_matUnit {k : ℕ} (x y : Fin k × n) (c d : Fin k) :
 
 /-- The dual of `tensorIdMap Φ k` (at the `Fin k × n` level) equals
     `tensorIdMap (dualMap Φ) k`. This is the key lemma for `dual_cp_of_cp`. -/
-private theorem dualMap_tensorIdMap {k : ℕ}
+private theorem dualMap_tensorIdMap [DecidableEq n] {k : ℕ}
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) :
     dualMap (tensorIdMap Φ k) = tensorIdMap (dualMap Φ) k := by
   ext M ⟨a, i⟩ ⟨b, j⟩
@@ -636,7 +637,7 @@ private theorem dualMap_tensorIdMap {k : ℕ}
 /-- The dual of a CP map is CP. Proof: for each `k`, `tensorIdMap Φ k` is positive
     (by CP). By `dual_positive_of_positive`, its dual is positive. By
     `dualMap_tensorIdMap`, this dual equals `tensorIdMap (dualMap Φ) k`. -/
-theorem dual_cp_of_cp
+theorem dual_cp_of_cp [DecidableEq n]
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
     (hΦ : IsCPMap Φ) : IsCPMap (dualMap Φ) := by
   intro k M hM
@@ -648,7 +649,7 @@ theorem dual_cp_of_cp
 
 /-- The dual of a CPTP map is positive and unital. Complete positivity of the dual is
     `dual_cp_of_cp`. -/
-theorem cptp_dual_is_cpu (Φ : CPTPMap n) :
+theorem cptp_dual_is_cpu [DecidableEq n] (Φ : CPTPMap n) :
     IsPositiveMap (dualMap Φ.toLinearMap) ∧ dualMap Φ.toLinearMap 1 = 1 := by
   constructor
   · exact dual_positive_of_positive _ Φ.positive
@@ -657,7 +658,7 @@ theorem cptp_dual_is_cpu (Φ : CPTPMap n) :
 /-- CPU maps preserve effects: `0 ≤ E ≤ I → 0 ≤ Φ†(E) ≤ I`.
     Proof: CP ⟹ positive, so Φ†(E) ≥ 0.
            Φ†(I-E) = I - Φ†(E) ≥ 0, so Φ†(E) ≤ I. -/
-theorem cpu_preserves_effect (Φ : CPTPMap n) (E : Matrix n n ℂ)
+theorem cpu_preserves_effect [DecidableEq n] (Φ : CPTPMap n) (E : Matrix n n ℂ)
     (hE : Quantum.IsEffect E) :
     Quantum.IsEffect (dualMap Φ.toLinearMap E) := by
   obtain ⟨hE_psd, hE_comp⟩ := hE

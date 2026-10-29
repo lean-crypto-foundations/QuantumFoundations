@@ -85,11 +85,10 @@ noncomputable section
 
 namespace Quantum
 
-variable {d : Type*} [Fintype d] [DecidableEq d] {α β γ δ : Type}
+variable {d : Type*} [Fintype d] {α β γ δ : Type}
 
 /-! ## Helper: trace of PSD is non-negative -/
 
-omit [DecidableEq d] in
 /-- The trace of a positive semidefinite matrix has nonnegative real part. -/
 theorem trace_re_nonneg_of_psd {ρ : Matrix d d ℂ}
     (hρ : ρ.PosSemidef) : 0 ≤ ρ.trace.re :=
@@ -99,7 +98,7 @@ theorem trace_re_nonneg_of_psd {ρ : Matrix d d ℂ}
 
 /-- A density matrix on a system with basis indexed by `d`: a positive semidefinite
 complex matrix of trace one. -/
-structure DensityMatrix (d : Type*) [Fintype d] [DecidableEq d] where
+structure DensityMatrix (d : Type*) [Fintype d] where
   /-- The underlying matrix. -/
   val : Matrix d d ℂ
   /-- The matrix is positive semidefinite. -/
@@ -115,7 +114,7 @@ trace-non-increasing on positive semidefinite inputs. The branches need not be
 completely positive (the transpose map is a one-outcome `QComp`), so a `QComp` is
 a quantum instrument in the physical sense only when every branch satisfies
 `IsCPMap`; results that need this take it as a hypothesis. -/
-structure QComp (d : Type*) [Fintype d] [DecidableEq d] (α : Type) where
+structure QComp (d : Type*) [Fintype d] (α : Type) where
   /-- The linear map applied on outcome `a`. -/
   branch : α → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
   /-- Each branch maps positive semidefinite matrices to positive semidefinite
@@ -184,7 +183,7 @@ def QComp.qfail : QComp d α where
 
 /-! ## Summability Infrastructure for PSD Matrices -/
 
-omit [Fintype d] [DecidableEq d] in
+omit [Fintype d] in
 /-- Cauchy–Schwarz for PSD matrices: `|M i j|² ≤ (M i i).re * (M j j).re`.
     Proved via non-negative determinant of the 2×2 principal submatrix. -/
 theorem psd_cauchy_schwarz {M : Matrix d d ℂ} (hM : M.PosSemidef)
@@ -209,7 +208,6 @@ theorem psd_cauchy_schwarz {M : Matrix d d ℂ} (hM : M.PosSemidef)
     simp [Complex.mul_re, hii_im, hjj_im]
   linarith
 
-omit [DecidableEq d] in
 /-- Entry norm bound for PSD matrices: `‖M i j‖ ≤ trace(M).re`. -/
 theorem psd_entry_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef)
     (i j : d) : ‖M i j‖ ≤ M.trace.re := by
@@ -233,14 +231,12 @@ theorem psd_entry_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef)
       _ ≤ M.trace.re ^ 2 := hab_le
   nlinarith [norm_nonneg (M i j), sq_nonneg (M.trace.re - ‖M i j‖)]
 
-omit [DecidableEq d] in
 /-- For PSD matrices, the sup-norm is bounded by the trace.
     Uses `psd_cauchy_schwarz` (2×2 principal minor determinant) and `Matrix.norm_le_iff`. -/
 theorem psd_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef) :
     ‖M‖ ≤ M.trace.re :=
   (Matrix.norm_le_iff (trace_re_nonneg_of_psd hM)).mpr (psd_entry_norm_le_trace hM)
 
-omit [DecidableEq d] in
 /-- A family of PSD matrices with summable traces is summable (in the product/norm topology). -/
 theorem psd_summable_of_trace_summable {f : α → Matrix d d ℂ}
     (hpsd : ∀ a, (f a).PosSemidef)
@@ -249,13 +245,13 @@ theorem psd_summable_of_trace_summable {f : α → Matrix d d ℂ}
   summable_norm_iff.mp
     (htrace.of_nonneg_of_le (fun _ => norm_nonneg _) (fun a => psd_norm_le_trace (hpsd a)))
 
-omit [Fintype d] [DecidableEq d] in
+omit [Fintype d] in
 /-- Entry-wise summability from matrix summability. -/
 private theorem summable_entry {f : α → Matrix d d ℂ}
     (hf : Summable f) (i j : d) : Summable (fun a => f a i j) :=
   Pi.summable.mp (Pi.summable.mp hf i) j
 
-omit [Fintype d] [DecidableEq d] in
+omit [Fintype d] in
 /-- Entry-wise tsum for summable matrix families. -/
 private theorem tsum_entry {f : α → Matrix d d ℂ}
     (hf : Summable f) (i j : d) :
@@ -264,7 +260,7 @@ private theorem tsum_entry {f : α → Matrix d d ℂ}
   have h2 : (∑' a, f a i) j = ∑' a, f a i j := Pi.tsum_apply (Pi.summable.mp hf i)
   exact (congr_fun h1 j).trans h2
 
-omit [Fintype d] [DecidableEq d] in
+omit [Fintype d] in
 /-- Tsum of Hermitian matrices is Hermitian. -/
 private theorem tsum_isHermitian {f : α → Matrix d d ℂ}
     (hH : ∀ a, (f a).IsHermitian) (hf : Summable f) :
@@ -275,7 +271,7 @@ private theorem tsum_isHermitian {f : α → Matrix d d ℂ}
   congr 1; ext a
   exact congr_fun (congr_fun (hH a) i) j
 
-omit [Fintype d] [DecidableEq d] in
+omit [Fintype d] in
 /-- Tsum of PSD matrices is PSD (summable family). -/
 theorem tsum_posSemidef [Finite d] {f : α → Matrix d d ℂ}
     (hpsd : ∀ a, (f a).PosSemidef) (hf : Summable f) :
@@ -306,7 +302,6 @@ theorem tsum_posSemidef [Finite d] {f : α → Matrix d d ℂ}
         (fun i' a' => star x i' * ∑ j : d, f a' i' j * x j) i a) from by simp]
   rw [← Summable.tsum_finsetSum (fun i _ => (hrow i).mul_left _)]
 
-omit [DecidableEq d] in
 /-- Trace commutes with tsum for summable matrix families. -/
 theorem trace_tsum {f : α → Matrix d d ℂ} (hf : Summable f) :
     (∑' a, f a).trace = ∑' a, (f a).trace := by
@@ -314,15 +309,13 @@ theorem trace_tsum {f : α → Matrix d d ℂ} (hf : Summable f) :
 
 /-- The trace, as a ContinuousLinearMap from matrices to ℂ. -/
 def traceCLM (d : Type*) [Fintype d] : Matrix d d ℂ →L[ℂ] ℂ :=
-  (traceLinearMap (d) ℂ ℂ).toContinuousLinearMap
+  (traceLinearMap d ℂ ℂ).toContinuousLinearMap
 
-omit [DecidableEq d] in
 /-- Summability of traces from summability of matrices. -/
 theorem trace_summable {f : α → Matrix d d ℂ} (hf : Summable f) :
     Summable (fun a => (f a).trace) :=
   (traceCLM d).summable hf
 
-omit [DecidableEq d] in
 /-- Summability of trace real parts from summability of matrices. -/
 theorem trace_re_summable {f : α → Matrix d d ℂ} (hf : Summable f) :
     Summable (fun a => (f a).trace.re) :=
@@ -342,7 +335,6 @@ For Hermitian H: shift H + d‖H‖·I to make PSD, use triangle inequality → 
 For general M: decompose M = H₁ + (-i)H₂ with ‖Hₖ‖ ≤ ‖M‖ → 2d(2d+1)·‖M‖.
 -/
 
-omit [DecidableEq d] in
 /-- Single branch sub-TP: trace of one branch ≤ trace of input, for PSD input. -/
 private lemma single_stp_re
     {α : Type}
@@ -1005,13 +997,11 @@ theorem absDiff_le_iff {a b ε : ℝ≥0∞} :
     · exact tsub_le_iff_right.mpr (by rwa [add_comm])
     · exact tsub_le_iff_right.mpr (by rwa [add_comm])
 
-omit [DecidableEq d] in
 /-- PSD matrix with zero trace is the zero matrix (wrapper for Mathlib). -/
 private theorem psd_zero_of_trace_zero {M : Matrix d d ℂ}
     (hM : M.PosSemidef) (htr : M.trace = 0) : M = 0 :=
   hM.trace_eq_zero_iff.mp htr
 
-omit [DecidableEq d] in
 /-- Imaginary part of the trace of a Hermitian matrix is zero. -/
 theorem trace_im_zero_of_hermitian {M : Matrix d d ℂ}
     (hH : M.IsHermitian) : M.trace.im = 0 := by
@@ -1162,7 +1152,7 @@ theorem absDiff_prTrue_Q_qbind_le {α : Type} (c : QComp d α)
     Given measurement operators `M : α → Matrix` with completeness `∑ M†M = I`,
     each branch maps `ρ ↦ M(a) ρ M(a)†`.
     Automatically proves PSD preservation, summability, and trace preservation. -/
-def QComp.ofKraus [Fintype α] (M : α → Matrix d d ℂ)
+def QComp.ofKraus [DecidableEq d] [Fintype α] (M : α → Matrix d d ℂ)
     (h_complete : ∑ a, (M a)ᴴ * M a = 1) : QComp d α where
   branch a := {
     toFun := fun ρ => M a * ρ * (M a)ᴴ
@@ -1186,7 +1176,7 @@ def QComp.ofKraus [Fintype α] (M : α → Matrix d d ℂ)
 
 /-- `QComp.ofKraus` branch unfolds to conjugation. -/
 @[simp]
-theorem QComp.ofKraus_branch [Fintype α] (M : α → Matrix d d ℂ)
+theorem QComp.ofKraus_branch [DecidableEq d] [Fintype α] (M : α → Matrix d d ℂ)
     (h : ∑ a, (M a)ᴴ * M a = 1) (a : α) (ρ : Matrix d d ℂ) :
     (QComp.ofKraus M h).branch a ρ = M a * ρ * (M a)ᴴ := rfl
 

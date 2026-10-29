@@ -548,29 +548,34 @@ theorem qrhl_unitary
 
 /-! ## Quantum Indistinguishability -/
 
+section Indist
+
+variable {ι : Type*} [Fintype ι]
+
 /-- **Quantum indistinguishability (induced / Helstrom distance).** Two programs
     are ε-indistinguishable if no distinguisher `D` and input `ρ` *on the
-    program's own dimension* `d₁` separate them by more than ε.
+    program's own system* `ι` separate them by more than ε.
 
     `ρ` carries no reference register; a diamond-norm variant adds one.
 
-    At dimension `d₁ = 0` there is no density matrix (the trace of the empty
-    matrix is `0`, not `1`), so `qIndist C₁ C₂ ε` holds for all `C₁`, `C₂` and
-    `ε`. A statement about `qIndist` carries information only for `d₁ ≠ 0`,
-    which a caller over a variable dimension states as `[NeZero d₁]`.
+    For an empty index type `ι` there is no density matrix (the trace of the
+    empty matrix is `0`, not `1`), so `qIndist C₁ C₂ ε` holds for all `C₁`, `C₂`
+    and `ε`. A statement about `qIndist` carries information only for a nonempty
+    `ι`, which a caller over a variable system states as `[Nonempty ι]`
+    (`[NeZero d]` at `ι = Fin d`).
 
     The definition is direct; no theorem derives `qIndist` from a `qrHoare`
     judgment. -/
-def qIndist (C₁ C₂ : QComp (Fin d₁) α) (ε : ℝ≥0∞) : Prop :=
-  ∀ (D : α → QComp (Fin d₁) Bool) (ρ : DensityMatrix (Fin d₁)),
+def qIndist (C₁ C₂ : QComp ι α) (ε : ℝ≥0∞) : Prop :=
+  ∀ (D : α → QComp ι Bool) (ρ : DensityMatrix ι),
     absDiff (prTrue_Q (QComp.qbind C₁ D) ρ) (prTrue_Q (QComp.qbind C₂ D) ρ) ≤ ε
 
 /-- qIndist is reflexive. -/
-theorem qIndist_refl (C : QComp (Fin d₁) α) : qIndist C C 0 := by
+theorem qIndist_refl (C : QComp ι α) : qIndist C C 0 := by
   intro D ρ; simp [absDiff]
 
 /-- qIndist is symmetric. -/
-theorem qIndist_symm {C₁ C₂ : QComp (Fin d₁) α} {ε : ℝ≥0∞}
+theorem qIndist_symm {C₁ C₂ : QComp ι α} {ε : ℝ≥0∞}
     (h : qIndist C₁ C₂ ε) : qIndist C₂ C₁ ε := by
   intro D ρ
   have := h D ρ
@@ -579,7 +584,7 @@ theorem qIndist_symm {C₁ C₂ : QComp (Fin d₁) α} {ε : ℝ≥0∞}
   exact this
 
 /-- qIndist satisfies triangle inequality. -/
-theorem qIndist_triangle {C₁ C₂ C₃ : QComp (Fin d₁) α} {ε₁ ε₂ : ℝ≥0∞}
+theorem qIndist_triangle {C₁ C₂ C₃ : QComp ι α} {ε₁ ε₂ : ℝ≥0∞}
     (h₁ : qIndist C₁ C₂ ε₁) (h₂ : qIndist C₂ C₃ ε₂) :
     qIndist C₁ C₃ (ε₁ + ε₂) := by
   intro D ρ
@@ -588,5 +593,7 @@ theorem qIndist_triangle {C₁ C₂ C₃ : QComp (Fin d₁) α} {ε₁ ε₂ : �
         absDiff (prTrue_Q (QComp.qbind C₂ D) ρ) (prTrue_Q (QComp.qbind C₃ D) ρ) :=
         absDiff_triangle _ _ _
     _ ≤ ε₁ + ε₂ := add_le_add (h₁ D ρ) (h₂ D ρ)
+
+end Indist
 
 end Quantum.QRHL

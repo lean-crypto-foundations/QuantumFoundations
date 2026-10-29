@@ -65,7 +65,7 @@ noncomputable section
 
 namespace Quantum.GentleMeasurement
 
-variable {d : Type*} [Fintype d] [DecidableEq d]
+variable {d : Type*} [Fintype d]
 
 /-! ## Projector -/
 
@@ -83,7 +83,7 @@ theorem psd : P.val.PosSemidef := by
   exact h
 
 /-- The complementary projector `I - P`. -/
-def complement : Projector d where
+def complement [DecidableEq d] : Projector d where
   val := 1 - P.val
   self_adjoint := by
     rw [conjTranspose_sub, conjTranspose_one, P.self_adjoint]
@@ -91,11 +91,11 @@ def complement : Projector d where
     rw [sub_mul, one_mul, mul_sub, mul_one, P.idempotent, sub_self, sub_zero]
 
 /-- The complement of a projector is PSD. -/
-theorem complement_psd : (1 - P.val).PosSemidef :=
+theorem complement_psd [DecidableEq d] : (1 - P.val).PosSemidef :=
   P.complement.psd
 
 /-- A projector is an effect (0 ≤ P ≤ I). -/
-theorem isEffect : IsEffect P.val :=
+theorem isEffect [DecidableEq d] : IsEffect P.val :=
   ⟨P.psd, P.complement_psd⟩
 
 /-! ## Trace Bounds -/
@@ -120,7 +120,7 @@ theorem trace_Pρ_real (hρ : ρ.IsHermitian) :
 /-- Complement trace bound: `tr((I-P)ρ).re ≤ ε` when `tr(Pρ).re ≥ 1 - ε`.
 
     Proof: `tr((I-P)ρ) = tr(ρ) - tr(Pρ) = 1 - tr(Pρ)`. -/
-theorem complement_trace_le (htr : ρ.trace = 1)
+theorem complement_trace_le [DecidableEq d] (htr : ρ.trace = 1)
     (ε : ℝ) (h : (P.val * ρ).trace.re ≥ 1 - ε) :
     ((1 - P.val) * ρ).trace.re ≤ ε := by
   have hlin : ((1 - P.val) * ρ).trace = ρ.trace - (P.val * ρ).trace := by
@@ -129,7 +129,7 @@ theorem complement_trace_le (htr : ρ.trace = 1)
   linarith
 
 /-- `tr((I-P)ρ(I-P)) = tr((I-P)ρ)` by cyclicity and `(I-P)² = I-P`. -/
-theorem trace_QρQ_eq :
+theorem trace_QρQ_eq [DecidableEq d] :
     ((1 - P.val) * ρ * (1 - P.val)).trace = ((1 - P.val) * ρ).trace := by
   rw [trace_mul_cycle]
   have : (1 - P.val) * (1 - P.val) = 1 - P.val := by
@@ -145,7 +145,7 @@ theorem PρP_psd (hρ : ρ.PosSemidef) :
   exact hρ.conjTranspose_mul_mul_same P.val
 
 /-- `(I-P)ρ(I-P)` is PSD when ρ is PSD. -/
-theorem QρQ_psd (hρ : ρ.PosSemidef) :
+theorem QρQ_psd [DecidableEq d] (hρ : ρ.PosSemidef) :
     ((1 - P.val) * ρ * (1 - P.val)).PosSemidef :=
   P.complement.PρP_psd ρ hρ
 
@@ -155,7 +155,7 @@ theorem QρQ_psd (hρ : ρ.PosSemidef) :
 
     This splits the disturbance into two terms that can be bounded
     separately using Cauchy-Schwarz. -/
-theorem gentle_decomposition :
+theorem gentle_decomposition [DecidableEq d] :
     ρ - P.val * ρ * P.val =
     (1 - P.val) * ρ + P.val * ρ * (1 - P.val) := by
   have h1 : (1 - P.val) * ρ = ρ - P.val * ρ := by
@@ -181,11 +181,11 @@ theorem gentle_diff_trace :
 /-! ## Orthogonality -/
 
 /-- `PQ = 0` for complementary projectors. -/
-theorem P_mul_Q : P.val * (1 - P.val) = 0 := by
+theorem P_mul_Q [DecidableEq d] : P.val * (1 - P.val) = 0 := by
   rw [mul_sub, mul_one, P.idempotent, sub_self]
 
 /-- `QP = 0` for complementary projectors. -/
-theorem Q_mul_P : (1 - P.val) * P.val = 0 := by
+theorem Q_mul_P [DecidableEq d] : (1 - P.val) * P.val = 0 := by
   rw [sub_mul, one_mul, P.idempotent, sub_self]
 
 end Projector
@@ -200,7 +200,6 @@ weighted by a PSD matrix ρ:
 This is the key analytical tool for the gentle measurement bound.
 -/
 
-omit [DecidableEq d] in
 /-- Trace of a PSD-weighted outer product is non-negative:
     `0 ≤ tr(AρA†)` when ρ is PSD.
 
@@ -216,7 +215,6 @@ theorem trace_AρAstar_nonneg {ρ A : Matrix d d ℂ}
 private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z := by
   simp [Complex.normSq_apply]
 
-omit [DecidableEq d] in
 /-- **Cauchy-Schwarz for PSD-weighted trace products**.
 
     For PSD ρ and any matrices A, B:
@@ -276,7 +274,7 @@ theorem trace_product_cs_bound {ρ A B : Matrix d d ℂ}
     each term contributes at most `√ε`.
 
     **References**: Wilde, QIT Lemma 9.4.1; Winter 1999. -/
-theorem gentle_measurement (P : Projector d)
+theorem gentle_measurement [DecidableEq d] (P : Projector d)
     (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (_hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
@@ -330,7 +328,7 @@ theorem gentle_measurement (P : Projector d)
 
 /-- Gentle measurement in trace distance form:
     `traceDist ρ (PρP) ≤ √ε` (half the trace norm bound). -/
-theorem gentle_measurement_traceDist (P : Projector d)
+theorem gentle_measurement_traceDist [DecidableEq d] (P : Projector d)
     (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
@@ -343,7 +341,7 @@ theorem gentle_measurement_traceDist (P : Projector d)
 
 /-- The complement trace bound: `tr((I-P)ρ(I-P)) ≤ ε` for a density matrix `ρ` with
     `tr(Pρ) ≥ 1 - ε`. -/
-theorem complement_sandwich_trace_le (P : Projector d)
+theorem complement_sandwich_trace_le [DecidableEq d] (P : Projector d)
     (ρ : Matrix d d ℂ) (htr : ρ.trace = 1)
     (ε : ℝ) (h_meas : (P.val * ρ).trace.re ≥ 1 - ε) :
     ((1 - P.val) * ρ * (1 - P.val)).trace.re ≤ ε := by
