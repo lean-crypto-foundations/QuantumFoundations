@@ -46,7 +46,6 @@ that need complete positivity, such as the local lifts `TensorProduct.localOp₁
 * `Quantum.QComp.qpure`, `Quantum.QComp.qbind`: the unit and the Kleisli
   composition of instruments.
 * `Quantum.QComp.qfail`: the instrument that aborts with probability one.
-* `Quantum.QComp.ofKraus`: the instrument of a finite family of Kraus operators.
 * `Quantum.prTrue_Q`: the probability of outcome `true` of a Boolean instrument.
 
 ## Main results
@@ -1145,39 +1144,5 @@ theorem absDiff_prTrue_Q_qbind_le {α : Type} (c : QComp d α)
       _ ≤ (∑' a, g a) + 1 * ε := by gcongr
       _ = (∑' a, g a) + ε := by rw [one_mul]
   exact ⟨assemble _ _ (fun a => (hcomp a).1), assemble _ _ (fun a => (hcomp a).2)⟩
-
-/-! ## Smart Constructor: Kraus Operator QComp -/
-
-/-- Build a QComp from Kraus operators over a `Fintype` index.
-    Given measurement operators `M : α → Matrix` with completeness `∑ M†M = I`,
-    each branch maps `ρ ↦ M(a) ρ M(a)†`.
-    Automatically proves PSD preservation, summability, and trace preservation. -/
-def QComp.ofKraus [DecidableEq d] [Fintype α] (M : α → Matrix d d ℂ)
-    (h_complete : ∑ a, (M a)ᴴ * M a = 1) : QComp d α where
-  branch a := {
-    toFun := fun ρ => M a * ρ * (M a)ᴴ
-    map_add' := fun ρ₁ ρ₂ => by simp [mul_add, add_mul]
-    map_smul' := fun c ρ => by
-      change M a * (c • ρ) * (M a)ᴴ = c • (M a * ρ * (M a)ᴴ)
-      simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
-  }
-  branch_psd a ρ hρ := hρ.mul_mul_conjTranspose_same (M a)
-  branch_summable ρ :=
-    summable_of_ne_finset_zero (s := Finset.univ)
-      (fun a ha => absurd (Finset.mem_univ a) ha)
-  branch_stp ρ _ := by
-    simp only [LinearMap.coe_mk, AddHom.coe_mk]
-    rw [tsum_fintype]
-    conv_lhs => arg 1; arg 2; ext a; rw [trace_mul_cycle]
-    rw [show ∑ a : α, ((M a)ᴴ * M a * ρ).trace =
-      ((∑ a : α, (M a)ᴴ * M a) * ρ).trace from by
-      rw [Finset.sum_mul, trace_sum]]
-    rw [h_complete, Matrix.one_mul]
-
-/-- `QComp.ofKraus` branch unfolds to conjugation. -/
-@[simp]
-theorem QComp.ofKraus_branch [DecidableEq d] [Fintype α] (M : α → Matrix d d ℂ)
-    (h : ∑ a, (M a)ᴴ * M a = 1) (a : α) (ρ : Matrix d d ℂ) :
-    (QComp.ofKraus M h).branch a ρ = M a * ρ * (M a)ᴴ := rfl
 
 end Quantum

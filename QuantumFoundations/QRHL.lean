@@ -468,7 +468,7 @@ theorem jointBranch_unitaryChannel
   rw [conjTranspose_kronecker]
   ext i j
   set e := finProdEquiv d₁ d₂
-  simp only [jointBranch, unitaryChannel, conjugate_apply, Matrix.of_apply,
+  simp only [jointBranch, unitaryChannel_branch, Matrix.of_apply,
     extractBlock_apply, Matrix.mul_apply, Matrix.conjTranspose_apply, kronecker_apply]
   -- Reindex flat sums over Fin (d₁*d₂) to product sums over Fin d₁ × Fin d₂
   have hri : ∀ (f : Fin (d₁ * d₂) → ℂ),
