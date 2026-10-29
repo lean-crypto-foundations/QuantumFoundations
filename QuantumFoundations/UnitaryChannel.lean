@@ -46,33 +46,35 @@ noncomputable section
 
 namespace Quantum.UnitaryChannel
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d]
 
 /-- Conjugation by a matrix: `ρ ↦ U ρ Uᴴ` as a linear map. -/
-def conjugate (U : Matrix (Fin d) (Fin d) ℂ) :
-    Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ where
+def conjugate (U : Matrix d d ℂ) :
+    Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ where
   toFun ρ := U * ρ * Uᴴ
   map_add' ρ₁ ρ₂ := by simp [mul_add, add_mul]
   map_smul' c ρ := by
     change U * (c • ρ) * Uᴴ = c • (U * ρ * Uᴴ)
-    simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
+    rw [Matrix.mul_smul, Matrix.smul_mul]
 
 /-- `conjugate U ρ = U * ρ * Uᴴ`. -/
 @[grind =]
-theorem conjugate_apply (U ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem conjugate_apply (U ρ : Matrix d d ℂ) :
     conjugate U ρ = U * ρ * Uᴴ := rfl
+
+variable [DecidableEq d]
 
 /-- The unitary channel `ρ ↦ U ρ Uᴴ` as an instrument with the single
 outcome `()`. -/
-def unitaryChannel (U : Matrix.unitaryGroup (Fin d) ℂ) : QComp d Unit where
-  branch _ := conjugate (U : Matrix (Fin d) (Fin d) ℂ)
+def unitaryChannel (U : Matrix.unitaryGroup d ℂ) : QComp d Unit where
+  branch _ := conjugate (U : Matrix d d ℂ)
   branch_psd _ ρ hρ := by
     simp only [conjugate_apply]
-    exact hρ.mul_mul_conjTranspose_same (U : Matrix (Fin d) (Fin d) ℂ)
+    exact hρ.mul_mul_conjTranspose_same (U : Matrix d d ℂ)
   branch_summable _ :=
     summable_of_ne_finset_zero (s := {()}) (fun b hb => by simp at hb)
   branch_stp ρ hρ := by
-    have htrace : (conjugate (U : Matrix (Fin d) (Fin d) ℂ) ρ).trace = ρ.trace := by
+    have htrace : (conjugate (U : Matrix d d ℂ) ρ).trace = ρ.trace := by
       rw [conjugate_apply, trace_mul_cycle]
       have hU := UnitaryGroup.star_mul_self U
       simp only [star_eq_conjTranspose] at hU
@@ -82,12 +84,12 @@ def unitaryChannel (U : Matrix.unitaryGroup (Fin d) ℂ) : QComp d Unit where
 /-- The unitary channel of `U` followed by the unitary channel of `V` is the
 unitary channel of `V * U`. -/
 theorem unitaryChannel_compose
-    (U V : Matrix.unitaryGroup (Fin d) ℂ) :
+    (U V : Matrix.unitaryGroup d ℂ) :
     QComp.qbind (unitaryChannel U) (fun _ => unitaryChannel V) =
       unitaryChannel (V * U) := by
   apply QComp.ext_fun; intro () ρ
   change ∑' (_ : Unit), conjugate (V : Matrix _ _ ℂ) (conjugate (U : Matrix _ _ ℂ) ρ) =
-    conjugate ((V * U : Matrix.unitaryGroup (Fin d) ℂ) : Matrix _ _ ℂ) ρ
+    conjugate ((V * U : Matrix.unitaryGroup d ℂ) : Matrix _ _ ℂ) ρ
   rw [tsum_eq_single () (fun b hb => absurd rfl hb)]
   simp only [conjugate_apply, UnitaryGroup.mul_val, Matrix.conjTranspose_mul]
   simp only [← Matrix.mul_assoc]

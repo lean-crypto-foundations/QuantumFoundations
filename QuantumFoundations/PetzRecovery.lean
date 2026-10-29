@@ -14,8 +14,8 @@ public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 /-!
 # The Petz recovery map
 
-For a positive linear map `Φ` on `d × d` complex matrices and a PSD reference matrix `σ`, the
-Petz recovery map is
+For a positive linear map `Φ` on complex matrices `Matrix d d ℂ` and a PSD reference matrix `σ`,
+the Petz recovery map is
 
 ```
 R_{σ,Φ}(X) = σ^{1/2} Φ†[ Φ(σ)^{-1/2} X Φ(σ)^{-1/2} ] σ^{1/2}
@@ -77,7 +77,7 @@ noncomputable section
 
 namespace Quantum
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 -- The Loewner order instances are not found automatically; register them locally.
 attribute [local instance] instPartialOrder Matrix.instStarOrderedRing
@@ -94,8 +94,8 @@ The square root and the inverse square root of a PSD matrix are the functional c
     For a PSD matrix `M`, `M.PosSemidef.isHermitian` gives the Hermitian
     structure, and `Matrix.IsHermitian.cfc Real.sqrt` realizes the
     spectral square root concretely via eigendecomposition. -/
-noncomputable def psdSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
-    Matrix (Fin d) (Fin d) ℂ :=
+noncomputable def psdSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef) :
+    Matrix d d ℂ :=
   hM.isHermitian.cfc Real.sqrt
 
 /-- Inverse square root on the support of a PSD matrix, via the unital CFC.
@@ -103,13 +103,13 @@ noncomputable def psdSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
     For PSD `M`, we apply `(√x)⁻¹` on the spectrum (zero at the origin
     by the convention `0⁻¹ = 0`). The eigenvector unitary structure of
     `hM.isHermitian.cfc` makes this the Moore-Penrose inverse of √M. -/
-noncomputable def psdInvSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
-    Matrix (Fin d) (Fin d) ℂ :=
+noncomputable def psdInvSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef) :
+    Matrix d d ℂ :=
   hM.isHermitian.cfc (fun x => (Real.sqrt x)⁻¹)
 
 /-- Helper: spectrum of a PSD matrix (over ℝ) is range of its eigenvalues. -/
 private lemma spectrum_real_nonneg_of_posSemidef
-    (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     ∀ x ∈ spectrum ℝ M, (0 : ℝ) ≤ x := by
   intro x hx
   rw [hM.isHermitian.spectrum_real_eq_range_eigenvalues] at hx
@@ -122,7 +122,7 @@ open scoped MatrixOrder in
     Goes through the unital CFC: `√x · √x = x` on the spectrum of `M`
     (which is nonneg for PSD), so `cfc Real.sqrt M * cfc Real.sqrt M
     = cfc (id) M = M` by `cfc_mul`, `cfc_congr`, `cfc_id`. -/
-theorem psdSqrt_mul_psdSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+theorem psdSqrt_mul_psdSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     psdSqrt M hM * psdSqrt M hM = M := by
   simp only [psdSqrt, ← hM.isHermitian.cfc_eq]
   rw [← cfc_mul Real.sqrt Real.sqrt M,
@@ -136,7 +136,7 @@ open scoped MatrixOrder in
     Goes through the unital CFC: `cfc Real.sqrt M` is `0 ≤ -` because
     `Real.sqrt` is nonneg on the spectrum, so `cfc_nonneg` applies;
     then `nonneg_iff_posSemidef.mp` converts. -/
-theorem psdSqrt_posSemidef (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+theorem psdSqrt_posSemidef (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     (psdSqrt M hM).PosSemidef := by
   rw [psdSqrt, ← hM.isHermitian.cfc_eq, ← Matrix.nonneg_iff_posSemidef]
   exact cfc_nonneg (fun x _ => Real.sqrt_nonneg x)
@@ -147,7 +147,7 @@ open scoped MatrixOrder in
 
     On the spectrum (positive for PosDef M), `(√x)⁻¹ · √x = 1`, so
     `cfc (fun x => (√x)⁻¹ · √x) M = cfc (fun _ => 1) M = 1`. -/
-theorem psdInvSqrt_mul_psdSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef)
+theorem psdInvSqrt_mul_psdSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef)
     (hU : IsUnit M) :
     psdInvSqrt M hM * psdSqrt M hM = 1 := by
   -- PosDef: PosSemidef + invertible. Spectrum is in (0,∞).
@@ -174,7 +174,7 @@ theorem psdInvSqrt_mul_psdSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemid
 open scoped MatrixOrder in
 /-- `psdSqrt M * psdInvSqrt M = 1` when M is invertible (positive definite).
     Symmetric to `psdInvSqrt_mul_psdSqrt`. -/
-theorem psdSqrt_mul_psdInvSqrt (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef)
+theorem psdSqrt_mul_psdInvSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef)
     (hU : IsUnit M) :
     psdSqrt M hM * psdInvSqrt M hM = 1 := by
   have hPD : M.PosDef := hM.posDef_iff_isUnit.mpr hU
@@ -203,13 +203,13 @@ For PSD `M`, `psdInvSqrt M * psdSqrt M` is the functional calculus of the indica
 nonzero reals, the orthogonal projection onto the support of `M`. -/
 
 /-- Every real function is continuous on the real spectrum of a matrix, which is finite. -/
-private lemma continuousOn_spectrum_matrix (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → ℝ) :
+private lemma continuousOn_spectrum_matrix (M : Matrix d d ℂ) (f : ℝ → ℝ) :
     ContinuousOn f (spectrum ℝ M) :=
   Matrix.finite_real_spectrum.continuousOn f
 
 open scoped MatrixOrder in
 /-- `psdInvSqrt M * psdSqrt M` is the support projection of a PSD matrix `M`. -/
-theorem psdInvSqrt_mul_psdSqrt_eq_cfc (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+theorem psdInvSqrt_mul_psdSqrt_eq_cfc (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     psdInvSqrt M hM * psdSqrt M hM = cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) M := by
   simp only [psdInvSqrt, psdSqrt, ← hM.isHermitian.cfc_eq]
   rw [← cfc_mul _ _ M (continuousOn_spectrum_matrix M _) (continuousOn_spectrum_matrix M _)]
@@ -222,7 +222,7 @@ theorem psdInvSqrt_mul_psdSqrt_eq_cfc (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.P
 
 open scoped MatrixOrder in
 /-- `psdSqrt M * psdInvSqrt M` is the support projection of a PSD matrix `M`. -/
-theorem psdSqrt_mul_psdInvSqrt_eq_cfc (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+theorem psdSqrt_mul_psdInvSqrt_eq_cfc (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     psdSqrt M hM * psdInvSqrt M hM = cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) M := by
   simp only [psdInvSqrt, psdSqrt, ← hM.isHermitian.cfc_eq]
   rw [← cfc_mul _ _ M (continuousOn_spectrum_matrix M _) (continuousOn_spectrum_matrix M _)]
@@ -235,21 +235,21 @@ theorem psdSqrt_mul_psdInvSqrt_eq_cfc (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.P
 
 open scoped MatrixOrder in
 /-- The functional calculus of a `{0,1}`-valued function is idempotent. -/
-private lemma cfc_mul_self_of_idem (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → ℝ)
+private lemma cfc_mul_self_of_idem (M : Matrix d d ℂ) (f : ℝ → ℝ)
     (hf : ∀ x, f x * f x = f x) : cfc f M * cfc f M = cfc f M := by
   rw [← cfc_mul _ _ M (continuousOn_spectrum_matrix M _) (continuousOn_spectrum_matrix M _)]
   exact cfc_congr fun x _ => hf x
 
 open scoped MatrixOrder in
 /-- The functional calculus of a real function is Hermitian. -/
-private lemma cfc_conjTranspose (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → ℝ) :
+private lemma cfc_conjTranspose (M : Matrix d d ℂ) (f : ℝ → ℝ) :
     (cfc f M)ᴴ = cfc f M := by
   have h : IsSelfAdjoint (cfc f M) := cfc_predicate f M
   rwa [IsSelfAdjoint, Matrix.star_eq_conjTranspose] at h
 
 open scoped MatrixOrder in
 /-- `psdInvSqrt M` is Hermitian: it is the functional calculus of a real function. -/
-theorem psdInvSqrt_isHermitian (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+theorem psdInvSqrt_isHermitian (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     (psdInvSqrt M hM).IsHermitian := by
   change (psdInvSqrt M hM)ᴴ = psdInvSqrt M hM
   simp only [psdInvSqrt, ← hM.isHermitian.cfc_eq]
@@ -257,13 +257,13 @@ theorem psdInvSqrt_isHermitian (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemid
 
 open scoped MatrixOrder in
 /-- The functional calculus of a nonnegative real function is PSD. -/
-private lemma cfc_posSemidef_of_nonneg (M : Matrix (Fin d) (Fin d) ℂ) (f : ℝ → ℝ)
+private lemma cfc_posSemidef_of_nonneg (M : Matrix d d ℂ) (f : ℝ → ℝ)
     (hf : ∀ x, 0 ≤ f x) : (cfc f M).PosSemidef :=
   Matrix.nonneg_iff_posSemidef.mp (cfc_nonneg fun x _ => hf x)
 
 open scoped MatrixOrder in
 /-- The support projection of a Hermitian matrix and its complement sum to `1`. -/
-private lemma cfc_supp_add_ker (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.IsHermitian) :
+private lemma cfc_supp_add_ker (M : Matrix d d ℂ) (hM : M.IsHermitian) :
     cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) M
       + cfc (fun x : ℝ => if x = 0 then (1 : ℝ) else 0) M = 1 := by
   rw [← cfc_add (fun x : ℝ => if x = 0 then (0 : ℝ) else 1)
@@ -272,10 +272,12 @@ private lemma cfc_supp_add_ker (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.IsHermit
     cfc_congr (g := fun _ => (1 : ℝ)) (fun x _ => by by_cases h : x = 0 <;> simp [h]),
     cfc_const_one ℝ M hM.isSelfAdjoint]
 
+omit [DecidableEq d] in
 /-- For PSD `W` and a Hermitian idempotent `Q`, `tr(Q W) = 0` forces `Q * W = 0`. -/
-private lemma mul_eq_zero_of_trace_mul_eq_zero {Q W : Matrix (Fin d) (Fin d) ℂ}
+private lemma mul_eq_zero_of_trace_mul_eq_zero {Q W : Matrix d d ℂ}
     (hW : W.PosSemidef) (hQh : Qᴴ = Q) (hQQ : Q * Q = Q) (htr : (Q * W).trace = 0) :
     Q * W = 0 := by
+  classical
   have hSh : (psdSqrt W hW)ᴴ = psdSqrt W hW := (psdSqrt_posSemidef W hW).isHermitian
   have hA : Q * psdSqrt W hW = 0 := by
     rw [← trace_mul_conjTranspose_self_eq_zero_iff, conjTranspose_mul, hQh, hSh]
@@ -285,13 +287,16 @@ private lemma mul_eq_zero_of_trace_mul_eq_zero {Q W : Matrix (Fin d) (Fin d) ℂ
     rw [h1, trace_mul_comm, Matrix.mul_assoc, hQQ, trace_mul_comm, htr]
   rw [← psdSqrt_mul_psdSqrt W hW, ← Matrix.mul_assoc, hA, Matrix.zero_mul]
 
+omit [Fintype d] [DecidableEq d] in
 open scoped MatrixOrder in
 /-- A linear map on matrices that vanishes on every PSD matrix vanishes identically:
     every matrix is a complex combination of four PSD matrices. -/
-private lemma linearMap_eq_zero_of_posSemidef
-    (f : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hf : ∀ B, B.PosSemidef → f B = 0) (B : Matrix (Fin d) (Fin d) ℂ) : f B = 0 := by
-  have herm : ∀ H : Matrix (Fin d) (Fin d) ℂ, H.IsHermitian → f H = 0 := by
+private lemma linearMap_eq_zero_of_posSemidef [Finite d]
+    (f : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hf : ∀ B, B.PosSemidef → f B = 0) (B : Matrix d d ℂ) : f B = 0 := by
+  have := Fintype.ofFinite d
+  classical
+  have herm : ∀ H : Matrix d d ℂ, H.IsHermitian → f H = 0 := by
     intro H hH
     have hdec : H = cfc (fun x : ℝ => max x 0) H - cfc (fun x : ℝ => max (-x) 0) H := by
       rw [← cfc_sub _ _ H (continuousOn_spectrum_matrix H _) (continuousOn_spectrum_matrix H _)]
@@ -321,10 +326,10 @@ private lemma linearMap_eq_zero_of_posSemidef
     with `Φ† = dualMap Φ` and `Φ(σ)^{-1/2} = psdInvSqrt (Φ σ)`, which is zero on the kernel
     of `Φ(σ)`. -/
 noncomputable def petzRecovery
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
-    Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ :=
+    Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ :=
   let σ_half := psdSqrt σ hσ
   let Φσ := Φ σ
   let hΦσ : Φσ.PosSemidef := hΦ σ hσ
@@ -349,8 +354,8 @@ noncomputable def petzRecovery
     The inner and outer sandwiches by the Hermitian matrices `Φ(σ)^{-1/2}` and `σ^{1/2}`
     preserve PSD, and `Φ†` does by hypothesis. -/
 theorem petzRecovery_positive
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
     (hΦ_dual : ∀ ρ, ρ.PosSemidef → (dualMap Φ ρ).PosSemidef)
     (h_invSqrt_sa : (psdInvSqrt (Φ σ) (hΦ σ hσ))ᴴ = psdInvSqrt (Φ σ) (hΦ σ hσ)) :
@@ -379,8 +384,8 @@ alias petzRecovery_cp := petzRecovery_positive
 
 /-- For a positive map `Φ` and PSD `σ`, the Petz recovery map is positive. -/
 theorem petzRecovery_isPositiveMap
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : IsPositiveMap Φ) :
     IsPositiveMap (petzRecovery σ hσ Φ hΦ) :=
   petzRecovery_positive σ hσ Φ hΦ (dual_positive_of_positive Φ hΦ)
@@ -390,8 +395,8 @@ theorem petzRecovery_isPositiveMap
     positive: it is conjugation by `Φ(σ)^{-1/2}`, followed by `Φ†` (completely positive by
     `dual_cp_of_cp`), followed by conjugation by `σ^{1/2}`. -/
 theorem petzRecovery_isCPMap
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : IsCPMap Φ) :
     IsCPMap (petzRecovery σ hσ Φ hΦ.isPositiveMap) := by
   have hS : (psdSqrt σ hσ)ᴴ = psdSqrt σ hσ := (psdSqrt_posSemidef σ hσ).isHermitian
@@ -410,9 +415,9 @@ theorem petzRecovery_isCPMap
     `Π = Φ(σ)^{-1/2} Φ(σ) Φ(σ)^{-1/2}` the support projection of `Φ(σ)`. By `dual_spec`,
     `tr R_{σ,Φ}(X) = tr(Φ(σ)^{-1/2} X Φ(σ)^{-1/2} Φ(σ))`. -/
 theorem petzRecovery_trace
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (X : Matrix (Fin d) (Fin d) ℂ) :
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (X : Matrix d d ℂ) :
     (petzRecovery σ hσ Φ hΦ X).trace
       = (X * cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ)).trace := by
   have hM : (Φ σ).PosSemidef := hΦ σ hσ
@@ -438,17 +443,17 @@ theorem petzRecovery_trace
 /-- The Petz recovery map is trace preserving on inputs supported on the support of `Φ(σ)`:
     if `Π X = X` for the support projection `Π` of `Φ(σ)`, then `tr R_{σ,Φ}(X) = tr X`. -/
 theorem petzRecovery_trace_of_supported
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (X : Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (X : Matrix d d ℂ)
     (hX : cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ) * X = X) :
     (petzRecovery σ hσ Φ hΦ X).trace = X.trace := by
   rw [petzRecovery_trace, trace_mul_comm, hX]
 
 /-- When `Φ(σ)` is invertible, the Petz recovery map is trace preserving on all matrices. -/
 theorem petzRecovery_isTP
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (hU : IsUnit (Φ σ)) :
     IsTP (petzRecovery σ hσ Φ hΦ) := by
   intro X
@@ -462,8 +467,8 @@ theorem petzRecovery_isTP
 
     **Reference**: D. Petz, "Sufficiency of channels over von Neumann algebras" (1988). -/
 theorem petzRecovery_stp
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) :
     ∀ ρ, ρ.PosSemidef →
       (petzRecovery σ hσ Φ hΦ ρ).trace.re ≤ ρ.trace.re := by
@@ -480,8 +485,8 @@ theorem petzRecovery_stp
 /-- Exact recovery of the reference: `R_{σ,Φ}(Φ(σ)) = σ`, when `Φ(σ)` is invertible and
     `Φ†` is unital (equivalently, `Φ` is trace preserving: `tp_iff_dual_unital`). -/
 theorem petzRecovery_exact
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
     (hU : IsUnit (Φ σ))
     (h_unital : dualMap Φ 1 = 1) :
@@ -508,9 +513,9 @@ theorem petzRecovery_exact
     so `tr(Q Φ(σ^{1/2} B σ^{1/2})) = 0` for every `B`, which for PSD `B` forces
     `Q Φ(σ^{1/2} B σ^{1/2}) = 0`, and PSD matrices span all matrices. -/
 theorem dualMap_sandwich_supportProj
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (Y : Matrix (Fin d) (Fin d) ℂ) :
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef) (Y : Matrix d d ℂ) :
     psdSqrt σ hσ * dualMap Φ (cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ) * Y *
         cfc (fun x : ℝ => if x = 0 then (0 : ℝ) else 1) (Φ σ)) * psdSqrt σ hσ
       = psdSqrt σ hσ * dualMap Φ Y * psdSqrt σ hσ := by
@@ -539,7 +544,7 @@ theorem dualMap_sandwich_supportProj
       rwa [hSh] at this
     refine hpsd.trace_eq_zero_iff.mp ?_
     rw [trace_mul_comm, ← Matrix.mul_assoc, hSS, trace_mul_comm, dual_spec, hQT, trace_zero]
-  have hcyc : ∀ Z B : Matrix (Fin d) (Fin d) ℂ,
+  have hcyc : ∀ Z B : Matrix d d ℂ,
       (S * Z * S * B).trace = (Z * (S * B * S)).trace := by
     intro Z B
     rw [show S * Z * S * B = S * (Z * S * B) by simp only [Matrix.mul_assoc], trace_mul_comm S]
@@ -557,7 +562,7 @@ theorem dualMap_sandwich_supportProj
     rwa [conjTranspose_mul, hQh, hWpsd.isHermitian.eq, conjTranspose_zero] at this
   have hall : ∀ B, Q * Φ (S * B * S) = 0 ∧ Φ (S * B * S) * Q = 0 := by
     intro B
-    let L : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ :=
+    let L : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ :=
       Φ ∘ₗ (LinearMap.mulRight ℂ S ∘ₗ LinearMap.mulLeft ℂ S)
     exact ⟨linearMap_eq_zero_of_posSemidef (LinearMap.mulLeft ℂ Q ∘ₗ L)
         (fun B hB => (hW B hB).1) B,
@@ -585,8 +590,8 @@ theorem dualMap_sandwich_supportProj
     **Reference**: D. Petz, "Sufficiency of channels over von Neumann algebras" (1988);
     M. Wilde, *Quantum Information Theory*, 2nd ed., §12.3. -/
 theorem petzRecovery_comp
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ₁ Φ₂ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ₁ Φ₂ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ₁ : ∀ ρ, ρ.PosSemidef → (Φ₁ ρ).PosSemidef)
     (hΦ₂ : ∀ ρ, ρ.PosSemidef → (Φ₂ ρ).PosSemidef) :
     ∀ X, petzRecovery σ hσ (Φ₂.comp Φ₁) (fun ρ hρ => hΦ₂ _ (hΦ₁ ρ hρ)) X =
@@ -594,7 +599,7 @@ theorem petzRecovery_comp
   intro X
   simp only [petzRecovery, LinearMap.coe_mk, AddHom.coe_mk]
   rw [dualMap_comp, LinearMap.comp_apply,
-    show ∀ A B Y C D : Matrix (Fin d) (Fin d) ℂ, A * (B * Y * C) * D = (A * B) * Y * (C * D)
+    show ∀ A B Y C D : Matrix d d ℂ, A * (B * Y * C) * D = (A * B) * Y * (C * D)
       from fun _ _ _ _ _ => by simp only [Matrix.mul_assoc],
     psdInvSqrt_mul_psdSqrt_eq_cfc, psdSqrt_mul_psdInvSqrt_eq_cfc,
     dualMap_sandwich_supportProj σ hσ Φ₁ hΦ₁]
@@ -606,8 +611,8 @@ theorem petzRecovery_comp
     `QComp` instrument. Its branch is completely positive (`petzRecovery_isCPMap`) and
     trace-nonincreasing on PSD inputs (`petzRecovery_stp`). -/
 noncomputable def petzQComp
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
     (hΦ : IsCPMap Φ) :
     QComp d Unit where
   branch _ := petzRecovery σ hσ Φ hΦ.isPositiveMap
