@@ -24,7 +24,7 @@ public import Mathlib.Algebra.Order.Chebyshev
 # Positive instruments and the `QComp` monad
 
 This file defines the type `QComp d α` of families `{E_a}_{a ∈ α}` of linear maps
-on `d × d` complex matrices that are positive (each `E_a` maps positive
+on complex matrices `Matrix d d ℂ` that are positive (each `E_a` maps positive
 semidefinite matrices to positive semidefinite matrices), summable, and whose sum
 is trace-non-increasing on positive semidefinite inputs; the missing trace is the
 probability of abort. It defines the unit and Kleisli composition and proves that
@@ -63,10 +63,11 @@ that need complete positivity, such as the local lifts `TensorProduct.localOp₁
 
 ## Implementation notes
 
-The summability of `qbind` rests on a uniform bound `‖L M‖ ≤ 2d(2d+1) ‖M‖`
+The summability of `qbind` rests on a uniform bound `‖L M‖ ≤ 2n(2n+1) ‖M‖`,
+where `n = Fintype.card d`,
 for every positivity-preserving trace-non-increasing linear map `L`, and on
 the same bound for the sum of the norms of the branches of an instrument. A
-Hermitian `H` is shifted to the positive semidefinite `H + d‖H‖ • 1`; a
+Hermitian `H` is shifted to the positive semidefinite `H + n‖H‖ • 1`; a
 general `M` is written `H₁ + (-i) • H₂` with Hermitian `H₁`, `H₂`.
 
 ## References
@@ -84,22 +85,23 @@ noncomputable section
 
 namespace Quantum
 
-variable {d : ℕ} {α β γ δ : Type}
+variable {d : Type*} [Fintype d] [DecidableEq d] {α β γ δ : Type}
 
 /-! ## Helper: trace of PSD is non-negative -/
 
+omit [DecidableEq d] in
 /-- The trace of a positive semidefinite matrix has nonnegative real part. -/
-theorem trace_re_nonneg_of_psd {ρ : Matrix (Fin d) (Fin d) ℂ}
+theorem trace_re_nonneg_of_psd {ρ : Matrix d d ℂ}
     (hρ : ρ.PosSemidef) : 0 ≤ ρ.trace.re :=
   (Complex.nonneg_iff.mp hρ.trace_nonneg).1
 
 /-! ## Density Matrices -/
 
-/-- A density matrix on a `d`-dimensional system: a positive semidefinite
+/-- A density matrix on a system with basis indexed by `d`: a positive semidefinite
 complex matrix of trace one. -/
-structure DensityMatrix (d : ℕ) where
+structure DensityMatrix (d : Type*) [Fintype d] [DecidableEq d] where
   /-- The underlying matrix. -/
-  val : Matrix (Fin d) (Fin d) ℂ
+  val : Matrix d d ℂ
   /-- The matrix is positive semidefinite. -/
   psd : val.PosSemidef
   /-- The matrix has trace one. -/
@@ -107,24 +109,24 @@ structure DensityMatrix (d : ℕ) where
 
 /-! ## QComp Definition -/
 
-/-- A positive instrument on a `d`-dimensional system with outcomes in `α`: a
-summable family of positive linear maps on `d × d` complex matrices whose sum is
+/-- A positive instrument on a system with basis indexed by a finite type `d` with outcomes
+in `α`: a summable family of positive linear maps on complex matrices `Matrix d d ℂ` whose sum is
 trace-non-increasing on positive semidefinite inputs. The branches need not be
 completely positive (the transpose map is a one-outcome `QComp`), so a `QComp` is
 a quantum instrument in the physical sense only when every branch satisfies
 `IsCPMap`; results that need this take it as a hypothesis. -/
-structure QComp (d : ℕ) (α : Type) where
+structure QComp (d : Type*) [Fintype d] [DecidableEq d] (α : Type) where
   /-- The linear map applied on outcome `a`. -/
-  branch : α → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+  branch : α → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
   /-- Each branch maps positive semidefinite matrices to positive semidefinite
   matrices. -/
-  branch_psd : ∀ a (ρ : Matrix (Fin d) (Fin d) ℂ), ρ.PosSemidef →
+  branch_psd : ∀ a (ρ : Matrix d d ℂ), ρ.PosSemidef →
     (branch a ρ).PosSemidef
   /-- The branches applied to a fixed matrix form a summable family. -/
-  branch_summable : ∀ (ρ : Matrix (Fin d) (Fin d) ℂ),
+  branch_summable : ∀ (ρ : Matrix d d ℂ),
     Summable (fun a => branch a ρ)
   /-- The total trace of the branches is at most the trace of the input. -/
-  branch_stp : ∀ (ρ : Matrix (Fin d) (Fin d) ℂ), ρ.PosSemidef →
+  branch_stp : ∀ (ρ : Matrix d d ℂ), ρ.PosSemidef →
     (∑' a, (branch a ρ).trace).re ≤ ρ.trace.re
 
 /-! ## Extensional Equality -/
@@ -137,7 +139,7 @@ theorem QComp.ext {I J : QComp d α}
 
 /-- Two instruments whose branches agree on every matrix are equal. -/
 theorem QComp.ext_fun {I J : QComp d α}
-    (h : ∀ a (ρ : Matrix (Fin d) (Fin d) ℂ), I.branch a ρ = J.branch a ρ) :
+    (h : ∀ a (ρ : Matrix d d ℂ), I.branch a ρ = J.branch a ρ) :
     I = J :=
   QComp.ext (fun a => LinearMap.ext (h a))
 
@@ -151,7 +153,7 @@ def QComp.qpure (a : α) : QComp d α where
   branch_psd a' ρ hρ := by
     split_ifs with h <;> simp_all [Matrix.PosSemidef.zero]
   branch_summable ρ := by
-    suffices h : Summable (fun a' => if a' = a then ρ else (0 : Matrix (Fin d) (Fin d) ℂ)) by
+    suffices h : Summable (fun a' => if a' = a then ρ else (0 : Matrix d d ℂ)) by
       refine h.congr ?_
       intro a'
       split_ifs <;> simp
@@ -161,7 +163,7 @@ def QComp.qpure (a : α) : QComp d α where
     simp [hb]
   branch_stp ρ _ := by
     have heq : (fun a' => ((if a' = a then
-        (LinearMap.id : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
+        (LinearMap.id : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
         else 0) ρ).trace) =
         (fun a' => if a' = a then ρ.trace else 0) := by
       funext a'; split_ifs <;> simp
@@ -176,16 +178,17 @@ def QComp.qfail : QComp d α where
   branch_psd _ _ _ := Matrix.PosSemidef.zero
   branch_summable _ := summable_zero
   branch_stp ρ hρ := by
-    change (∑' (_ : α), (0 : Matrix (Fin d) (Fin d) ℂ).trace).re ≤ ρ.trace.re
+    change (∑' (_ : α), (0 : Matrix d d ℂ).trace).re ≤ ρ.trace.re
     simp only [Matrix.trace_zero, tsum_zero, Complex.zero_re]
     exact trace_re_nonneg_of_psd hρ
 
 /-! ## Summability Infrastructure for PSD Matrices -/
 
+omit [Fintype d] [DecidableEq d] in
 /-- Cauchy–Schwarz for PSD matrices: `|M i j|² ≤ (M i i).re * (M j j).re`.
     Proved via non-negative determinant of the 2×2 principal submatrix. -/
-theorem psd_cauchy_schwarz {M : Matrix (Fin d) (Fin d) ℂ} (hM : M.PosSemidef)
-    (i j : Fin d) : Complex.normSq (M i j) ≤ (M i i).re * (M j j).re := by
+theorem psd_cauchy_schwarz {M : Matrix d d ℂ} (hM : M.PosSemidef)
+    (i j : d) : Complex.normSq (M i j) ≤ (M i i).re * (M j j).re := by
   have hN : (M.submatrix (![i, j]) (![i, j])).PosSemidef := hM.submatrix _
   have hdet_nn : 0 ≤ (M.submatrix (![i, j]) (![i, j])).det := hN.det_nonneg
   have hdet_eq : (M.submatrix (![i, j]) (![i, j])).det =
@@ -206,13 +209,14 @@ theorem psd_cauchy_schwarz {M : Matrix (Fin d) (Fin d) ℂ} (hM : M.PosSemidef)
     simp [Complex.mul_re, hii_im, hjj_im]
   linarith
 
+omit [DecidableEq d] in
 /-- Entry norm bound for PSD matrices: `‖M i j‖ ≤ trace(M).re`. -/
-theorem psd_entry_norm_le_trace {M : Matrix (Fin d) (Fin d) ℂ} (hM : M.PosSemidef)
-    (i j : Fin d) : ‖M i j‖ ≤ M.trace.re := by
+theorem psd_entry_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef)
+    (i j : d) : ‖M i j‖ ≤ M.trace.re := by
   have hdiag_nn : ∀ k, 0 ≤ (M k k).re :=
     fun k => (Complex.nonneg_iff.mp (hM.diag_nonneg)).1
-  have htrace_re : M.trace.re = ∑ k : Fin d, (M k k).re := by
-    unfold Matrix.trace Matrix.diag; exact map_sum Complex.reAddGroupHom _ _
+  have htrace_re : M.trace.re = ∑ k : d, (M k k).re := by
+    simp [Matrix.trace]
   have htrace_nn : 0 ≤ M.trace.re := trace_re_nonneg_of_psd hM
   have hcs := psd_cauchy_schwarz hM i j
   have hai : (M i i).re ≤ M.trace.re := by
@@ -229,35 +233,40 @@ theorem psd_entry_norm_le_trace {M : Matrix (Fin d) (Fin d) ℂ} (hM : M.PosSemi
       _ ≤ M.trace.re ^ 2 := hab_le
   nlinarith [norm_nonneg (M i j), sq_nonneg (M.trace.re - ‖M i j‖)]
 
+omit [DecidableEq d] in
 /-- For PSD matrices, the sup-norm is bounded by the trace.
     Uses `psd_cauchy_schwarz` (2×2 principal minor determinant) and `Matrix.norm_le_iff`. -/
-theorem psd_norm_le_trace {M : Matrix (Fin d) (Fin d) ℂ} (hM : M.PosSemidef) :
+theorem psd_norm_le_trace {M : Matrix d d ℂ} (hM : M.PosSemidef) :
     ‖M‖ ≤ M.trace.re :=
   (Matrix.norm_le_iff (trace_re_nonneg_of_psd hM)).mpr (psd_entry_norm_le_trace hM)
 
+omit [DecidableEq d] in
 /-- A family of PSD matrices with summable traces is summable (in the product/norm topology). -/
-theorem psd_summable_of_trace_summable {f : α → Matrix (Fin d) (Fin d) ℂ}
+theorem psd_summable_of_trace_summable {f : α → Matrix d d ℂ}
     (hpsd : ∀ a, (f a).PosSemidef)
     (htrace : Summable (fun a => (f a).trace.re)) :
     Summable f :=
   summable_norm_iff.mp
     (htrace.of_nonneg_of_le (fun _ => norm_nonneg _) (fun a => psd_norm_le_trace (hpsd a)))
 
+omit [Fintype d] [DecidableEq d] in
 /-- Entry-wise summability from matrix summability. -/
-private theorem summable_entry {f : α → Matrix (Fin d) (Fin d) ℂ}
-    (hf : Summable f) (i j : Fin d) : Summable (fun a => f a i j) :=
+private theorem summable_entry {f : α → Matrix d d ℂ}
+    (hf : Summable f) (i j : d) : Summable (fun a => f a i j) :=
   Pi.summable.mp (Pi.summable.mp hf i) j
 
+omit [Fintype d] [DecidableEq d] in
 /-- Entry-wise tsum for summable matrix families. -/
-private theorem tsum_entry {f : α → Matrix (Fin d) (Fin d) ℂ}
-    (hf : Summable f) (i j : Fin d) :
+private theorem tsum_entry {f : α → Matrix d d ℂ}
+    (hf : Summable f) (i j : d) :
     (∑' a, f a) i j = ∑' a, f a i j := by
   have h1 : (∑' a, f a) i = ∑' a, f a i := Pi.tsum_apply hf
   have h2 : (∑' a, f a i) j = ∑' a, f a i j := Pi.tsum_apply (Pi.summable.mp hf i)
   exact (congr_fun h1 j).trans h2
 
+omit [Fintype d] [DecidableEq d] in
 /-- Tsum of Hermitian matrices is Hermitian. -/
-private theorem tsum_isHermitian {f : α → Matrix (Fin d) (Fin d) ℂ}
+private theorem tsum_isHermitian {f : α → Matrix d d ℂ}
     (hH : ∀ a, (f a).IsHermitian) (hf : Summable f) :
     (∑' a, f a).IsHermitian := by
   ext i j
@@ -266,10 +275,12 @@ private theorem tsum_isHermitian {f : α → Matrix (Fin d) (Fin d) ℂ}
   congr 1; ext a
   exact congr_fun (congr_fun (hH a) i) j
 
+omit [Fintype d] [DecidableEq d] in
 /-- Tsum of PSD matrices is PSD (summable family). -/
-theorem tsum_posSemidef {f : α → Matrix (Fin d) (Fin d) ℂ}
+theorem tsum_posSemidef [Finite d] {f : α → Matrix d d ℂ}
     (hpsd : ∀ a, (f a).PosSemidef) (hf : Summable f) :
     (∑' a, f a).PosSemidef := by
+  have := Fintype.ofFinite d
   rw [posSemidef_iff_dotProduct_mulVec]
   refine ⟨tsum_isHermitian (fun a => (hpsd a).isHermitian) hf, fun x => ?_⟩
   -- Show: star x ⬝ᵥ (∑' a, f a) *ᵥ x = ∑' a, star x ⬝ᵥ f a *ᵥ x, then use tsum_nonneg
@@ -279,44 +290,41 @@ theorem tsum_posSemidef {f : α → Matrix (Fin d) (Fin d) ℂ}
   have hentry : ∀ i j, Summable (fun a => f a i j) := summable_entry hf
   have hentry_mul : ∀ i j, Summable (fun a => f a i j * x j) :=
     fun i j => (hentry i j).mul_right _
-  have hrow : ∀ i, Summable (fun a => ∑ j : Fin d, f a i j * x j) :=
+  have hrow : ∀ i, Summable (fun a => ∑ j : d, f a i j * x j) :=
     fun i => summable_sum fun j _ => hentry_mul i j
   simp only [dotProduct, mulVec]
   simp_rw [tsum_entry hf]
   simp_rw [← tsum_mul_right]
-  simp_rw [show ∀ i, ∑ j : Fin d, ∑' a, f a i j * x j =
-      ∑' a, ∑ j : Fin d, f a i j * x j from fun i => by
-    rw [show (∑ j : Fin d, ∑' a, f a i j * x j) =
+  simp_rw [show ∀ i, ∑ j : d, ∑' a, f a i j * x j =
+      ∑' a, ∑ j : d, f a i j * x j from fun i => by
+    rw [show (∑ j : d, ∑' a, f a i j * x j) =
         (∑ j ∈ Finset.univ, ∑' a, (fun j' a' => f a' i j' * x j') j a) from by simp]
     rw [← Summable.tsum_finsetSum (fun j _ => hentry_mul i j)]]
   simp_rw [← tsum_mul_left]
-  rw [show (∑ i : Fin d, ∑' a, star x i * ∑ j : Fin d, f a i j * x j) =
+  rw [show (∑ i : d, ∑' a, star x i * ∑ j : d, f a i j * x j) =
       (∑ i ∈ Finset.univ, ∑' a,
-        (fun i' a' => star x i' * ∑ j : Fin d, f a' i' j * x j) i a) from by simp]
+        (fun i' a' => star x i' * ∑ j : d, f a' i' j * x j) i a) from by simp]
   rw [← Summable.tsum_finsetSum (fun i _ => (hrow i).mul_left _)]
 
+omit [DecidableEq d] in
 /-- Trace commutes with tsum for summable matrix families. -/
-theorem trace_tsum {f : α → Matrix (Fin d) (Fin d) ℂ} (hf : Summable f) :
+theorem trace_tsum {f : α → Matrix d d ℂ} (hf : Summable f) :
     (∑' a, f a).trace = ∑' a, (f a).trace := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ j : Fin d, (∑' a, f a) j j) =
-      (∑ j : Fin d, ∑' a, f a j j) from by
-    congr 1; ext j; exact tsum_entry hf j j]
-  rw [show (∑ j ∈ Finset.univ, ∑' a, (fun j' a' => f a' j' j') j a) =
-      (∑ j : Fin d, ∑' a, f a j j) from by simp]
-  rw [← Summable.tsum_finsetSum (fun j _ => summable_entry hf j j)]
+  simp [Matrix.trace, tsum_entry hf, Summable.tsum_finsetSum fun j _ => summable_entry hf j j]
 
 /-- The trace, as a ContinuousLinearMap from matrices to ℂ. -/
-def traceCLM (d : ℕ) : Matrix (Fin d) (Fin d) ℂ →L[ℂ] ℂ :=
-  (traceLinearMap (Fin d) ℂ ℂ).toContinuousLinearMap
+def traceCLM (d : Type*) [Fintype d] : Matrix d d ℂ →L[ℂ] ℂ :=
+  (traceLinearMap (d) ℂ ℂ).toContinuousLinearMap
 
+omit [DecidableEq d] in
 /-- Summability of traces from summability of matrices. -/
-theorem trace_summable {f : α → Matrix (Fin d) (Fin d) ℂ} (hf : Summable f) :
+theorem trace_summable {f : α → Matrix d d ℂ} (hf : Summable f) :
     Summable (fun a => (f a).trace) :=
   (traceCLM d).summable hf
 
+omit [DecidableEq d] in
 /-- Summability of trace real parts from summability of matrices. -/
-theorem trace_re_summable {f : α → Matrix (Fin d) (Fin d) ℂ} (hf : Summable f) :
+theorem trace_re_summable {f : α → Matrix d d ℂ} (hf : Summable f) :
     Summable (fun a => (f a).trace.re) :=
   (trace_summable hf).map Complex.reAddGroupHom Complex.continuous_re
 
@@ -334,15 +342,16 @@ For Hermitian H: shift H + d‖H‖·I to make PSD, use triangle inequality → 
 For general M: decompose M = H₁ + (-i)H₂ with ‖Hₖ‖ ≤ ‖M‖ → 2d(2d+1)·‖M‖.
 -/
 
+omit [DecidableEq d] in
 /-- Single branch sub-TP: trace of one branch ≤ trace of input, for PSD input. -/
 private lemma single_stp_re
     {α : Type}
-    (branch : α → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ))
-    (hpsd : ∀ a (ρ : Matrix (Fin d) (Fin d) ℂ), ρ.PosSemidef → (branch a ρ).PosSemidef)
-    (hsum : ∀ (ρ : Matrix (Fin d) (Fin d) ℂ), Summable (fun a => branch a ρ))
-    (hstp : ∀ (ρ : Matrix (Fin d) (Fin d) ℂ), ρ.PosSemidef →
+    (branch : α → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ))
+    (hpsd : ∀ a (ρ : Matrix d d ℂ), ρ.PosSemidef → (branch a ρ).PosSemidef)
+    (hsum : ∀ (ρ : Matrix d d ℂ), Summable (fun a => branch a ρ))
+    (hstp : ∀ (ρ : Matrix d d ℂ), ρ.PosSemidef →
       (∑' a, (branch a ρ).trace).re ≤ ρ.trace.re)
-    (b : α) (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    (b : α) (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     (branch b M).trace.re ≤ M.trace.re := by
   calc (branch b M).trace.re
       ≤ ∑' a, (branch a M).trace.re :=
@@ -353,25 +362,25 @@ private lemma single_stp_re
     _ ≤ M.trace.re := hstp M hM
 
 private lemma QComp.single_stp (I : QComp d α) (b : α)
-    (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     (I.branch b M).trace.re ≤ M.trace.re :=
   single_stp_re I.branch I.branch_psd I.branch_summable I.branch_stp b M hM
 
 /-- For PSD-preserving sub-TP map L and PSD input M, ‖L(M)‖ ≤ trace(M).re.
     Proof: L(M) is PSD, so ‖L(M)‖ ≤ trace(L(M)).re ≤ trace(M).re. -/
 private theorem subTP_psd_norm_le
-    {d : ℕ}
-    (L : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hpsd : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).PosSemidef)
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
-    (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    {d : Type*} [Fintype d]
+    (L : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hpsd : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).PosSemidef)
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
+    (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     ‖L M‖ ≤ M.trace.re :=
   le_trans (psd_norm_le_trace (hpsd M hM)) (hstp M hM)
 
 /-- Quadratic form bound via Cauchy-Schwarz: `|⟨x, Mx⟩| ≤ d · ‖M‖ · ‖x‖²`. -/
-private lemma norm_quadratic_form_le {d : ℕ}
-    (M : Matrix (Fin d) (Fin d) ℂ) (x : Fin d → ℂ) :
-    ‖star x ⬝ᵥ M *ᵥ x‖ ≤ ↑d * ‖M‖ * ∑ i : Fin d, ‖x i‖ ^ 2 := by
+private lemma norm_quadratic_form_le {d : Type*} [Fintype d]
+    (M : Matrix d d ℂ) (x : d → ℂ) :
+    ‖star x ⬝ᵥ M *ᵥ x‖ ≤ ↑(Fintype.card d) * ‖M‖ * ∑ i : d, ‖x i‖ ^ 2 := by
   simp only [dotProduct, mulVec, star]
   calc ‖∑ i, (starRingEnd ℂ) (x i) * ∑ j, M i j * x j‖
       ≤ ∑ i, ‖(starRingEnd ℂ) (x i) * ∑ j, M i j * x j‖ := norm_sum_le _ _
@@ -385,35 +394,35 @@ private lemma norm_quadratic_form_le {d : ℕ}
           _ ≤ ∑ j, ‖M‖ * ‖x j‖ := Finset.sum_le_sum fun j _ =>
               mul_le_mul_of_nonneg_right (norm_entry_le_entrywise_sup_norm M) (norm_nonneg _)
           _ = ‖M‖ * ∑ j, ‖x j‖ := by rw [Finset.mul_sum]
-    _ ≤ ↑d * ‖M‖ * ∑ i : Fin d, ‖x i‖ ^ 2 := by
-        have h1 : ∑ i : Fin d, ‖x i‖ * (‖M‖ * ∑ j : Fin d, ‖x j‖) =
-            ‖M‖ * (∑ i : Fin d, ‖x i‖) ^ 2 := by
+    _ ≤ ↑(Fintype.card d) * ‖M‖ * ∑ i : d, ‖x i‖ ^ 2 := by
+        have h1 : ∑ i : d, ‖x i‖ * (‖M‖ * ∑ j : d, ‖x j‖) =
+            ‖M‖ * (∑ i : d, ‖x i‖) ^ 2 := by
           rw [sq]; simp_rw [mul_comm (‖M‖) _, ← Finset.sum_mul]; ring
         rw [h1]
         have h2 := @sq_sum_le_card_mul_sum_sq _ ℝ _ _ _ _
           (s := Finset.univ) (f := fun i => ‖x i‖)
-        rw [Finset.card_univ, Fintype.card_fin] at h2
-        calc ‖M‖ * (∑ i : Fin d, ‖x i‖) ^ 2
-            ≤ ‖M‖ * (↑d * ∑ i : Fin d, ‖x i‖ ^ 2) :=
+        rw [Finset.card_univ] at h2
+        calc ‖M‖ * (∑ i : d, ‖x i‖) ^ 2
+            ≤ ‖M‖ * (↑(Fintype.card d) * ∑ i : d, ‖x i‖ ^ 2) :=
               mul_le_mul_of_nonneg_left h2 (norm_nonneg _)
-          _ = ↑d * ‖M‖ * ∑ i : Fin d, ‖x i‖ ^ 2 := by ring
+          _ = ↑(Fintype.card d) * ‖M‖ * ∑ i : d, ‖x i‖ ^ 2 := by ring
 
 /-- Hermitian quadratic form is real: `Im(⟨x, Hx⟩) = 0` for Hermitian H.
     Proved via involution pairing: terms (i,j) and (j,i) contribute conjugate values. -/
-private lemma hermitian_quadratic_im_zero {d : ℕ}
-    (H : Matrix (Fin d) (Fin d) ℂ) (hH : H.IsHermitian) (x : Fin d → ℂ) :
+private lemma hermitian_quadratic_im_zero {d : Type*} [Fintype d]
+    (H : Matrix d d ℂ) (hH : H.IsHermitian) (x : d → ℂ) :
     (star x ⬝ᵥ H *ᵥ x).im = 0 := by
   simp only [dotProduct, mulVec]
-  change (∑ i : Fin d, (star x) i * ∑ j : Fin d, H i j * x j).im = 0
-  rw [show (∑ i : Fin d, (star x) i * ∑ j : Fin d, H i j * x j).im =
-    ∑ i : Fin d, ((star x) i * ∑ j : Fin d, H i j * x j).im from
+  change (∑ i : d, (star x) i * ∑ j : d, H i j * x j).im = 0
+  rw [show (∑ i : d, (star x) i * ∑ j : d, H i j * x j).im =
+    ∑ i : d, ((star x) i * ∑ j : d, H i j * x j).im from
     map_sum Complex.imAddGroupHom _ _]
   simp_rw [Finset.mul_sum,
-    show ∀ i : Fin d, (∑ j : Fin d, (star x) i * (H i j * x j)).im =
-      ∑ j : Fin d, ((star x) i * (H i j * x j)).im from
+    show ∀ i : d, (∑ j : d, (star x) i * (H i j * x j)).im =
+      ∑ j : d, ((star x) i * (H i j * x j)).im from
       fun i => map_sum Complex.imAddGroupHom _ _]
   rw [← Finset.sum_product']
-  let σ : Fin d × Fin d → Fin d × Fin d := fun p => (p.2, p.1)
+  let σ : d × d → d × d := fun p => (p.2, p.1)
   apply Finset.sum_involution (fun a _ => σ a)
   · intro ⟨i, j⟩ _
     set z := (star x) i * (H i j * x j)
@@ -439,32 +448,32 @@ private lemma hermitian_quadratic_im_zero {d : ℕ}
 
 /-- Hermitian shift to PSD: for Hermitian H, `H + c·I` is PSD when `c ≥ d·‖H‖`.
     Uses `norm_quadratic_form_le` for the lower bound on the quadratic form. -/
-private lemma hermitian_shift_psd {d : ℕ} {H : Matrix (Fin d) (Fin d) ℂ}
-    (hH : H.IsHermitian) (c : ℝ) (hc : ↑d * ‖H‖ ≤ c) :
-    (H + (↑c : ℂ) • (1 : Matrix (Fin d) (Fin d) ℂ)).PosSemidef := by
+private lemma hermitian_shift_psd {d : Type*} [Fintype d] [DecidableEq d] {H : Matrix d d ℂ}
+    (hH : H.IsHermitian) (c : ℝ) (hc : ↑(Fintype.card d) * ‖H‖ ≤ c) :
+    (H + (↑c : ℂ) • (1 : Matrix d d ℂ)).PosSemidef := by
   rw [posSemidef_iff_dotProduct_mulVec]
   constructor
-  · have : ((↑c : ℂ) • (1 : Matrix (Fin d) (Fin d) ℂ)).IsHermitian := by
-      change ((↑c : ℂ) • (1 : Matrix (Fin d) (Fin d) ℂ))ᴴ = (↑c : ℂ) • 1
+  · have : ((↑c : ℂ) • (1 : Matrix d d ℂ)).IsHermitian := by
+      change ((↑c : ℂ) • (1 : Matrix d d ℂ))ᴴ = (↑c : ℂ) • 1
       rw [conjTranspose_smul, isHermitian_one]; congr 1; exact Complex.conj_ofReal c
     exact hH.add this
   · intro x
     rw [add_mulVec, dotProduct_add,
-      show ((↑c : ℂ) • (1 : Matrix (Fin d) (Fin d) ℂ)) *ᵥ x = (↑c : ℂ) • x from by
+      show ((↑c : ℂ) • (1 : Matrix d d ℂ)) *ᵥ x = (↑c : ℂ) • x from by
         rw [smul_mulVec (↑c : ℂ) 1 x, one_mulVec],
       dotProduct_smul]
-    have hxx_eq : star x ⬝ᵥ x = ↑(∑ i : Fin d, ‖x i‖ ^ 2 : ℝ) := by
+    have hxx_eq : star x ⬝ᵥ x = ↑(∑ i : d, ‖x i‖ ^ 2 : ℝ) := by
       simp only [dotProduct]; rw [Complex.ofReal_sum]
       congr 1; ext i
       change (starRingEnd ℂ) (x i) * x i = ↑(‖x i‖ ^ 2)
       rw [Complex.normSq_eq_conj_mul_self.symm, Complex.sq_norm]
     rw [hxx_eq]
-    set S := ∑ i : Fin d, ‖x i‖ ^ 2
+    set S := ∑ i : d, ‖x i‖ ^ 2
     have hS_nn : (0 : ℝ) ≤ S := Finset.sum_nonneg fun i _ => sq_nonneg _
     have hqf_im := hermitian_quadratic_im_zero H hH x
-    have hqf_re_bound : -(↑d * ‖H‖ * S) ≤ (star x ⬝ᵥ H *ᵥ x).re := by
+    have hqf_re_bound : -(↑(Fintype.card d) * ‖H‖ * S) ≤ (star x ⬝ᵥ H *ᵥ x).re := by
       have hle := norm_quadratic_form_le H x
-      calc -(↑d * ‖H‖ * S) ≤ -‖star x ⬝ᵥ H *ᵥ x‖ := neg_le_neg hle
+      calc -(↑(Fintype.card d) * ‖H‖ * S) ≤ -‖star x ⬝ᵥ H *ᵥ x‖ := neg_le_neg hle
         _ ≤ -|Complex.re (star x ⬝ᵥ H *ᵥ x)| := neg_le_neg (Complex.abs_re_le_norm _)
         _ ≤ (star x ⬝ᵥ H *ᵥ x).re := neg_abs_le _
     have hcS_re : ((↑c : ℂ) * (↑S : ℂ)).re = c * S := by simp
@@ -474,65 +483,62 @@ private lemma hermitian_shift_psd {d : ℕ} {H : Matrix (Fin d) (Fin d) ℂ}
            by rw [Complex.add_im, hcS_im]; linarith⟩
 
 /-- `trace(M).re ≤ d · ‖M‖` for any `d×d` complex matrix. -/
-private lemma trace_re_le_dim_mul_norm {d : ℕ} (M : Matrix (Fin d) (Fin d) ℂ) :
-    M.trace.re ≤ ↑d * ‖M‖ := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ x : Fin d, M x x).re = ∑ x : Fin d, (M x x).re from
-    map_sum Complex.reAddGroupHom _ _]
-  calc ∑ i : Fin d, (M i i).re
-      ≤ ∑ i : Fin d, ‖M i i‖ := Finset.sum_le_sum fun i _ => Complex.re_le_norm _
-    _ ≤ ∑ i : Fin d, ‖M‖ := Finset.sum_le_sum fun i _ => norm_entry_le_entrywise_sup_norm M
-    _ = ↑d * ‖M‖ := by simp [Finset.sum_const, nsmul_eq_mul]
+private lemma trace_re_le_dim_mul_norm {d : Type*} [Fintype d] (M : Matrix d d ℂ) :
+    M.trace.re ≤ ↑(Fintype.card d) * ‖M‖ := by
+  simp only [Matrix.trace, Matrix.diag, Complex.re_sum]
+  calc ∑ i : d, (M i i).re
+      ≤ ∑ i : d, ‖M i i‖ := Finset.sum_le_sum fun i _ => Complex.re_le_norm _
+    _ ≤ ∑ i : d, ‖M‖ := Finset.sum_le_sum fun i _ => norm_entry_le_entrywise_sup_norm M
+    _ = ↑(Fintype.card d) * ‖M‖ := by simp [Finset.sum_const, nsmul_eq_mul]
 
-private lemma trace_one_re {d : ℕ} :
-    (1 : Matrix (Fin d) (Fin d) ℂ).trace.re = (↑d : ℝ) := by
+private lemma trace_one_re {d : Type*} [Fintype d] [DecidableEq d] :
+    (1 : Matrix d d ℂ).trace.re = (↑(Fintype.card d) : ℝ) := by
   simp [Matrix.trace, Matrix.diag, Finset.sum_const, nsmul_eq_mul]
 
-private lemma trace_add_smul_one_re {d : ℕ} (H : Matrix (Fin d) (Fin d) ℂ) (c : ℝ) :
-    (H + (↑c : ℂ) • (1 : Matrix (Fin d) (Fin d) ℂ)).trace.re =
-    H.trace.re + c * ↑d := by
-  rw [Matrix.trace_add, Matrix.trace_smul, smul_eq_mul]
-  have : (1 : Matrix (Fin d) (Fin d) ℂ).trace = (↑d : ℂ) := by
-    simp [Matrix.trace, Matrix.diag, Finset.sum_const, nsmul_eq_mul]
-  rw [this]; simp
+private lemma trace_add_smul_one_re {d : Type*} [Fintype d] [DecidableEq d] (H : Matrix d d ℂ)
+    (c : ℝ) :
+    (H + (↑c : ℂ) • (1 : Matrix d d ℂ)).trace.re =
+    H.trace.re + c * ↑(Fintype.card d) := by
+  simp
 
 /-- Core Hermitian bound: `‖L(H)‖ ≤ d(2d+1)·‖H‖` for Hermitian H and sub-TP L.
     Uses shift trick: L(H) = L(H+c·I) - c·L(I) where c = d·‖H‖. -/
-private lemma hermitian_norm_bound {d : ℕ}
-    (L : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hpsd : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).PosSemidef)
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
-    (H : Matrix (Fin d) (Fin d) ℂ) (hH : H.IsHermitian) :
-    ‖L H‖ ≤ ↑d * (2 * ↑d + 1) * ‖H‖ := by
-  set c := (↑d : ℝ) * ‖H‖ with hc_def
+private lemma hermitian_norm_bound {d : Type*} [Fintype d]
+    (L : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hpsd : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).PosSemidef)
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
+    (H : Matrix d d ℂ) (hH : H.IsHermitian) :
+    ‖L H‖ ≤ ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H‖ := by
+  classical
+  set c := (↑(Fintype.card d) : ℝ) * ‖H‖ with hc_def
   have hc_nn : 0 ≤ c := mul_nonneg (Nat.cast_nonneg _) (norm_nonneg _)
   have hdecomp : L H = L (H + (↑c : ℂ) • 1) - (↑c : ℂ) • L 1 := by
     rw [map_add, map_smul]; simp
   rw [hdecomp]
   have hpsd_shift := hermitian_shift_psd hH c le_rfl
-  have hpsd_one : (1 : Matrix (Fin d) (Fin d) ℂ).PosSemidef := PosSemidef.one
+  have hpsd_one : (1 : Matrix d d ℂ).PosSemidef := PosSemidef.one
   calc ‖L (H + (↑c : ℂ) • 1) - (↑c : ℂ) • L 1‖
       ≤ ‖L (H + (↑c : ℂ) • 1)‖ + ‖(↑c : ℂ) • L 1‖ := norm_sub_le _ _
     _ ≤ ‖L (H + (↑c : ℂ) • 1)‖ + c * ‖L 1‖ := by
         rw [norm_smul, Complex.norm_of_nonneg (by exact_mod_cast hc_nn)]
-    _ ≤ (H + (↑c : ℂ) • 1).trace.re + c * (1 : Matrix (Fin d) (Fin d) ℂ).trace.re := by
+    _ ≤ (H + (↑c : ℂ) • 1).trace.re + c * (1 : Matrix d d ℂ).trace.re := by
         gcongr
         · exact le_trans (psd_norm_le_trace (hpsd _ hpsd_shift)) (hstp _ hpsd_shift)
         · exact le_trans (psd_norm_le_trace (hpsd 1 hpsd_one)) (hstp 1 hpsd_one)
-    _ ≤ ↑d * ‖H‖ + c * ↑d + c * ↑d := by
+    _ ≤ ↑(Fintype.card d) * ‖H‖ + c * ↑(Fintype.card d) + c * ↑(Fintype.card d) := by
         rw [trace_add_smul_one_re, trace_one_re]
         linarith [trace_re_le_dim_mul_norm H]
-    _ = ↑d * (2 * ↑d + 1) * ‖H‖ := by rw [hc_def]; ring
+    _ = ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H‖ := by rw [hc_def]; ring
 
 /-- For instrument branches and PSD input M, ∑ᵦ ‖branch b M‖ ≤ trace(M).re. -/
 private theorem instrument_psd_l1_le
-    {d : ℕ} {β : Type}
-    (branch : β → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ))
-    (hpsd : ∀ b (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (branch b M).PosSemidef)
-    (hsum : ∀ (M : Matrix (Fin d) (Fin d) ℂ), Summable (fun b => branch b M))
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef →
+    {d : Type*} [Fintype d] {β : Type}
+    (branch : β → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ))
+    (hpsd : ∀ b (M : Matrix d d ℂ), M.PosSemidef → (branch b M).PosSemidef)
+    (hsum : ∀ (M : Matrix d d ℂ), Summable (fun b => branch b M))
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef →
       (∑' b, (branch b M).trace).re ≤ M.trace.re)
-    (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef) :
+    (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     ∑' b, ‖branch b M‖ ≤ M.trace.re :=
   calc ∑' b, ‖branch b M‖
       ≤ ∑' b, (branch b M).trace.re :=
@@ -543,18 +549,19 @@ private theorem instrument_psd_l1_le
     _ ≤ M.trace.re := hstp M hM
 
 /-- L1 Hermitian bound for instruments: `∑ᵦ ‖Lᵦ(H)‖ ≤ d(2d+1)·‖H‖`. -/
-private lemma hermitian_l1_bound {d : ℕ} {β : Type}
-    (branch : β → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ))
-    (hpsd : ∀ b (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (branch b M).PosSemidef)
-    (hsum : ∀ (M : Matrix (Fin d) (Fin d) ℂ), Summable (fun b => branch b M))
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef →
+private lemma hermitian_l1_bound {d : Type*} [Fintype d] {β : Type}
+    (branch : β → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ))
+    (hpsd : ∀ b (M : Matrix d d ℂ), M.PosSemidef → (branch b M).PosSemidef)
+    (hsum : ∀ (M : Matrix d d ℂ), Summable (fun b => branch b M))
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef →
       (∑' b, (branch b M).trace).re ≤ M.trace.re)
-    (H : Matrix (Fin d) (Fin d) ℂ) (hH : H.IsHermitian) :
-    ∑' b, ‖branch b H‖ ≤ ↑d * (2 * ↑d + 1) * ‖H‖ := by
-  set c := (↑d : ℝ) * ‖H‖ with hc_def
+    (H : Matrix d d ℂ) (hH : H.IsHermitian) :
+    ∑' b, ‖branch b H‖ ≤ ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H‖ := by
+  classical
+  set c := (↑(Fintype.card d) : ℝ) * ‖H‖ with hc_def
   have hc_nn : 0 ≤ c := mul_nonneg (Nat.cast_nonneg _) (norm_nonneg _)
   have hpsd_shift := hermitian_shift_psd hH c le_rfl
-  have hpsd_one : (1 : Matrix (Fin d) (Fin d) ℂ).PosSemidef := PosSemidef.one
+  have hpsd_one : (1 : Matrix d d ℂ).PosSemidef := PosSemidef.one
   -- branch b H = branch b (H + c·I) - c · branch b I
   have hdecomp : ∀ b, branch b H = branch b (H + (↑c : ℂ) • 1) - (↑c : ℂ) • branch b 1 := by
     intro b; rw [map_add, map_smul]; simp
@@ -574,14 +581,14 @@ private lemma hermitian_l1_bound {d : ℕ} {β : Type}
           (hsum_shift.add (hsum_one.mul_left c))
     _ = (∑' b, ‖branch b (H + (↑c : ℂ) • 1)‖) + c * (∑' b, ‖branch b 1‖) := by
         rw [Summable.tsum_add hsum_shift (hsum_one.mul_left c), tsum_mul_left]
-    _ ≤ (H + (↑c : ℂ) • 1).trace.re + c * (1 : Matrix (Fin d) (Fin d) ℂ).trace.re := by
+    _ ≤ (H + (↑c : ℂ) • 1).trace.re + c * (1 : Matrix d d ℂ).trace.re := by
         gcongr
         · exact instrument_psd_l1_le branch hpsd hsum hstp _ hpsd_shift
         · exact instrument_psd_l1_le branch hpsd hsum hstp 1 hpsd_one
-    _ ≤ ↑d * ‖H‖ + c * ↑d + c * ↑d := by
+    _ ≤ ↑(Fintype.card d) * ‖H‖ + c * ↑(Fintype.card d) + c * ↑(Fintype.card d) := by
         rw [trace_add_smul_one_re, trace_one_re]
         linarith [trace_re_le_dim_mul_norm H]
-    _ = ↑d * (2 * ↑d + 1) * ‖H‖ := by rw [hc_def]; ring
+    _ = ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H‖ := by rw [hc_def]; ring
 
 /-- Hermitian decomposition helper: `‖(2⁻¹)‖ * 2 = 1` for complex inverse of 2. -/
 private lemma inv2_norm_mul_2 : ‖(2 : ℂ)⁻¹‖ * 2 = 1 := by
@@ -590,8 +597,8 @@ private lemma inv2_norm_mul_2 : ‖(2 : ℂ)⁻¹‖ * 2 = 1 := by
 
 /-- Every complex matrix is `H₁ + (-i) • H₂` with Hermitian `H₁`, `H₂` of norm at
 most its own. -/
-private lemma exists_hermitian_decomp {d : ℕ} (M : Matrix (Fin d) (Fin d) ℂ) :
-    ∃ H₁ H₂ : Matrix (Fin d) (Fin d) ℂ, H₁.IsHermitian ∧ H₂.IsHermitian ∧
+private lemma exists_hermitian_decomp {d : Type*} [Fintype d] (M : Matrix d d ℂ) :
+    ∃ H₁ H₂ : Matrix d d ℂ, H₁.IsHermitian ∧ H₂.IsHermitian ∧
       ‖H₁‖ ≤ ‖M‖ ∧ ‖H₂‖ ≤ ‖M‖ ∧ M = H₁ + (-Complex.I) • H₂ := by
   refine ⟨(2 : ℂ)⁻¹ • (M + Mᴴ), Complex.I • ((2 : ℂ)⁻¹ • (M - Mᴴ)), ?_, ?_, ?_, ?_, ?_⟩
   · change ((2 : ℂ)⁻¹ • (M + Mᴴ))ᴴ = (2 : ℂ)⁻¹ • (M + Mᴴ)
@@ -618,20 +625,22 @@ private lemma exists_hermitian_decomp {d : ℕ} (M : Matrix (Fin d) (Fin d) ℂ)
 /-- Uniform operator norm bound for a single branch of a PSD-preserving sub-TP map.
     Every such map L satisfies `‖L(M)‖ ≤ C(d) · ‖M‖` where `C(d) = 2d(2d+1)`.
     Proved via Hermitian shift decomposition. -/
-private def subTP_opNorm_bound (d : ℕ) : ℝ := 2 * ↑d * (2 * ↑d + 1)
+private def subTP_opNorm_bound (d : Type*) [Fintype d] : ℝ :=
+  2 * ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1)
 private theorem subTP_opNorm_le
-    {d : ℕ}
-    (L : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hpsd : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).PosSemidef)
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
-    (M : Matrix (Fin d) (Fin d) ℂ) :
+    {d : Type*} [Fintype d]
+    (L : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hpsd : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).PosSemidef)
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef → (L M).trace.re ≤ M.trace.re)
+    (M : Matrix d d ℂ) :
     ‖L M‖ ≤ subTP_opNorm_bound d * ‖M‖ := by
   obtain ⟨H₁, H₂, hH₁, hH₂, hn₁, hn₂, hM⟩ := exists_hermitian_decomp M
-  have hc : (0 : ℝ) ≤ d * (2 * d + 1) := by positivity
+  have hc : (0 : ℝ) ≤ Fintype.card d * (2 * Fintype.card d + 1) := by positivity
   calc ‖L M‖ ≤ ‖L H₁‖ + ‖L H₂‖ := by
         rw [hM, map_add, map_smul]
         exact (norm_add_le _ _).trans_eq (by rw [norm_smul]; simp)
-    _ ≤ ↑d * (2 * ↑d + 1) * ‖H₁‖ + ↑d * (2 * ↑d + 1) * ‖H₂‖ :=
+    _ ≤ ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H₁‖ +
+        ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H₂‖ :=
         add_le_add (hermitian_norm_bound L hpsd hstp H₁ hH₁)
           (hermitian_norm_bound L hpsd hstp H₂ hH₂)
     _ ≤ subTP_opNorm_bound d * ‖M‖ := by
@@ -641,18 +650,18 @@ private theorem subTP_opNorm_le
 /-- Total L1-norm bound for all branches of an instrument.
     `∑ᵦ ‖Lᵦ(M)‖ ≤ C(d) · ‖M‖` where `C(d) = 2d(2d+1)`.
     Proved via Hermitian shift decomposition, same as `subTP_opNorm_le`. -/
-private def instrument_l1_bound (d : ℕ) : ℝ := subTP_opNorm_bound d
+private def instrument_l1_bound (d : Type*) [Fintype d] : ℝ := subTP_opNorm_bound d
 private theorem instrument_l1_le
-    {d : ℕ} {β : Type}
-    (branch : β → (Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ))
-    (hpsd : ∀ b (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef → (branch b M).PosSemidef)
-    (hsum : ∀ (M : Matrix (Fin d) (Fin d) ℂ), Summable (fun b => branch b M))
-    (hstp : ∀ (M : Matrix (Fin d) (Fin d) ℂ), M.PosSemidef →
+    {d : Type*} [Fintype d] {β : Type}
+    (branch : β → (Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ))
+    (hpsd : ∀ b (M : Matrix d d ℂ), M.PosSemidef → (branch b M).PosSemidef)
+    (hsum : ∀ (M : Matrix d d ℂ), Summable (fun b => branch b M))
+    (hstp : ∀ (M : Matrix d d ℂ), M.PosSemidef →
       (∑' b, (branch b M).trace).re ≤ M.trace.re)
-    (M : Matrix (Fin d) (Fin d) ℂ) :
+    (M : Matrix d d ℂ) :
     ∑' b, ‖branch b M‖ ≤ instrument_l1_bound d * ‖M‖ := by
   obtain ⟨H₁, H₂, hH₁, hH₂, hn₁, hn₂, hM⟩ := exists_hermitian_decomp M
-  have hc : (0 : ℝ) ≤ d * (2 * d + 1) := by positivity
+  have hc : (0 : ℝ) ≤ Fintype.card d * (2 * Fintype.card d + 1) := by positivity
   have hle : ∀ b, ‖branch b M‖ ≤ ‖branch b H₁‖ + ‖branch b H₂‖ := fun b => by
     rw [hM, map_add, map_smul]
     exact (norm_add_le _ _).trans_eq (by rw [norm_smul]; simp)
@@ -662,7 +671,8 @@ private theorem instrument_l1_le
       ≤ ∑' b, (‖branch b H₁‖ + ‖branch b H₂‖) :=
         Summable.tsum_le_tsum hle (summable_norm_iff.mpr (hsum M)) (hs₁.add hs₂)
     _ = (∑' b, ‖branch b H₁‖) + (∑' b, ‖branch b H₂‖) := hs₁.tsum_add hs₂
-    _ ≤ ↑d * (2 * ↑d + 1) * ‖H₁‖ + ↑d * (2 * ↑d + 1) * ‖H₂‖ :=
+    _ ≤ ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H₁‖ +
+        ↑(Fintype.card d) * (2 * ↑(Fintype.card d) + 1) * ‖H₂‖ :=
         add_le_add (hermitian_l1_bound branch hpsd hsum hstp H₁ hH₁)
           (hermitian_l1_bound branch hpsd hsum hstp H₂ hH₂)
     _ ≤ instrument_l1_bound d * ‖M‖ := by
@@ -674,11 +684,11 @@ private theorem instrument_l1_le
 /-- The family of composites `(f a).branch b (I.branch a ρ)` over the first
 outcome `a` is summable. -/
 theorem QComp.bind_summable (I : QComp d α) (f : α → QComp d β)
-    (b : β) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (b : β) (ρ : Matrix d d ℂ) :
     Summable (fun a => (f a).branch b (I.branch a ρ)) :=
   Summable.of_norm_bounded
     (g := fun a => subTP_opNorm_bound d * ‖I.branch a ρ‖)
-    ((summable_norm_iff (E := Matrix (Fin d) (Fin d) ℂ)).mpr
+    ((summable_norm_iff (E := Matrix d d ℂ)).mpr
       (I.branch_summable ρ) |>.hasSum.mul_left (subTP_opNorm_bound d) |>.summable)
     (fun a => subTP_opNorm_le ((f a).branch b)
       (fun M hM => (f a).branch_psd b M hM)
@@ -687,7 +697,7 @@ theorem QComp.bind_summable (I : QComp d α) (f : α → QComp d β)
 
 /-- Joint summability of the uncurried family for Fubini in `qbind_assoc`. -/
 theorem QComp.bind_summable_uncurry (I : QComp d α) (f : α → QComp d β)
-    (g : β → QComp d γ) (c : γ) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (g : β → QComp d γ) (c : γ) (ρ : Matrix d d ℂ) :
     Summable (Function.uncurry fun a b =>
       (g b).branch c ((f a).branch b (I.branch a ρ))) := by
   -- Norm bound per (a,b): ‖F(a,b)‖ ≤ C · ‖(f a).branch b (I.branch a ρ)‖
@@ -707,7 +717,7 @@ theorem QComp.bind_summable_uncurry (I : QComp d α) (f : α → QComp d β)
         (fun a => tsum_nonneg (fun b => norm_nonneg _))
         (fun a => instrument_l1_le (f a).branch (f a).branch_psd
           (f a).branch_summable (f a).branch_stp (I.branch a ρ))
-        ((summable_norm_iff (E := Matrix (Fin d) (Fin d) ℂ)).mpr
+        ((summable_norm_iff (E := Matrix d d ℂ)).mpr
           (I.branch_summable ρ) |>.hasSum.mul_left (instrument_l1_bound d) |>.summable)⟩
   -- Summable by comparison with the bounding function
   exact Summable.of_norm_bounded
@@ -718,7 +728,7 @@ theorem QComp.bind_summable_uncurry (I : QComp d α) (f : α → QComp d β)
 /-- Joint summability of the (a,b)-family (without the outer g), used for
 branch_summable and for `qbind` reasoning (e.g. `localOp₁` functoriality). -/
 theorem QComp.bind_uncurry_summable (I : QComp d α) (f : α → QComp d β)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     Summable (Function.uncurry fun a b => (f a).branch b (I.branch a ρ)) := by
   rw [show (Function.uncurry fun a b => (f a).branch b (I.branch a ρ)) =
       (fun (p : α × β) => (f p.1).branch p.2 (I.branch p.1 ρ)) from rfl]
@@ -729,7 +739,7 @@ theorem QComp.bind_uncurry_summable (I : QComp d α) (f : α → QComp d β)
         (fun a => tsum_nonneg (fun b => norm_nonneg _))
         (fun a => instrument_l1_le (f a).branch (f a).branch_psd
           (f a).branch_summable (f a).branch_stp (I.branch a ρ))
-        ((summable_norm_iff (E := Matrix (Fin d) (Fin d) ℂ)).mpr
+        ((summable_norm_iff (E := Matrix d d ℂ)).mpr
           (I.branch_summable ρ) |>.hasSum.mul_left (instrument_l1_bound d) |>.summable)⟩)
 
 /-- Kleisli composition of instruments: the branch at `b` maps `ρ` to
@@ -864,10 +874,8 @@ instance : LawfulMonad (QComp d) := LawfulMonad.mk'
 /-- Composing any instrument with the failing continuation fails. -/
 theorem QComp.qbind_fail (c : QComp d α) :
     QComp.qbind c (fun _ => (QComp.qfail : QComp d β)) = QComp.qfail := by
-  apply QComp.ext_fun; intro b ρ
-  change ∑' a, ((0 : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (c.branch a ρ)) = 0
-  simp only [LinearMap.zero_apply, tsum_zero]
+  ext
+  simp [QComp.qbind, QComp.qfail]
 
 /-- The failing instrument followed by any continuation fails. -/
 theorem QComp.qfail_qbind (f : α → QComp d β) :
@@ -997,19 +1005,18 @@ theorem absDiff_le_iff {a b ε : ℝ≥0∞} :
     · exact tsub_le_iff_right.mpr (by rwa [add_comm])
     · exact tsub_le_iff_right.mpr (by rwa [add_comm])
 
+omit [DecidableEq d] in
 /-- PSD matrix with zero trace is the zero matrix (wrapper for Mathlib). -/
-private theorem psd_zero_of_trace_zero {M : Matrix (Fin d) (Fin d) ℂ}
+private theorem psd_zero_of_trace_zero {M : Matrix d d ℂ}
     (hM : M.PosSemidef) (htr : M.trace = 0) : M = 0 :=
   hM.trace_eq_zero_iff.mp htr
 
+omit [DecidableEq d] in
 /-- Imaginary part of the trace of a Hermitian matrix is zero. -/
-theorem trace_im_zero_of_hermitian {M : Matrix (Fin d) (Fin d) ℂ}
+theorem trace_im_zero_of_hermitian {M : Matrix d d ℂ}
     (hH : M.IsHermitian) : M.trace.im = 0 := by
-  unfold Matrix.trace Matrix.diag
-  rw [show (∑ x : Fin d, M x x).im = ∑ x : Fin d, (M x x).im from
-    map_sum Complex.imAddGroupHom _ _]
-  apply Finset.sum_eq_zero; intro i _
-  exact Complex.conj_eq_iff_im.mp (congr_fun (congr_fun hH i) i)
+  simpa [Matrix.trace] using
+    Finset.sum_eq_zero fun i _ => Complex.conj_eq_iff_im.mp (congr_fun (congr_fun hH i) i)
 
 /-- Weighted average bound for prTrue_Q under qbind.
     The core technical lemma: post-composition with ε-close continuations
@@ -1155,7 +1162,7 @@ theorem absDiff_prTrue_Q_qbind_le {α : Type} (c : QComp d α)
     Given measurement operators `M : α → Matrix` with completeness `∑ M†M = I`,
     each branch maps `ρ ↦ M(a) ρ M(a)†`.
     Automatically proves PSD preservation, summability, and trace preservation. -/
-def QComp.ofKraus [Fintype α] (M : α → Matrix (Fin d) (Fin d) ℂ)
+def QComp.ofKraus [Fintype α] (M : α → Matrix d d ℂ)
     (h_complete : ∑ a, (M a)ᴴ * M a = 1) : QComp d α where
   branch a := {
     toFun := fun ρ => M a * ρ * (M a)ᴴ
@@ -1179,8 +1186,8 @@ def QComp.ofKraus [Fintype α] (M : α → Matrix (Fin d) (Fin d) ℂ)
 
 /-- `QComp.ofKraus` branch unfolds to conjugation. -/
 @[simp]
-theorem QComp.ofKraus_branch [Fintype α] (M : α → Matrix (Fin d) (Fin d) ℂ)
-    (h : ∑ a, (M a)ᴴ * M a = 1) (a : α) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem QComp.ofKraus_branch [Fintype α] (M : α → Matrix d d ℂ)
+    (h : ∑ a, (M a)ᴴ * M a = 1) (a : α) (ρ : Matrix d d ℂ) :
     (QComp.ofKraus M h).branch a ρ = M a * ρ * (M a)ᴴ := rfl
 
 end Quantum

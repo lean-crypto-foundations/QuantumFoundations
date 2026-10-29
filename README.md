@@ -8,7 +8,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 
 | Module | Content |
 |---|---|
-| `CPMap` | completely positive maps on `Fin n` matrices, effects, the trace dual of a linear map |
+| `CPMap` | completely positive maps on matrices over a finite index type, effects, the trace dual of a linear map |
 | `DualMap` | functoriality of the trace dual (the Hilbert–Schmidt adjoint for positive maps) |
 | `ChoiKraus` | the Choi matrix; every CP map has a Kraus form |
 | `Stinespring` | the Stinespring dilation of a CPTP map by an ancilla |
@@ -34,8 +34,9 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi matrices, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
-The planned merges with VCVio's `MatrixMap` and `SubInstrument` (registers as arbitrary finite
-types, CP branches) are separate pull requests.
+States, instruments, measurements and CP maps take the index of the system as any finite type;
+bipartite systems are encoded as `Fin (d₁ * d₂)`. The planned merges with VCVio's `MatrixMap`
+and `SubInstrument` (CP branches) are separate pull requests.
 
 ## From VCVio
 
@@ -46,13 +47,13 @@ types, CP branches) are separate pull requests.
 | `MatrixMap/Norm`, `MatrixMap/OpNorm`, `MatrixMap/BlockNorm` | trace, operator and block norm bounds |
 | `MatrixMap/Completion` | matrix completion without increasing the operator norm (Parrott's theorem) |
 | `MatrixMap/Pinching`, `MatrixMap/Commutant` | pinching maps and commutation bounds |
+| `MatrixMap/Comparison` | replacing Kraus operators before a trace-nonincreasing finishing map |
 | `MatrixMap/ProjectorEvent`, `MatrixMap/ProjectorPair` | projector events and pairs of projectors |
 | `DSubInstrument`, `SubInstrument` | instruments with dependent or fixed output registers |
 | `Register` | finite quantum registers |
 | `Pure/Vector`, `Pure/Norm` | state vectors, matrix actions, and norm bounds |
 | `ForMathlib/Analysis/Matrix/PosSemidef` | bounds for positive semidefinite matrices |
 | `ForMathlib/Analysis/Normed/Ring/Commutator` | norm bounds for commutators |
-| `ForMathlib/MeasureTheory/Measure/Subprobability` | subprobability measures, by Devon Tuma |
 | `Observe` | substates, post-measurement states, and Born outcome measures |
 | `Pure/State`, `Pure/Instrument`, `Pure/Tensor` | pure states, measurements, and tensors |
 | `Oracle/Basis`, `Oracle/Unitary` | computational-basis operations and unitary oracle gates |

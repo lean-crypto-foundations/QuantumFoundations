@@ -48,13 +48,13 @@ open Quantum.TensorProduct
 /-! ## The trivial branches -/
 
 /-- The zero map is completely positive. -/
-theorem isCPMap_zero {n : ℕ} :
-    IsCPMap (0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) := by
+theorem isCPMap_zero {n : Type*} :
+    IsCPMap (0 : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) := by
   intro k M _
   have h : tensorIdMap
-      (0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ) k M = 0 := by
+      (0 : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) k M = 0 := by
     funext p q
-    change ((0 : Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] Matrix (Fin n) (Fin n) ℂ)
+    change ((0 : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ)
       (blockMatrix M p.1 q.1)) p.2 q.2 = 0
     simp
   rw [h]
@@ -63,7 +63,7 @@ theorem isCPMap_zero {n : ℕ} :
 open Classical in
 /-- Every branch of the trivial instrument `qpure a₀` is completely positive:
 it is `id` on the outcome `a₀` and `0` elsewhere. -/
-theorem qpure_branch_isCPMap {n : ℕ} {α : Type} (a₀ : α) :
+theorem qpure_branch_isCPMap {n : Type*} [Fintype n] [DecidableEq n] {α : Type} (a₀ : α) :
     ∀ a, IsCPMap ((QComp.qpure (d := n) a₀).branch a) := by
   intro a
   change IsCPMap (if a = a₀ then LinearMap.id else 0)
@@ -80,14 +80,14 @@ variable {d e : ℕ} {α β : Type}
 /-- The tensor of instruments: `C` on the first register and `D` on the
 second register of the `d * e`-dimensional system, with outcome pair
 `(a, b)`. It is `QRHL.jointEvolve`. -/
-def QComp.tensor (C : QComp d α) (D : QComp e β)
+def QComp.tensor (C : QComp (Fin d) α) (D : QComp (Fin e) β)
     (hC : ∀ a, IsCPMap (C.branch a)) (hD : ∀ b, IsCPMap (D.branch b)) :
-    QComp (d * e) (α × β) :=
+    QComp (Fin (d * e)) (α × β) :=
   QRHL.jointEvolve C D hC hD
 
 /-- The tensor of `C` and `D` runs `localOp₁ C`, then `localOp₂ D`, and returns
 the pair of outcomes. -/
-theorem QComp.tensor_def (C : QComp d α) (D : QComp e β)
+theorem QComp.tensor_def (C : QComp (Fin d) α) (D : QComp (Fin e) β)
     (hC : ∀ a, IsCPMap (C.branch a)) (hD : ∀ b, IsCPMap (D.branch b)) :
     C.tensor D hC hD =
       QComp.qbind (localOp₁ C hC) fun a =>
@@ -99,10 +99,10 @@ end Quantum
 
 namespace Quantum.GentleMeasurement
 
-/-- A projector on a `d`-dimensional system: self-adjoint and idempotent. -/
-structure Projector (d : ℕ) where
+/-- A projector on a system with basis indexed by `d`: self-adjoint and idempotent. -/
+structure Projector (d : Type*) [Fintype d] [DecidableEq d] where
   /-- The underlying matrix. -/
-  val : Matrix (Fin d) (Fin d) ℂ
+  val : Matrix d d ℂ
   /-- The matrix is self-adjoint. -/
   self_adjoint : valᴴ = val
   /-- The matrix is idempotent. -/
@@ -117,7 +117,7 @@ open Quantum Quantum.GentleMeasurement
 /-- The projective measurement `{P, 1 - P}` as a quantum instrument: outcome
 `true` is the branch `P ρ P`, outcome `false` the branch
 `(1 - P) ρ (1 - P)`. -/
-def measureProj {d : ℕ} (P : Projector d) : QComp d Bool :=
+def measureProj {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d) : QComp d Bool :=
   QComp.ofKraus (fun b => if b then P.val else 1 - P.val)
     (by
       rw [Fintype.sum_bool]
@@ -134,16 +134,16 @@ def measureProj {d : ℕ} (P : Projector d) : QComp d Bool :=
       abel)
 
 /-- The branch of `measureProj P` at `true` is `ρ ↦ P ρ P`. -/
-theorem measureProj_branch_true {d : ℕ} (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem measureProj_branch_true {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d)
+    (ρ : Matrix d d ℂ) :
     (measureProj P).branch true ρ = P.val * ρ * P.val := by
   change (if true then P.val else 1 - P.val) * ρ *
     (if true then P.val else 1 - P.val)ᴴ = _
   rw [ite_eq_left rfl, P.self_adjoint]
 
 /-- The branch of `measureProj P` at `false` is `ρ ↦ (1 - P) ρ (1 - P)`. -/
-theorem measureProj_branch_false {d : ℕ} (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem measureProj_branch_false {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d)
+    (ρ : Matrix d d ℂ) :
     (measureProj P).branch false ρ = (1 - P.val) * ρ * (1 - P.val) := by
   change (if false then P.val else 1 - P.val) * ρ *
     (if false then P.val else 1 - P.val)ᴴ = _
@@ -151,7 +151,7 @@ theorem measureProj_branch_false {d : ℕ} (P : Projector d)
     Matrix.conjTranspose_one, P.self_adjoint]
 
 /-- Each branch of the projective instrument is completely positive. -/
-theorem measureProj_branch_isCPMap {d : ℕ} (P : Projector d) :
+theorem measureProj_branch_isCPMap {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d) :
     ∀ b, IsCPMap ((measureProj P).branch b) := by
   intro b
   cases b

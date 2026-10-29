@@ -48,7 +48,7 @@ noncomputable section
 
 namespace Quantum
 
-variable {n : Type} [Fintype n] [DecidableEq n]
+variable {n : Type*} [Fintype n] [DecidableEq n]
 
 /-! ## Eigenvalues of Negated Matrices
 
@@ -406,7 +406,7 @@ theorem exists_selfAdjoint_involution_trace_eq_traceNormH
 
 /-- Trace distance between density matrices:
     `traceDist ρ σ = ½ ‖ρ - σ‖₁`. -/
-def traceDist {d : ℕ} (ρ σ : Matrix (Fin d) (Fin d) ℂ)
+def traceDist (ρ σ : Matrix n n ℂ)
     (_hρ : ρ.PosSemidef) (_hσ : σ.PosSemidef)
     (h_herm : (ρ - σ).IsHermitian) : ℝ :=
   (1/2 : ℝ) * traceNormH (ρ - σ) h_herm

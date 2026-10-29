@@ -14,7 +14,7 @@ public import Mathlib.Data.Fin.Tuple.Basic
 /-!
 # Tensor products for `QComp`
 
-Defines bipartite quantum registers via tensor products on `QComp (d₁ * d₂)`.
+Defines bipartite quantum registers via tensor products on `QComp (Fin (d₁ * d₂))`.
 
 ## Main definitions
 
@@ -91,7 +91,7 @@ def kronecker
     A i₁ j₁ * B i₂ j₂
 
 /-- Infix notation for `kronecker`. -/
-infixl:70 " ⊗ₖ " => kronecker
+scoped infixl:70 " ⊗ₖ " => kronecker
 
 /-- Kronecker product entry decomposition. -/
 @[grind =]
@@ -228,7 +228,7 @@ theorem kronecker_conjTranspose_mul_self {A : Matrix (Fin d₁) (Fin d₁) ℂ}
 open Classical in
 /-- The tensor of two pure computations (deterministic returns, not pure states): the identity
 branch at `(a, b)` and the zero branch elsewhere. -/
-def tensorPure (a : α) (b : β) : QComp (d₁ * d₂) (α × β) where
+def tensorPure (a : α) (b : β) : QComp (Fin (d₁ * d₂)) (α × β) where
   branch := fun ⟨a', b'⟩ =>
     if a' = a ∧ b' = b then LinearMap.id else 0
   branch_psd := fun ⟨a', b'⟩ ρ hρ => by
@@ -349,7 +349,7 @@ private theorem sum_extractBlock₂_diag_trace
 /-! ## Local Operations -/
 
 /-- The raw function underlying `localOp₁.branch a`. -/
-def localOp₁_fun (op : QComp d₁ α) (a : α)
+def localOp₁_fun (op : QComp (Fin d₁) α) (a : α)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ :=
   Matrix.of fun i j =>
@@ -358,7 +358,7 @@ def localOp₁_fun (op : QComp d₁ α) (a : α)
     (op.branch a (extractBlock ρ i₂ j₂)) i₁ j₁
 
 /-- Trace of `localOp₁.branch a ρ` decomposes into diagonal block traces. -/
-theorem trace_localOp₁_fun (op : QComp d₁ α) (a : α)
+theorem trace_localOp₁_fun (op : QComp (Fin d₁) α) (a : α)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     (localOp₁_fun op a ρ).trace =
       ∑ k : Fin d₂, (op.branch a (extractBlock ρ k k)).trace := by
@@ -370,7 +370,7 @@ theorem trace_localOp₁_fun (op : QComp d₁ α) (a : α)
     Fintype.sum_prod_type, Finset.sum_comm]
 
 /-- The raw function underlying `localOp₂.branch b`. -/
-def localOp₂_fun (op : QComp d₂ β) (b : β)
+def localOp₂_fun (op : QComp (Fin d₂) β) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ :=
   Matrix.of fun i j =>
@@ -380,7 +380,7 @@ def localOp₂_fun (op : QComp d₂ β) (b : β)
       ρ (finProdEquiv d₁ d₂ (i₁, i₂')) (finProdEquiv d₁ d₂ (j₁, j₂')))) i₂ j₂
 
 /-- Trace of `localOp₂.branch b ρ` decomposes into diagonal block traces. -/
-private theorem trace_localOp₂_fun (op : QComp d₂ β) (b : β)
+private theorem trace_localOp₂_fun (op : QComp (Fin d₂) β) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     (localOp₂_fun op b ρ).trace =
       ∑ k : Fin d₁, (op.branch b (Matrix.of fun i₂ j₂ =>
@@ -401,8 +401,8 @@ private theorem trace_localOp₂_fun (op : QComp d₂ β) (b : β)
 
     Requires each branch to be completely positive (CP), since positivity alone
     does not suffice for tensor products (the transpose map is a counterexample). -/
-def localOp₁ (op : QComp d₁ α) (hcp : ∀ a, IsCPMap (op.branch a)) :
-    QComp (d₁ * d₂) α where
+def localOp₁ (op : QComp (Fin d₁) α) (hcp : ∀ a, IsCPMap (op.branch a)) :
+    QComp (Fin (d₁ * d₂)) α where
   branch a := {
     toFun := localOp₁_fun op a
     map_add' := fun ρ₁ ρ₂ => by
@@ -452,8 +452,8 @@ def localOp₁ (op : QComp d₁ α) (hcp : ∀ a, IsCPMap (op.branch a)) :
     `(i₁,j₁)`-blocks (each a `d₂ × d₂` matrix) and apply `E_b`.
 
     Requires each branch to be completely positive (CP). -/
-def localOp₂ (op : QComp d₂ β) (hcp : ∀ b, IsCPMap (op.branch b)) :
-    QComp (d₁ * d₂) β where
+def localOp₂ (op : QComp (Fin d₂) β) (hcp : ∀ b, IsCPMap (op.branch b)) :
+    QComp (Fin (d₁ * d₂)) β where
   branch b := {
     toFun := localOp₂_fun op b
     map_add' := fun ρ₁ ρ₂ => by
@@ -519,7 +519,7 @@ def localOp₂ (op : QComp d₂ β) (hcp : ∀ b, IsCPMap (op.branch b)) :
 
 /-- Local operation on first register of a Kronecker product applies
     the operation to the first factor. -/
-theorem localOp₁_kronecker (op : QComp d₁ α) (hcp : ∀ a, IsCPMap (op.branch a))
+theorem localOp₁_kronecker (op : QComp (Fin d₁) α) (hcp : ∀ a, IsCPMap (op.branch a))
     (A : Matrix (Fin d₁) (Fin d₁) ℂ) (B : Matrix (Fin d₂) (Fin d₂) ℂ) :
     ∀ a, (localOp₁ (d₂ := d₂) op hcp).branch a (A ⊗ₖ B) =
       (op.branch a A) ⊗ₖ B := by
@@ -557,7 +557,7 @@ theorem kronecker_finset_sum_right [Fintype ι]
 
     `tr((E ⊗ I) * localOp₁(C).branch(a)(ρ)) =
       ∑_k tr(E * C.branch(a)(extractBlock ρ k k))` -/
-theorem trace_kronecker_one_mul_localOp₁ (op : QComp d₁ α)
+theorem trace_kronecker_one_mul_localOp₁ (op : QComp (Fin d₁) α)
     (hcp : ∀ a, IsCPMap (op.branch a))
     (E : Matrix (Fin d₁) (Fin d₁) ℂ)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (a : α) :

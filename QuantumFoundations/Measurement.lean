@@ -13,8 +13,8 @@ public import Mathlib.LinearAlgebra.Matrix.Trace
 
 Defines POVMs and projective measurements as QComp instruments.
 
-A POVM on a `d`-dimensional system with outcomes in `α` is a family `{E_a}` of
-positive semidefinite matrices with `∑_a E_a = 1`. A family of measurement
+A POVM on a system with basis indexed by a finite type `d` and outcomes in `α`
+is a family `{E_a}` of positive semidefinite matrices with `∑_a E_a = 1`. A family of measurement
 operators `{M_a}` with `∑_a M_aᴴ M_a = 1` determines the instrument with
 branches `ρ ↦ M_a ρ M_aᴴ`, whose POVM is `{M_aᴴ M_a}`.
 
@@ -51,16 +51,16 @@ noncomputable section
 
 namespace Quantum.Measurement
 
-variable {d : ℕ} {α : Type}
+variable {d : Type*} [Fintype d] [DecidableEq d] {α : Type}
 
 /-! ## POVM -/
 
-/-- A POVM (positive operator-valued measure) on a `d`-dimensional system: a
-family of positive semidefinite matrices indexed by outcomes, summing to the
+/-- A POVM (positive operator-valued measure) on a system with basis indexed by
+`d`: a family of positive semidefinite matrices indexed by outcomes, summing to the
 identity. -/
-structure POVM (d : ℕ) (α : Type) [Fintype α] where
+structure POVM (d : Type*) [Fintype d] [DecidableEq d] (α : Type) [Fintype α] where
   /-- The effect of outcome `a`. -/
-  effect : α → Matrix (Fin d) (Fin d) ℂ
+  effect : α → Matrix d d ℂ
   /-- Every effect is positive semidefinite. -/
   effect_psd : ∀ a, (effect a).PosSemidef
   /-- The effects sum to the identity. -/
@@ -71,9 +71,9 @@ structure POVM (d : ℕ) (α : Type) [Fintype α] where
 /-- Measurement operators: a family `{M_a}` with `∑_a M_aᴴ M_a = 1`. The
 associated POVM is `E_a = M_aᴴ M_a` and the unnormalized post-measurement state
 on outcome `a` is `M_a ρ M_aᴴ`. -/
-structure MeasurementOps (d : ℕ) (α : Type) [Fintype α] where
+structure MeasurementOps (d : Type*) [Fintype d] [DecidableEq d] (α : Type) [Fintype α] where
   /-- The measurement operator of outcome `a`. -/
-  op : α → Matrix (Fin d) (Fin d) ℂ
+  op : α → Matrix d d ℂ
   /-- Completeness: `∑_a M_aᴴ M_a = 1`. -/
   completeness : ∑ a, (op a)ᴴ * op a = 1
 
@@ -86,8 +86,8 @@ def measureOps [Fintype α] (M : MeasurementOps d α) : QComp d α :=
 
 /-- A projective measurement: measurement operators `P_a` that are orthogonal
 projectors, `P_aᴴ = P_a` and `P_a * P_a = P_a`. -/
-structure ProjectiveMeasurement (d : ℕ) (α : Type) [Fintype α] extends
-    MeasurementOps d α where
+structure ProjectiveMeasurement (d : Type*) [Fintype d] [DecidableEq d] (α : Type) [Fintype α]
+    extends MeasurementOps d α where
   /-- Every operator is self-adjoint. -/
   self_adjoint : ∀ a, (op a)ᴴ = op a
   /-- Every operator is idempotent. -/
@@ -102,13 +102,13 @@ def projectiveMeasure [Fintype α] (P : ProjectiveMeasurement d α) :
 
 /-- Born rule: the probability of outcome `a` when measuring the state `ρ`
 with the POVM `{E_a}` is `tr(E_a ρ)`. -/
-def bornProb [Fintype α] (E : POVM d α) (ρ : Matrix (Fin d) (Fin d) ℂ)
+def bornProb [Fintype α] (E : POVM d α) (ρ : Matrix d d ℂ)
     (a : α) : ℂ :=
   (E.effect a * ρ).trace
 
 /-- Born probabilities sum to `tr(ρ)`. -/
 theorem bornProb_sum [Fintype α] (E : POVM d α)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     ∑ a, bornProb E ρ a = ρ.trace := by
   simp only [bornProb]
   rw [show ∑ a : α, (E.effect a * ρ).trace =

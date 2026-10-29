@@ -36,6 +36,7 @@ public import QuantumFoundations.DSubInstrument
 public import QuantumFoundations.MatrixMap
 public import QuantumFoundations.MatrixMap.BlockNorm
 public import QuantumFoundations.MatrixMap.Commutant
+public import QuantumFoundations.MatrixMap.Comparison
 public import QuantumFoundations.MatrixMap.Completion
 public import QuantumFoundations.MatrixMap.Family
 public import QuantumFoundations.MatrixMap.Kraus
@@ -49,8 +50,7 @@ public import QuantumFoundations.Pure.Vector
 public import QuantumFoundations.Register
 public import QuantumFoundations.SubInstrument
 
--- Observation and its dependent modules, with Devon Tuma's measure extension.
-public import QuantumFoundations.ForMathlib.MeasureTheory.Measure.Subprobability
+-- Observation and its dependent modules.
 public import QuantumFoundations.Observe
 public import QuantumFoundations.Oracle.Basis
 public import QuantumFoundations.Oracle.Unitary
