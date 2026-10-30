@@ -15,7 +15,8 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PartialTrace` | partial traces over `Fin (d₁ * d₂)` |
 | `TensorProduct` | Kronecker products of states and maps, local operations |
 | `KroneckerPSD` | positivity of Kronecker products |
-| `TraceNorm` | the trace norm and its bounds |
+| `TraceNorm` | the trace norm, its dual bound by Hermitian contractions, the triangle inequality |
+| `TraceDistance` | positive trace-nonincreasing maps (CPTP maps in particular) contract the trace norm and the trace distance |
 | `Measurement` | general and projective measurements as instruments |
 | `UnitaryChannel` | unitary channels |
 | `Instrument` | `QComp d α`: positive (maybe non-CP) branches, jointly sub-TP; a lawful monad |

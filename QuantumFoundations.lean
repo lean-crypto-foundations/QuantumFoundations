@@ -13,6 +13,7 @@ public import QuantumFoundations.PartialTrace
 public import QuantumFoundations.TensorProduct
 public import QuantumFoundations.KroneckerPSD
 public import QuantumFoundations.TraceNorm
+public import QuantumFoundations.TraceDistance
 public import QuantumFoundations.Measurement
 public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.Instrument
@@ -28,7 +29,6 @@ public import QuantumFoundations.MinEntropyProduct
 public import QuantumFoundations.MinEntropySplit
 public import QuantumFoundations.LeftoverHash
 public import QuantumFoundations.PrivacyAmplification
-public import QuantumFoundations.ForPhyslib.TraceDistance
 
 -- From VCVio.
 public import QuantumFoundations.ForMathlib.Analysis.Matrix.PosSemidef

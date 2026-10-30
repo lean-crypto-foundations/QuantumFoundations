@@ -21,6 +21,7 @@ the Helstrom dual characterization.
 
 * `traceNormH` — trace norm of a Hermitian matrix: `∑ i, |λᵢ|`
 * `IsEffect` — a matrix `E` with `0 ≤ E ≤ I` (quantum effect / POVM element)
+* `IsHermContraction` — a matrix `S` with `-1 ≤ S ≤ 1`
 
 ## Main Results
 
@@ -29,9 +30,11 @@ the Helstrom dual characterization.
 * `helstrom_traceless` — Helstrom dual characterization for traceless matrices
 * `effect_trace_le` — upper bound: `Re(tr(EX)) ≤ ½ ‖X‖₁` for effects and traceless X
 * `exists_effect_achieves` — achievability: spectral projection attains the bound
-* `traceNormH_triangle_traceless` — triangle inequality (via Helstrom)
 * `exists_selfAdjoint_involution_trace_eq_traceNormH` — `‖X‖₁ = Re tr(SX)` for a
   self-adjoint involution `S`
+* `trace_mul_re_le_traceNormH` — `Re tr(S X) ≤ ‖X‖₁` for a Hermitian contraction
+  `-1 ≤ S ≤ 1` (`IsHermContraction`) and Hermitian `X`
+* `traceNormH_add_le` — triangle inequality `‖A + B‖₁ ≤ ‖A‖₁ + ‖B‖₁`
 
 ## References
 
@@ -204,9 +207,11 @@ private lemma effect_diag_re_bounds (F : Matrix n n ℂ) (hF : IsEffect F) (i : 
   simp only [Matrix.sub_apply, Matrix.one_apply_eq, Complex.sub_re, Complex.one_re] at h
   linarith
 
-/-- Express `tr(EX)` in the eigenvector basis of `X`: the trace reduces to a sum
-    over diagonal entries of the conjugated effect times eigenvalues. -/
-private lemma trace_EX_eq_sum (E X : Matrix n n ℂ) (hX : X.IsHermitian) :
+/-- The trace `tr(E X)` in the eigenbasis of the Hermitian matrix `X`: the sum of the
+    diagonal entries of `U* E U` times the eigenvalues of `X`, for the eigenvector
+    unitary `U` of `X`. -/
+theorem _root_.Matrix.IsHermitian.trace_mul_eq_sum_eigenvalues {X : Matrix n n ℂ}
+    (hX : X.IsHermitian) (E : Matrix n n ℂ) :
     (E * X).trace = ∑ i, (star (hX.eigenvectorUnitary : Matrix n n ℂ) * E *
       (hX.eigenvectorUnitary : Matrix n n ℂ)) i i *
       (↑(hX.eigenvalues i) : ℂ) := by
@@ -281,7 +286,7 @@ private lemma spectralProjection_isEffect (X : Matrix n n ℂ) (hX : X.IsHermiti
 theorem effect_trace_le (X : Matrix n n ℂ) (hX : X.IsHermitian) (htr : X.trace = 0)
     (E : Matrix n n ℂ) (hE : IsEffect E) :
     (E * X).trace.re ≤ (1/2 : ℝ) * traceNormH X hX := by
-  rw [trace_EX_eq_sum E X hX]
+  rw [hX.trace_mul_eq_sum_eigenvalues E]
   set F := star (hX.eigenvectorUnitary : Matrix n n ℂ) * E *
     (hX.eigenvectorUnitary : Matrix n n ℂ)
   have hF : IsEffect F := isEffect_conj E hE hX.eigenvectorUnitary
@@ -304,7 +309,7 @@ theorem exists_effect_achieves (X : Matrix n n ℂ) (hX : X.IsHermitian)
     ∃ E : Matrix n n ℂ, IsEffect E ∧
       (E * X).trace.re = (1/2 : ℝ) * traceNormH X hX := by
   refine ⟨spectralProjection X hX, spectralProjection_isEffect X hX, ?_⟩
-  rw [trace_EX_eq_sum _ _ hX]
+  rw [hX.trace_mul_eq_sum_eigenvalues]
   have hF : star (hX.eigenvectorUnitary : Matrix n n ℂ) * spectralProjection X hX *
       (hX.eigenvectorUnitary : Matrix n n ℂ) =
     diagonal (fun i => if 0 ≤ hX.eigenvalues i then (1 : ℂ) else 0) := by
@@ -336,26 +341,6 @@ theorem helstrom_traceless (X : Matrix n n ℂ) (hX : X.IsHermitian)
     · exact ⟨_, ⟨0, isEffect_zero, rfl⟩⟩
     · rintro _ ⟨E, hE, rfl⟩
       exact effect_trace_le X hX htr E hE
-
-/-- Triangle inequality for trace norm of traceless Hermitian matrices.
-
-    Derived from Helstrom: for traceless A, B:
-    `½‖A+B‖₁ = Re(tr(E₊(A+B))) = Re(tr(E₊A)) + Re(tr(E₊B)) ≤ ½‖A‖₁ + ½‖B‖₁`
-    where `E₊` is the spectral projection achieving `½‖A+B‖₁`. -/
-theorem traceNormH_triangle_traceless (A B : Matrix n n ℂ)
-    (hA : A.IsHermitian) (hB : B.IsHermitian) (hAB : (A + B).IsHermitian)
-    (htrA : A.trace = 0) (htrB : B.trace = 0) :
-    traceNormH (A + B) hAB ≤ traceNormH A hA + traceNormH B hB := by
-  obtain ⟨E, hE, hachieve⟩ := exists_effect_achieves (A + B) hAB (by simp [htrA, htrB])
-  have hlin : (E * (A + B)).trace.re = (E * A).trace.re + (E * B).trace.re := by
-    simp [mul_add, Complex.add_re]
-  have hbound : (E * A).trace.re + (E * B).trace.re ≤
-      (1/2 : ℝ) * traceNormH A hA + (1/2 : ℝ) * traceNormH B hB :=
-    add_le_add (effect_trace_le A hA htrA E hE) (effect_trace_le B hB htrB E hE)
-  have h2 : (1/2 : ℝ) * traceNormH (A + B) hAB ≤
-      (1/2 : ℝ) * (traceNormH A hA + traceNormH B hB) := by
-    rw [hachieve] at hlin; linarith
-  linarith
 
 /-! ## Sign Matrix of a Hermitian Matrix -/
 
@@ -401,6 +386,77 @@ theorem exists_selfAdjoint_involution_trace_eq_traceNormH
     split_ifs with h
     · simp [abs_of_nonneg h]
     · simp [abs_of_neg (not_le.mp h)]
+
+/-! ## Hermitian Contractions and the Triangle Inequality -/
+
+/-- A Hermitian contraction: `-1 ≤ S ≤ 1` in the Loewner order. -/
+def IsHermContraction (S : Matrix n n ℂ) : Prop :=
+  (1 - S).PosSemidef ∧ (1 + S).PosSemidef
+
+/-- Unitary conjugation preserves Hermitian contractions. -/
+theorem IsHermContraction.conj {S : Matrix n n ℂ} (hS : IsHermContraction S)
+    (U : ↥(unitaryGroup n ℂ)) :
+    IsHermContraction (star (U : Matrix n n ℂ) * S * (U : Matrix n n ℂ)) := by
+  constructor
+  · have h : 1 - star (U : Matrix n n ℂ) * S * (U : Matrix n n ℂ) =
+        star (U : Matrix n n ℂ) * (1 - S) * (U : Matrix n n ℂ) := by
+      rw [mul_sub, sub_mul, mul_one, UnitaryGroup.star_mul_self]
+    rw [h, star_eq_conjTranspose]
+    exact hS.1.conjTranspose_mul_mul_same _
+  · have h : 1 + star (U : Matrix n n ℂ) * S * (U : Matrix n n ℂ) =
+        star (U : Matrix n n ℂ) * (1 + S) * (U : Matrix n n ℂ) := by
+      rw [mul_add, add_mul, mul_one, UnitaryGroup.star_mul_self]
+    rw [h, star_eq_conjTranspose]
+    exact hS.2.conjTranspose_mul_mul_same _
+
+omit [Fintype n] in
+/-- The diagonal entries of a Hermitian contraction have real part in `[-1, 1]`. -/
+theorem IsHermContraction.diag_re_mem {S : Matrix n n ℂ} (hS : IsHermContraction S)
+    (i : n) : -1 ≤ (S i i).re ∧ (S i i).re ≤ 1 := by
+  constructor
+  · have h := (Complex.nonneg_iff.mp (hS.2.diag_nonneg (i := i))).1
+    simp only [Matrix.add_apply, Matrix.one_apply_eq, Complex.add_re, Complex.one_re] at h
+    linarith
+  · have h := (Complex.nonneg_iff.mp (hS.1.diag_nonneg (i := i))).1
+    simp only [Matrix.sub_apply, Matrix.one_apply_eq, Complex.sub_re, Complex.one_re] at h
+    linarith
+
+/-- A self-adjoint involution is a Hermitian contraction. -/
+theorem isHermContraction_of_involution {S : Matrix n n ℂ} (hSh : Sᴴ = S)
+    (hSS : S * S = 1) : IsHermContraction S := by
+  have h1 : 1 - S = (1 / 2 : ℂ) • ((1 - S)ᴴ * (1 - S)) := by
+    simp only [conjTranspose_sub, conjTranspose_one, hSh, sub_mul, mul_sub, hSS, one_mul,
+      mul_one]
+    module
+  have h2 : 1 + S = (1 / 2 : ℂ) • ((1 + S)ᴴ * (1 + S)) := by
+    simp only [conjTranspose_add, conjTranspose_one, hSh, add_mul, mul_add, hSS, one_mul,
+      mul_one]
+    module
+  constructor
+  · rw [h1]; exact (posSemidef_conjTranspose_mul_self _).smul (by positivity)
+  · rw [h2]; exact (posSemidef_conjTranspose_mul_self _).smul (by positivity)
+
+/-- Dual bound of the trace norm: `Re tr(S X) ≤ ‖X‖₁` for a Hermitian contraction `S`
+and a Hermitian matrix `X`. -/
+theorem trace_mul_re_le_traceNormH (X : Matrix n n ℂ) (hX : X.IsHermitian)
+    {S : Matrix n n ℂ} (hS : IsHermContraction S) :
+    (S * X).trace.re ≤ traceNormH X hX := by
+  rw [hX.trace_mul_eq_sum_eigenvalues S, Complex.re_sum]
+  simp_rw [Complex.re_mul_ofReal]
+  refine Finset.sum_le_sum fun i _ => ?_
+  have ⟨h1, h2⟩ := (hS.conj hX.eigenvectorUnitary).diag_re_mem i
+  rcases le_total 0 (hX.eigenvalues i) with h | h <;>
+    [rw [abs_of_nonneg h]; rw [abs_of_nonpos h]] <;> nlinarith
+
+/-- Triangle inequality of the trace norm of Hermitian matrices:
+`‖A + B‖₁ ≤ ‖A‖₁ + ‖B‖₁`. -/
+theorem traceNormH_add_le (A B : Matrix n n ℂ) (hA : A.IsHermitian) (hB : B.IsHermitian) :
+    traceNormH (A + B) (hA.add hB) ≤ traceNormH A hA + traceNormH B hB := by
+  obtain ⟨S, hSh, hSS, hS⟩ :=
+    exists_selfAdjoint_involution_trace_eq_traceNormH (A + B) (hA.add hB)
+  have hc := isHermContraction_of_involution hSh hSS
+  rw [← hS, mul_add, trace_add, Complex.add_re]
+  exact add_le_add (trace_mul_re_le_traceNormH A hA hc) (trace_mul_re_le_traceNormH B hB hc)
 
 /-! ## Trace Distance for Density Matrices -/
 
