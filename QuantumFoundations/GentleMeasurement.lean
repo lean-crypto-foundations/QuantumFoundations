@@ -181,12 +181,12 @@ theorem gentle_diff_trace :
 /-! ## Orthogonality -/
 
 /-- `PQ = 0` for complementary projectors. -/
-theorem P_mul_Q : P.val * (1 - P.val) = 0 := by
-  rw [mul_sub, mul_one, P.idempotent, sub_self]
+theorem P_mul_Q : P.val * (1 - P.val) = 0 :=
+  IsIdempotentElem.mul_one_sub_self P.idempotent
 
 /-- `QP = 0` for complementary projectors. -/
-theorem Q_mul_P : (1 - P.val) * P.val = 0 := by
-  rw [sub_mul, one_mul, P.idempotent, sub_self]
+theorem Q_mul_P : (1 - P.val) * P.val = 0 :=
+  IsIdempotentElem.one_sub_mul_self P.idempotent
 
 end Projector
 
@@ -199,19 +199,6 @@ weighted by a PSD matrix ρ:
 
 This is the key analytical tool for the gentle measurement bound.
 -/
-
-omit [DecidableEq d] in
-/-- Trace of a PSD-weighted outer product is non-negative:
-    `0 ≤ tr(AρA†)` when ρ is PSD.
-
-    Proof: `AρA† = A ρ^{1/2} (A ρ^{1/2})†`, which is PSD. -/
-theorem trace_AρAstar_nonneg {ρ A : Matrix d d ℂ}
-    (hρ : ρ.PosSemidef) :
-    0 ≤ (A * ρ * Aᴴ).trace := by
-  have h : (A * ρ * Aᴴ).PosSemidef := hρ.mul_mul_conjTranspose_same A
-  rw [Complex.nonneg_iff]
-  exact ⟨Quantum.trace_re_nonneg_of_psd h,
-         (Quantum.trace_im_zero_of_psd h).symm⟩
 
 private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z := by
   simp [Complex.normSq_apply]

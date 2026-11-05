@@ -251,8 +251,8 @@ theorem norm_sum_mul_sq_le {ι : Type*} (s : Finset ι) (f g : ι → 𝕜) :
 
 /-- The scalar inequality behind the norm of a two-by-two block matrix with a zero corner: with
 `λ = (t + √(t² + 4 s²)) / 2`, the largest eigenvalue of `!![0, s; s, t]`, one has
-`s² w² + (s u + t w)² ≤ λ² (u² + w²)` for nonnegative `s, t, u, w`. -/
-theorem sq_mul_sq_add_sq_le_of_nonneg {s t u w : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) :
+`s² w² + (s u + t w)² ≤ λ² (u² + w²)` for nonnegative `t`. -/
+theorem sq_mul_sq_add_sq_le_of_nonneg {s t u w : ℝ} (ht : 0 ≤ t) :
     s ^ 2 * w ^ 2 + (s * u + t * w) ^ 2 ≤
       ((t + √(t ^ 2 + 4 * s ^ 2)) / 2) ^ 2 * (u ^ 2 + w ^ 2) := by
   set r := √(t ^ 2 + 4 * s ^ 2) with hrdef
@@ -420,7 +420,7 @@ theorem l2_opNorm_le_of_corner_eq_zero [DecidableEq n] {E : Matrix m n 𝕜} (pm
         _ = (s * u * (t * w)) ^ 2 := by rw [hUu, hVw]; ring
     exact (pow_le_pow_iff_left₀ hX0 (by positivity) two_ne_zero).mp h₁
   rw [← Finset.sum_filter_add_sum_filter_not Finset.univ pm, hv, hUu, hVw]
-  have hpoly := sq_mul_sq_add_sq_le_of_nonneg (u := u) (w := w) hs0 ht0
+  have hpoly := sq_mul_sq_add_sq_le_of_nonneg (s := s) (u := u) (w := w) ht0
   rw [has, hVw] at hP
   rw [hUu] at hSα'
   rw [hVw] at hSβ'

@@ -178,14 +178,10 @@ theorem dual_spec
 /-- Trace of product with matrix unit extracts an entry. -/
 theorem trace_mul_matUnit (M : Matrix ι ι ℂ) (i j : ι) :
     (M * matUnit j i).trace = M i j := by
-  simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, matUnit_apply]
-  rw [Finset.sum_eq_single i]
-  · rw [Finset.sum_eq_single j]
-    · simp
-    · intro l _ hl; simp [hl]
-    · intro h; exact absurd (Finset.mem_univ j) h
-  · intro k _ hk; apply Finset.sum_eq_zero; intro l _; simp [hk]
-  · intro h; exact absurd (Finset.mem_univ i) h
+  have h : matUnit j i = Matrix.single j i (1 : ℂ) := by
+    ext k l
+    simp [matUnit, Matrix.single, eq_comm]
+  simpa [h] using Matrix.trace_mul_single M j i (1 : ℂ)
 
 /-- Trace of a matrix unit is 1 if on diagonal, 0 otherwise. -/
 theorem trace_matUnit (i j : ι) :

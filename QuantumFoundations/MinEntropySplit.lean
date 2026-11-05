@@ -158,13 +158,16 @@ theorem condMinEntropy_le_minEntropy {p : ι × κ → ℝ} (h : ∀ q, 0 ≤ p 
   exact Real.logb_le_logb_of_le (by norm_num) hpos hmono
 
 /-- Symmetric min-entropy form: `condMinEntropy' p ≤ minEntropy p`. -/
-theorem condMinEntropy'_le_minEntropy {p : ι × κ → ℝ} (h : ∀ q, 0 ≤ p q)
-    (hpos : 0 < guessProb p) : condMinEntropy' p ≤ minEntropy p := by
-  unfold condMinEntropy' minEntropy
-  have hmono := guessProb_le_condGuessProb' h
-  have hcg : 0 < condGuessProb' p := lt_of_lt_of_le hpos hmono
-  rw [neg_le_neg_iff]
-  exact Real.logb_le_logb_of_le (by norm_num) hpos hmono
+theorem condMinEntropy'_le_minEntropy {p : ι × κ → ℝ} (h : ∀ q, 0 ≤ p q) :
+    condMinEntropy' p ≤ minEntropy p := by
+  by_cases hpos : 0 < guessProb p
+  · unfold condMinEntropy' minEntropy
+    rw [neg_le_neg_iff]
+    exact Real.logb_le_logb_of_le (by norm_num) hpos (guessProb_le_condGuessProb' h)
+  · have hp : p = fun _ => 0 := by
+      funext q
+      exact le_antisymm ((le_guessProb p q).trans (le_of_not_gt hpos)) (h q)
+    simp [hp, condMinEntropy', minEntropy, condGuessProb', guessProb_const]
 
 /-! ### Choosing the better conditioning
 

@@ -211,14 +211,16 @@ a register `Fin D ≃ Fin (d * d)`. -/
 theorem exists_purification (e : Fin (d * d) ≃ Fin D) {ρ : Matrix (Fin d) (Fin d) ℂ}
     (hρ : ρ.PosSemidef) (htr : ρ.trace = 1) :
     ∃ ψ : Fin D → ℂ, star ψ ⬝ᵥ ψ = 1 ∧ ρ = trAnc e (vecMulVec ψ (star ψ)) := by
-  obtain ⟨B, hB⟩ := exists_eq_conjTranspose_mul_self_of_posSemidef hρ
+  open scoped MatrixOrder in
+  obtain ⟨B, hB⟩ :=
+    CStarAlgebra.nonneg_iff_eq_star_mul_self.mp (Matrix.nonneg_iff_posSemidef.mpr hρ)
   let ψ : Fin D → ℂ := fun a =>
     star (B ((finProdEquiv d d).symm (e.symm a)).2 ((finProdEquiv d d).symm (e.symm a)).1)
   have hρψ : ρ = trAnc e (vecMulVec ψ (star ψ)) := by
     rw [hB]
     ext x x'
     rw [trAnc_apply]
-    simp [ψ, mul_apply, conjTranspose_apply, vecMulVec_apply]
+    simp [ψ, mul_apply, vecMulVec_apply]
   refine ⟨ψ, ?_, hρψ⟩
   rw [← htr, hρψ, trace_trAnc, trace_vecMulVec, dotProduct_comm]
 

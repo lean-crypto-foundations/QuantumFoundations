@@ -435,9 +435,19 @@ theorem amplifyLeft_conj [Fintype R] [Fintype A] [DecidableEq A] (K : Matrix S R
   simp [Matrix.mul_apply, Fintype.sum_prod_type, Matrix.one_apply, apply_ite (starRingEnd ℂ)]
 
 /-- Kraus maps are completely positive. -/
-theorem isCP_conj [Fintype A] [Finite B] (K : Matrix B A ℂ) : (conj K).IsCP := fun k ρ hρ ↦ by
+theorem isCP_conj [Fintype A] (K : Matrix B A ℂ) : (conj K).IsCP := fun k ρ hρ ↦ by
   rw [amplify_conj, conj_apply]
-  exact hρ.mul_mul_conjTranspose_same _
+  classical
+  let L := K ⊗ₖ (1 : Matrix (Fin k) (Fin k) ℂ)
+  refine ⟨isHermitian_mul_mul_conjTranspose L hρ.isHermitian, fun x ↦ ?_⟩
+  have hx := (hρ.mul_mul_conjTranspose_same
+    (L.submatrix (Subtype.val : x.support → B × Fin k) id)).dotProduct_mulVec_nonneg
+    (fun i ↦ x i)
+  change 0 ≤ ∑ i : x.support, star (x i) *
+    ∑ j : x.support, (L * ρ * Lᴴ) i j * x j at hx
+  change 0 ≤ ∑ i ∈ x.support, ∑ j ∈ x.support, star (x i) * (L * ρ * Lᴴ) i j * x j
+  simp_rw [← Finset.sum_coe_sort x.support]
+  simpa only [Finset.mul_sum, ← mul_assoc] using hx
 
 /-! ## Trace conditions -/
 

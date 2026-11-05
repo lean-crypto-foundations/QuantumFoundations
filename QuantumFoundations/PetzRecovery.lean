@@ -119,16 +119,13 @@ private lemma spectrum_real_nonneg_of_posSemidef
 open scoped MatrixOrder in
 /-- `psdSqrt M * psdSqrt M = M` for PSD matrices.
 
-    Goes through the unital CFC: `√x · √x = x` on the spectrum of `M`
-    (which is nonneg for PSD), so `cfc Real.sqrt M * cfc Real.sqrt M
-    = cfc (id) M = M` by `cfc_mul`, `cfc_congr`, `cfc_id`. -/
+    Identifies the matrix functional calculus with `CFC.sqrt`, then applies
+    `CFC.sqrt_mul_sqrt_self`. -/
 theorem psdSqrt_mul_psdSqrt (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     psdSqrt M hM * psdSqrt M hM = M := by
-  simp only [psdSqrt, ← hM.isHermitian.cfc_eq]
-  rw [← cfc_mul Real.sqrt Real.sqrt M,
-      cfc_congr (f := fun x => Real.sqrt x * Real.sqrt x) (g := id)
-        (fun x hx => Real.mul_self_sqrt (spectrum_real_nonneg_of_posSemidef M hM x hx))]
-  exact cfc_id ℝ M hM.isHermitian.isSelfAdjoint
+  rw [psdSqrt, ← hM.isHermitian.cfc_eq, ← cfcₙ_eq_cfc,
+    ← CFC.sqrt_eq_real_sqrt M hM.nonneg]
+  exact CFC.sqrt_mul_sqrt_self M hM.nonneg
 
 open scoped MatrixOrder in
 /-- `psdSqrt M` is PSD.
@@ -251,9 +248,8 @@ open scoped MatrixOrder in
 /-- `psdInvSqrt M` is Hermitian: it is the functional calculus of a real function. -/
 theorem psdInvSqrt_isHermitian (M : Matrix d d ℂ) (hM : M.PosSemidef) :
     (psdInvSqrt M hM).IsHermitian := by
-  change (psdInvSqrt M hM)ᴴ = psdInvSqrt M hM
   simp only [psdInvSqrt, ← hM.isHermitian.cfc_eq]
-  exact cfc_conjTranspose M _
+  exact IsSelfAdjoint.cfc
 
 open scoped MatrixOrder in
 /-- The functional calculus of a nonnegative real function is PSD. -/

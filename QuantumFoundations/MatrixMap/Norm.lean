@@ -29,7 +29,7 @@ facts, collected here so that they depend on Mathlib and `Quantum.MatrixMap` onl
   (`Matrix.l2_opNorm_one_le`, `Matrix.l2_opNorm_le_one_of_conjTranspose_mul_self`, in
   `QuantumFoundations.MatrixMap.OpNorm`). The norm is invariant under isometries
   (`Quantum.MatrixMap.l2_opNorm_isometry_mul`, `Quantum.MatrixMap.l2_opNorm_mul_coisometry`),
-  orthogonal projections have norm at most one (`Quantum.MatrixMap.l2_opNorm_le_one_of_proj`),
+  orthogonal projections have norm at most one (`IsStarProjection.norm_le`),
   and the deviation of a conjugate from the original is a commutator
   (`Quantum.MatrixMap.l2_opNorm_conj_sub_self`). An operator that sends the blocks of an
   orthogonal decomposition of its input into mutually orthogonal blocks of its output is
@@ -281,14 +281,6 @@ theorem ofReal_trace_conj_le_sum_of_blocks [DecidableEq n] {κ : Type*} [Fintype
     (hY.mul_mul_conjTranspose_same (B k)).trace_re_nonneg
   rw [ENNReal.ofReal_sum_of_nonneg fun k _ ↦ mul_nonneg (sq_nonneg _) (hnn k)]
   exact Finset.sum_congr rfl fun k _ ↦ ENNReal.ofReal_mul (sq_nonneg _)
-
-/-- An orthogonal projection has operator norm at most one. -/
-theorem l2_opNorm_le_one_of_proj [DecidableEq n] {P : Matrix n n ℂ} (hP : Pᴴ = P)
-    (hPP : P * P = P) :
-    ‖P‖ ≤ 1 := by
-  have h := Matrix.l2_opNorm_conjTranspose_mul_self P
-  rw [hP, hPP] at h
-  nlinarith [norm_nonneg P]
 
 /-- **Unitary invariance, on the left.** Multiplying by an isometry on the left preserves the
 operator norm. -/

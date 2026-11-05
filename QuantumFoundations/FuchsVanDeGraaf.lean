@@ -5,6 +5,8 @@ Authors: Bas Spitters
 -/
 module
 
+public import Mathlib.Analysis.Matrix.Order
+
 public import QuantumFoundations.TraceNorm
 
 /-!
@@ -47,14 +49,9 @@ noncomputable def fidelityPure (P ρ : Matrix d d ℂ) : ℝ :=
 `1 − P` are positive semidefinite. -/
 theorem isEffect_of_projector (P : Matrix d d ℂ)
     (hP : P.PosSemidef) (hidem : P * P = P) : IsEffect P := by
-  refine ⟨hP, ?_⟩
-  have hherm : (1 - P)ᴴ = 1 - P := by
-    rw [Matrix.conjTranspose_sub, Matrix.conjTranspose_one, hP.isHermitian]
-  have hmul : (1 - P) * (1 - P) = 1 - P := by
-    rw [mul_sub, Matrix.mul_one, sub_mul, Matrix.one_mul, hidem, sub_self, sub_zero]
-  have hself : (1 - P) = (1 - P)ᴴ * (1 - P) := by rw [hherm, hmul]
-  rw [hself]
-  exact Matrix.posSemidef_conjTranspose_mul_self _
+  open scoped MatrixOrder in
+  exact ⟨hP, Matrix.nonneg_iff_posSemidef.mp
+    (IsStarProjection.one_sub_nonneg ⟨hidem, hP.isHermitian⟩)⟩
 
 /-- **Easy Fuchs–van de Graaf inequality.** For a pure target projector `P`
 (`P² = P`, unit trace) and a density matrix `ρ` (unit trace),
