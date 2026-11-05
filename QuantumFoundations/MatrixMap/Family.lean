@@ -107,10 +107,8 @@ theorem PosSemidef.ofReal_trace_re [Fintype n] {M : Matrix n n ℂ} (hM : M.PosS
 
 /-- A sum of positive semidefinite complex matrices is positive semidefinite. This holds for
 every family: the sum of a family that is not summable is zero. -/
-theorem PosSemidef.tsum [Finite n] {f : ι → Matrix n n ℂ} (hf : ∀ i, (f i).PosSemidef) :
+theorem PosSemidef.tsum {f : ι → Matrix n n ℂ} (hf : ∀ i, (f i).PosSemidef) :
     (∑' i, f i).PosSemidef := by
-  classical
-  cases nonempty_fintype n
   open scoped MatrixOrder in
   exact Matrix.nonneg_iff_posSemidef.mp (tsum_nonneg fun i ↦ (hf i).nonneg)
 

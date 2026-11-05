@@ -302,7 +302,7 @@ theorem IsCP.exists_kraus [Fintype A] [Fintype B] {Φ : MatrixMap A B} (hΦ : Φ
   exact ⟨krausOfFactor Y, eq_sum_conj_krausOfFactor (by rw [hY, star_eq_conjTranspose])⟩
 
 /-- A finite sum of Kraus maps is completely positive. -/
-theorem isCP_sum_conj [Fintype A] [Finite B] [Fintype ι] (K : ι → Matrix B A ℂ) :
+theorem isCP_sum_conj [Fintype A] [Fintype ι] (K : ι → Matrix B A ℂ) :
     IsCP (∑ i, conj (K i)) :=
   IsCP.sum _ fun i _ ↦ isCP_conj (K i)
 

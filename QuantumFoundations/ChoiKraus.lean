@@ -130,16 +130,6 @@ theorem eq_kraus_of_choi_eq {r : Type*} [Fintype r]
   rw [Finset.sum_comm]
   exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun a _ => by ring
 
-/-- A positive semidefinite complex matrix is `Bᴴ * B` for a square `B`. -/
-theorem exists_eq_conjTranspose_mul_self_of_posSemidef {ι : Type*} [Fintype ι]
-    {A : Matrix ι ι ℂ} (hA : A.PosSemidef) :
-    ∃ B : Matrix ι ι ℂ, A = Bᴴ * B := by
-  classical
-  have h0 : 0 ≤ A := nonneg_iff_posSemidef.mpr hA
-  refine ⟨CFC.sqrt A, ?_⟩
-  have hs : star (CFC.sqrt A) = CFC.sqrt A := (CFC.sqrt_nonneg A).isSelfAdjoint.star_eq
-  rw [← star_eq_conjTranspose, hs, CFC.sqrt_mul_sqrt_self A h0]
-
 /-- A map whose Choi matrix is positive semidefinite is a Kraus sum over
 `n × n`. -/
 theorem exists_kraus_of_choi_posSemidef
@@ -147,7 +137,7 @@ theorem exists_kraus_of_choi_posSemidef
     (hΦ : (choi Φ).PosSemidef) :
     ∃ K : n × n → Matrix n n ℂ,
       ∀ ρ, Φ ρ = ∑ x, K x * ρ * (K x)ᴴ := by
-  obtain ⟨B, hB⟩ := exists_eq_conjTranspose_mul_self_of_posSemidef hΦ
+  obtain ⟨B, hB⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hΦ.nonneg
   exact ⟨krausOfFactor B, eq_kraus_of_choi_eq Φ B hB⟩
 
 omit [DecidableEq n] in
