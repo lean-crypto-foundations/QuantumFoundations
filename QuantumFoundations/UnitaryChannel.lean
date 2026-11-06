@@ -5,7 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
-public import QuantumFoundations.Instrument
+public import QuantumFoundations.Bridge.ToQComp
 public import Mathlib.LinearAlgebra.Matrix.Trace
 public import Mathlib.LinearAlgebra.UnitaryGroup
 
@@ -48,14 +48,10 @@ namespace Quantum.UnitaryChannel
 
 variable {d : Type*} [Fintype d]
 
-/-- Conjugation by a matrix: `ρ ↦ U ρ Uᴴ` as a linear map. -/
+/-- Conjugation by a matrix: `ρ ↦ U ρ Uᴴ` as a linear map, the Kraus map of `U`. -/
 def conjugate (U : Matrix d d ℂ) :
-    Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ where
-  toFun ρ := U * ρ * Uᴴ
-  map_add' ρ₁ ρ₂ := by simp [mul_add, add_mul]
-  map_smul' c ρ := by
-    change U * (c • ρ) * Uᴴ = c • (U * ρ * Uᴴ)
-    rw [Matrix.mul_smul, Matrix.smul_mul]
+    Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ :=
+  MatrixMap.conj U
 
 /-- `conjugate U ρ = U * ρ * Uᴴ`. -/
 @[grind =]
@@ -65,21 +61,16 @@ theorem conjugate_apply (U ρ : Matrix d d ℂ) :
 variable [DecidableEq d]
 
 /-- The unitary channel `ρ ↦ U ρ Uᴴ` as an instrument with the single
-outcome `()`. -/
-def unitaryChannel (U : Matrix.unitaryGroup d ℂ) : QComp d Unit where
-  branch _ := conjugate (U : Matrix d d ℂ)
-  branch_psd _ ρ hρ := by
-    simp only [conjugate_apply]
-    exact hρ.mul_mul_conjTranspose_same (U : Matrix d d ℂ)
-  branch_summable _ :=
-    summable_of_ne_finset_zero (s := {()}) (fun b hb => by simp at hb)
-  branch_stp ρ hρ := by
-    have htrace : (conjugate (U : Matrix d d ℂ) ρ).trace = ρ.trace := by
-      rw [conjugate_apply, trace_mul_cycle]
-      have hU := UnitaryGroup.star_mul_self U
-      simp only [star_eq_conjTranspose] at hU
-      rw [hU, Matrix.one_mul]
-    rw [tsum_eq_single () (fun b hb => absurd rfl hb), htrace]
+outcome `()`: the image of the Kraus subinstrument with the single Kraus operator `U`. -/
+def unitaryChannel (U : Matrix.unitaryGroup d ℂ) : QComp d Unit :=
+  (SubInstrument.ofKraus (fun _ : Unit ↦ (U : Matrix d d ℂ))
+    (by simpa only [Finset.univ_unique, Finset.sum_singleton, star_eq_conjTranspose] using
+      UnitaryGroup.star_mul_self U)).toQComp
+
+/-- The branch of the unitary channel of `U` maps `ρ ↦ U ρ Uᴴ`. -/
+@[simp]
+theorem unitaryChannel_branch (U : Matrix.unitaryGroup d ℂ) (u : Unit) (ρ : Matrix d d ℂ) :
+    (unitaryChannel U).branch u ρ = (U : Matrix d d ℂ) * ρ * (U : Matrix d d ℂ)ᴴ := rfl
 
 /-- The unitary channel of `U` followed by the unitary channel of `V` is the
 unitary channel of `V * U`. -/

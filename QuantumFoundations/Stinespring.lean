@@ -200,7 +200,7 @@ theorem stinespring [NeZero d] {Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matr
     (hCP : IsCPMap Φ) (hTP : IsTP Φ) (e : Fin (d * (d * d)) ≃ Fin D) :
     ∃ U ∈ Matrix.unitaryGroup (Fin D) ℂ, ∀ ρ : Matrix (Fin d) (Fin d) ℂ,
       Φ ρ = trAnc e (U * (ρ ⊗ₖ Matrix.diagonal (Pi.single 0 1)).submatrix e.symm e.symm * Uᴴ) := by
-  obtain ⟨K, hK⟩ := exists_kraus_fin_fin hCP
+  obtain ⟨K, hK⟩ := exists_kraus_fin hCP
   obtain ⟨U, hU, hUρ⟩ := exists_unitary_of_kraus e (kraus_sum_conjTranspose_mul_self_eq_one hK hTP)
   exact ⟨U, hU, fun ρ => by rw [hK ρ, hUρ ρ]⟩
 
