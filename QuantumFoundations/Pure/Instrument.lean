@@ -575,6 +575,7 @@ theorem outcomeMeasure_real_ofKraus_ofVector_apply (K : (i : ι) → Matrix (B i
   rw [Measure.real, outcomeMeasure_ofKraus_ofVector_apply,
     ENNReal.toReal_ofReal (Finset.sum_nonneg fun _ _ ↦ sq_nonneg _)]
 
+omit [MeasurableSingletonClass ι] in
 /-- Event perturbation for a finite complete single-Kraus family `∑ a, K_a† K_a = I`:
 `|p_E(ψ) - p_E(φ)| ≤ (‖ψ‖ + ‖φ‖) * ‖ψ - φ‖`, where
 `p_E(ψ) = ∑ a ∈ E, ‖K_a ψ‖²` on the substate `|ψ⟩⟨ψ|`.
@@ -590,8 +591,21 @@ theorem abs_outcomeMeasure_real_ofKraus_ofVector_sub_le
     |((ofKraus K hK).outcomeMeasure (.ofVector ψ hψ)).real s -
       ((ofKraus K hK).outcomeMeasure (.ofVector φ hφ)).real s| ≤ (‖ψ‖ + ‖φ‖) * ‖ψ - φ‖ := by
   classical
-  rw [outcomeMeasure_real_ofKraus_ofVector_apply, outcomeMeasure_real_ofKraus_ofVector_apply]
-  let t := Finset.univ.filter (· ∈ s)
+  let t := Finset.univ.filter (fun a ↦ Measure.dirac a s = 1)
+  have hreal (χ : EuclideanSpace ℂ A) (hχ : ‖χ‖ ≤ 1) :
+      ((ofKraus K hK).outcomeMeasure (.ofVector χ hχ)).real s =
+        ∑ a ∈ t, ‖K a •ᵥ χ‖ ^ 2 := by
+    rw [Measure.real, outcomeMeasure_ofKraus_ofVector, Measure.coe_finsetSum, Finset.sum_apply]
+    have heq : (∑ a, (ENNReal.ofReal (‖K a •ᵥ χ‖ ^ 2) • Measure.dirac a) s) =
+        ENNReal.ofReal (∑ a ∈ t, ‖K a •ᵥ χ‖ ^ 2) := by
+      rw [ENNReal.ofReal_sum_of_nonneg fun _ _ ↦ sq_nonneg _]
+      simp only [t, Finset.sum_filter]
+      refine Finset.sum_congr rfl fun a _ ↦ ?_
+      rw [Measure.smul_apply, smul_eq_mul]
+      rcases Measure.dirac_apply_eq_zero_or_one (a := a) (s := s) with ha | ha <;>
+        simp [ha]
+    rw [heq, ENNReal.toReal_ofReal (Finset.sum_nonneg fun _ _ ↦ sq_nonneg _)]
+  rw [hreal ψ hψ, hreal φ hφ]
   let v (χ : EuclideanSpace ℂ A) : PiLp 2 (fun i : t ↦ EuclideanSpace ℂ (B i)) :=
     toLp 2 fun i ↦ K i •ᵥ χ
   have hv (χ : EuclideanSpace ℂ A) : ‖v χ‖ ^ 2 = ∑ i ∈ t, ‖K i •ᵥ χ‖ ^ 2 := by
@@ -615,6 +629,7 @@ theorem abs_outcomeMeasure_real_ofKraus_ofVector_sub_le
   exact mul_le_mul (add_le_add (hle ψ) (hle φ)) hdiff (abs_nonneg _)
     (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
+omit [MeasurableSingletonClass ι] in
 /-- Event perturbation for a finite complete single-Kraus family `∑ a, K_a† K_a = I`:
 on subnormalized vectors, event weights from `ofKraus` differ by at most `2 * ‖ψ - φ‖`.
 This factor two converts vector distance to event-weight difference; the vector hybrid bound

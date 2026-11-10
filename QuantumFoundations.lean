@@ -6,9 +6,6 @@ Authors: Bas Spitters
 module
 
 public import QuantumFoundations.CPMap
-public import QuantumFoundations.DualMap
-public import QuantumFoundations.ChoiKraus
-public import QuantumFoundations.Stinespring
 public import QuantumFoundations.PartialTrace
 public import QuantumFoundations.TensorProduct
 public import QuantumFoundations.KroneckerPSD
@@ -39,6 +36,7 @@ public import QuantumFoundations.MatrixMap.BlockNorm
 public import QuantumFoundations.MatrixMap.Commutant
 public import QuantumFoundations.MatrixMap.Comparison
 public import QuantumFoundations.MatrixMap.Completion
+public import QuantumFoundations.MatrixMap.Dual
 public import QuantumFoundations.MatrixMap.Family
 public import QuantumFoundations.MatrixMap.Kraus
 public import QuantumFoundations.MatrixMap.Norm
@@ -46,6 +44,7 @@ public import QuantumFoundations.MatrixMap.OpNorm
 public import QuantumFoundations.MatrixMap.Pinching
 public import QuantumFoundations.MatrixMap.ProjectorEvent
 public import QuantumFoundations.MatrixMap.ProjectorPair
+public import QuantumFoundations.MatrixMap.Stinespring
 public import QuantumFoundations.Pure.Norm
 public import QuantumFoundations.Pure.Vector
 public import QuantumFoundations.Register

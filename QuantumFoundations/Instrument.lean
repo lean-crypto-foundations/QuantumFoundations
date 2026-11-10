@@ -5,6 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
+public import Mathlib.Topology.EMetricSpace.Weak
 public import Mathlib.LinearAlgebra.Matrix.PosDef
 public import Mathlib.LinearAlgebra.Matrix.Trace
 public import Mathlib.Analysis.Complex.Order
@@ -951,8 +952,8 @@ theorem absDiff_self (a : ℝ≥0∞) : absDiff a a = 0 := by
   simp [absDiff, tsub_self]
 
 /-- `absDiff` is symmetric. -/
-theorem absDiff_comm (a b : ℝ≥0∞) : absDiff a b = absDiff b a := by
-  simp [absDiff, max_comm]
+theorem absDiff_comm (a b : ℝ≥0∞) : absDiff a b = absDiff b a :=
+  sup_comm _ _
 
 /-- Triangle inequality for `absDiff`. -/
 theorem absDiff_triangle (a b c : ℝ≥0∞) :
@@ -988,22 +989,7 @@ theorem weighted_bound {ι : Type} (w f g : ι → ℝ≥0∞) (ε : ℝ≥0∞)
 /-- `absDiff a b ≤ ε` iff both `a ≤ b + ε` and `b ≤ a + ε`. -/
 theorem absDiff_le_iff {a b ε : ℝ≥0∞} :
     absDiff a b ≤ ε ↔ (a ≤ b + ε ∧ b ≤ a + ε) := by
-  constructor
-  · intro h
-    constructor
-    · have : a - b ≤ ε := le_trans (le_max_left _ _) h
-      calc a ≤ a - b + b := le_tsub_add
-        _ ≤ ε + b := by gcongr
-        _ = b + ε := add_comm _ _
-    · have : b - a ≤ ε := le_trans (le_max_right _ _) h
-      calc b ≤ b - a + a := le_tsub_add
-        _ ≤ ε + a := by gcongr
-        _ = a + ε := add_comm _ _
-  · intro ⟨hab, hba⟩
-    simp only [absDiff]
-    apply max_le
-    · exact tsub_le_iff_right.mpr (by rwa [add_comm])
-    · exact tsub_le_iff_right.mpr (by rwa [add_comm])
+  simpa [absDiff, ← ENNReal.edist_eq_max] using ENNReal.edist_le_iff_le_add_right a b ε
 
 omit [DecidableEq d] in
 /-- PSD matrix with zero trace is the zero matrix (wrapper for Mathlib). -/

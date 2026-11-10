@@ -123,7 +123,7 @@ theorem linearMap_expand
 
 /-- The trace dual of a linear map on matrices: the unique linear map `Φ†` with
     `tr(Φ†(A) * B) = tr(A * Φ(B))` for all `A`, `B` (`dual_spec`; uniqueness by
-    `ext_of_trace_mul`). The pairing
+    `Matrix.ext_iff_trace_mul_right`). The pairing
     `(A, B) ↦ tr(A * B)` is complex-bilinear, so this is the transpose of `Φ` for it, not the
     Hilbert–Schmidt adjoint `Φ*`, which satisfies `tr(Φ*(A)ᴴ * B) = tr(Aᴴ * Φ(B))`.
     The two coincide when `Φ` commutes with `conjTranspose` (`dual_spec_conjTranspose`),
@@ -178,14 +178,10 @@ theorem dual_spec
 /-- Trace of product with matrix unit extracts an entry. -/
 theorem trace_mul_matUnit (M : Matrix ι ι ℂ) (i j : ι) :
     (M * matUnit j i).trace = M i j := by
-  simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, matUnit_apply]
-  rw [Finset.sum_eq_single i]
-  · rw [Finset.sum_eq_single j]
-    · simp
-    · intro l _ hl; simp [hl]
-    · intro h; exact absurd (Finset.mem_univ j) h
-  · intro k _ hk; apply Finset.sum_eq_zero; intro l _; simp [hk]
-  · intro h; exact absurd (Finset.mem_univ i) h
+  have h : matUnit j i = Matrix.single j i (1 : ℂ) := by
+    ext k l
+    simp [matUnit, Matrix.single, eq_comm]
+  simpa [h] using Matrix.trace_mul_single M j i (1 : ℂ)
 
 /-- Trace of a matrix unit is 1 if on diagonal, 0 otherwise. -/
 theorem trace_matUnit (i j : ι) :

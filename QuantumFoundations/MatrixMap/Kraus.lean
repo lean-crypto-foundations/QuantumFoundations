@@ -64,6 +64,9 @@ does not construct a whole-program Kraus refinement or prove its coarse-graining
 
 * `Quantum.MatrixMap.choi Φ`, and `Quantum.MatrixMap.ofChoi C`, the map with Choi matrix `C`;
   together the linear equivalence `Quantum.MatrixMap.choiEquiv`.
+* `Quantum.MatrixMap.maxEntVec`: the unnormalized maximally entangled vector `|Ω⟩` on `A × A`;
+  the blocks of `|Ω⟩⟨Ω|` are the matrix units (`vecMulVec_maxEntVec_submatrix`), so
+  `choi Φ = (Φ ⊗ id_A) (|Ω⟩⟨Ω|)` (`choi_eq_amplify`).
 * `Quantum.MatrixMap.krausOfFactor Y`: the Kraus operators read off the rows of a factor `Y` of the
   Choi matrix.
 * `Quantum.MatrixMap.krausOps Φ hΦ`: a chosen family of Kraus operators of a completely positive
@@ -78,7 +81,8 @@ does not construct a whole-program Kraus refinement or prove its coarse-graining
 * `Quantum.MatrixMap.isCP_iff_posSemidef_choi`: complete positivity is positivity of the Choi
   matrix.
 * `Quantum.MatrixMap.isCP_iff_exists_kraus`: complete positivity is having Kraus operators
-  (Choi's theorem); `Quantum.MatrixMap.IsCP.exists_kraus` gives at most `|A| * |B|` of them.
+  (Choi's theorem); `Quantum.MatrixMap.IsCP.exists_kraus` gives at most `|A| * |B|` of them,
+  and `Quantum.MatrixMap.IsCP.exists_kraus_fin` indexes them by `Fin (|B| * |A|)`.
 * `Quantum.MatrixMap.isTP_sum_conj_iff`, `Quantum.MatrixMap.isTNI_sum_conj_iff`: the trace
   conditions in terms of Kraus operators.
 * `Quantum.MatrixMap.sum_conj_eq_traceRight_comp_conj`,
@@ -247,17 +251,32 @@ theorem choi_sum_conj_apply [Fintype A] [DecidableEq A] [Fintype ι] (K : ι →
     (x y : B × A) : choi (∑ i, conj (K i)) x y = ∑ i, K i x.1 x.2 * star (K i y.1 y.2) := by
   simp [LinearMap.sum_apply, Matrix.sum_apply, Matrix.mul_apply, Matrix.single_apply, ite_and]
 
-/-- The Choi matrix of a map is `Φ ⊗ id_A` applied to the unnormalized maximally entangled
-matrix on `A × A`. -/
-theorem choi_eq_amplify [DecidableEq A] (Φ : MatrixMap A B) :
-    choi Φ = Φ.amplify A (vecMulVec (fun x : A × A ↦ if x.1 = x.2 then (1 : ℂ) else 0)
-      (star fun x : A × A ↦ if x.1 = x.2 then (1 : ℂ) else 0)) := by
-  ext ⟨b, a⟩ ⟨b', a'⟩
-  rw [choi_apply, amplify_apply]
-  refine congrArg (fun M ↦ Φ M b b') ?_
+/-- The unnormalized maximally entangled vector `|Ω⟩ = ∑ a, |a⟩ ⊗ |a⟩` on `A × A`: its entry at
+`x` is `1` if `x.1 = x.2` and `0` otherwise. -/
+@[expose]
+def maxEntVec [DecidableEq A] : A × A → ℂ :=
+  fun x ↦ if x.1 = x.2 then 1 else 0
+
+/-- The entry of `maxEntVec` at `x` is `1` if `x.1 = x.2` and `0` otherwise. -/
+@[simp]
+theorem maxEntVec_apply [DecidableEq A] (x : A × A) :
+    maxEntVec x = if x.1 = x.2 then 1 else 0 :=
+  rfl
+
+/-- The block of `|Ω⟩⟨Ω|` at right-factor indices `(a, a')` is the matrix unit
+`single a a' 1`. -/
+theorem vecMulVec_maxEntVec_submatrix [DecidableEq A] (a a' : A) :
+    (vecMulVec maxEntVec (star maxEntVec)).submatrix (·, a) (·, a') = single a a' (1 : ℂ) := by
   ext x y
-  simp only [Matrix.single_apply, vecMulVec_apply, Matrix.submatrix_apply, Pi.star_apply]
+  simp only [submatrix_apply, vecMulVec_apply, Pi.star_apply, maxEntVec_apply, single_apply]
   split_ifs <;> simp_all
+
+/-- The Choi matrix of a map is `Φ ⊗ id_A` applied to the unnormalized maximally entangled
+matrix `|Ω⟩⟨Ω|` on `A × A`. -/
+theorem choi_eq_amplify [DecidableEq A] (Φ : MatrixMap A B) :
+    choi Φ = Φ.amplify A (vecMulVec maxEntVec (star maxEntVec)) := by
+  ext ⟨b, a⟩ ⟨b', a'⟩
+  rw [choi_apply, amplify_apply, vecMulVec_maxEntVec_submatrix]
 
 /-- The Choi matrix of a completely positive map is positive semidefinite. -/
 theorem IsCP.posSemidef_choi [Finite A] [DecidableEq A] {Φ : MatrixMap A B} (hΦ : Φ.IsCP) :
@@ -301,8 +320,16 @@ theorem IsCP.exists_kraus [Fintype A] [Fintype B] {Φ : MatrixMap A B} (hΦ : Φ
   obtain ⟨Y, hY⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hΦ.posSemidef_choi.nonneg
   exact ⟨krausOfFactor Y, eq_sum_conj_krausOfFactor (by rw [hY, star_eq_conjTranspose])⟩
 
+/-- Choi's theorem with the Kraus operators indexed by `Fin (|B| * |A|)`. -/
+theorem IsCP.exists_kraus_fin [Fintype A] [Fintype B] {Φ : MatrixMap A B} (hΦ : Φ.IsCP) :
+    ∃ K : Fin (Fintype.card B * Fintype.card A) → Matrix B A ℂ, Φ = ∑ i, conj (K i) := by
+  obtain ⟨K, hK⟩ := hΦ.exists_kraus
+  let e : B × A ≃ Fin (Fintype.card B * Fintype.card A) :=
+    Fintype.equivFinOfCardEq (Fintype.card_prod B A)
+  exact ⟨K ∘ e.symm, hK.trans (Fintype.sum_equiv e _ _ fun _ ↦ by simp)⟩
+
 /-- A finite sum of Kraus maps is completely positive. -/
-theorem isCP_sum_conj [Fintype A] [Finite B] [Fintype ι] (K : ι → Matrix B A ℂ) :
+theorem isCP_sum_conj [Fintype A] [Fintype ι] (K : ι → Matrix B A ℂ) :
     IsCP (∑ i, conj (K i)) :=
   IsCP.sum _ fun i _ ↦ isCP_conj (K i)
 
