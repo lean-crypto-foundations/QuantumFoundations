@@ -7,6 +7,7 @@ Authors: Quang Dao
 module
 public import QuantumFoundations.Pure.Norm
 public import QuantumFoundations.Pure.State
+public import QuantumFoundations.DSubInstrument.Observe
 
 /-!
 # Kraus branches on pure states
