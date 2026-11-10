@@ -19,8 +19,7 @@ trace-preserving special case.
 
 ## Main results
 
-* `IsPositiveMap.isHermitian_map` — a positive map preserves Hermitian matrices
-* `one_sub_dualMap_one_posSemidef` — `Φ†(1) ≤ 1` for a positive trace-nonincreasing `Φ`
+* `IsHermContraction.map` — a positive sub-unital map preserves Hermitian contractions
 * `traceNormH_map_le_of_isSTP` — `‖Φ X‖₁ ≤ ‖X‖₁` for positive trace-nonincreasing `Φ`
 * `traceDist_map_le_of_isSTP` — `traceDist (Φ ρ) (Φ σ) ≤ traceDist ρ σ` for such `Φ`
 * `traceNormH_map_le`, `traceDist_map_le` — the same for a CPTP map
@@ -34,36 +33,6 @@ open Matrix
 namespace Quantum
 
 variable {n : Type*} [Fintype n] [DecidableEq n]
-
-omit [Fintype n] [DecidableEq n] in
-/-- A positive map sends Hermitian matrices to Hermitian matrices. -/
-theorem IsPositiveMap.isHermitian_map [Finite n] {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
-    (hΦ : IsPositiveMap Φ) {X : Matrix n n ℂ} (hX : X.IsHermitian) : (Φ X).IsHermitian :=
-  (hΦ.map_conjTranspose X).symm.trans (congrArg Φ hX)
-
-omit [DecidableEq n] in
-/-- A trace-preserving map is trace-nonincreasing. -/
-theorem IsTP.isSTP {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ} (hΦ : IsTP Φ) : IsSTP Φ :=
-  fun A _ => (congrArg Complex.re (hΦ A)).le
-
-/-- The trace dual of a positive trace-nonincreasing map is sub-unital:
-`Φ†(1) ≤ 1` in the Loewner order. -/
-theorem one_sub_dualMap_one_posSemidef {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ}
-    (hΦ : IsPositiveMap Φ) (hT : IsSTP Φ) : (1 - dualMap Φ 1).PosSemidef := by
-  have hD := dual_positive_of_positive Φ hΦ 1 PosSemidef.one
-  rw [posSemidef_iff_dotProduct_mulVec]
-  refine ⟨isHermitian_one.sub hD.isHermitian, fun x => ?_⟩
-  set P := vecMulVec x (star x) with hPdef
-  have hP : P.PosSemidef := by simpa using posSemidef_vecMulVec_star_self (star x)
-  have hq : star x ⬝ᵥ (1 - dualMap Φ 1) *ᵥ x = P.trace - (Φ P).trace := by
-    rw [show star x ⬝ᵥ (1 - dualMap Φ 1) *ᵥ x = ((1 - dualMap Φ 1) * P).trace by
-      rw [hPdef, mul_vecMulVec, trace_vecMulVec, dotProduct_comm],
-      sub_mul, trace_sub, one_mul, dual_spec, one_mul]
-  have h1 := Complex.nonneg_iff.mp hP.trace_nonneg
-  have h2 := Complex.nonneg_iff.mp (hΦ P hP).trace_nonneg
-  have h3 := hT P hP
-  rw [hq, Complex.nonneg_iff, Complex.sub_re, Complex.sub_im]
-  exact ⟨by linarith, by linarith [h1.2, h2.2]⟩
 
 omit [Fintype n] in
 /-- A positive sub-unital map sends Hermitian contractions to Hermitian contractions. -/
