@@ -51,15 +51,20 @@ public import QuantumFoundations.MatrixMap.Stinespring
 public import QuantumFoundations.Pure.Norm
 public import QuantumFoundations.Pure.Vector
 public import QuantumFoundations.Register
+public import QuantumFoundations.Subsystem
 public import QuantumFoundations.SubInstrument
 
 -- Observation and its dependent modules.
+public import QuantumFoundations.DSubInstrument.Observe
+public import QuantumFoundations.DSubInstrument.Relabel
 public import QuantumFoundations.Observe
 public import QuantumFoundations.Oracle.Basis
 public import QuantumFoundations.Oracle.Unitary
 public import QuantumFoundations.Pure.Instrument
 public import QuantumFoundations.Pure.State
 public import QuantumFoundations.Pure.Tensor
+public import QuantumFoundations.SubInstrument.Relabel
+public import QuantumFoundations.SubInstrument.Subsystem
 
 -- Agreement of the CPMap and MatrixMap developments.
 public import QuantumFoundations.Bridge.CPMap

@@ -54,6 +54,10 @@ branches) is the remaining work, in #17.
 | `MatrixMap/Comparison` | replacing Kraus operators before a trace-nonincreasing finishing map |
 | `MatrixMap/ProjectorEvent`, `MatrixMap/ProjectorPair` | projector events and pairs of projectors |
 | `DSubInstrument`, `SubInstrument` | instruments with dependent or fixed output registers |
+| `Subsystem` | a register factored as a selected register and its complement |
+| `SubInstrument/Subsystem` | subinstruments acting on a subsystem, leaving its complement unchanged |
+| `SubInstrument/Relabel`, `DSubInstrument/Relabel` | transporting input and output bases along equivalences |
+| `DSubInstrument/Observe` | outcome measures under framing, relabelling and continuations |
 | `Register` | finite quantum registers |
 | `Pure/Vector`, `Pure/Norm` | state vectors, matrix actions, and norm bounds |
 | `ForMathlib/Analysis/Matrix/PosSemidef` | bounds for positive semidefinite matrices; block-diagonal positivity |
