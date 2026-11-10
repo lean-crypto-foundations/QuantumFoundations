@@ -6,7 +6,7 @@ Authors: Bas Spitters
 module
 
 public import QuantumFoundations.Bridge.CPMap
-public import QuantumFoundations.Bridge.ToQComp
+public import QuantumFoundations.Instrument.OfSubInstrument
 public import QuantumFoundations.Measurement
 public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.InstrumentCP
@@ -32,8 +32,8 @@ This file proves that the overlapping definitions agree.
 * **States.** A `DensityMatrix d` is a `SubState d` of trace one (`DensityMatrix.toSubState`,
   injective, with inverse `DensityMatrix.ofSubState` on trace-one substates).
 * **Instruments.** A `SubInstrument d d α` is a `QComp d α` (`SubInstrument.toQComp`, defined
-  in `QuantumFoundations.Bridge.ToQComp`), and the map is injective. Its image is the set of
-  `QComp`s whose branches are completely positive (`QComp.toSubInstrument`,
+  in `QuantumFoundations.Instrument.OfSubInstrument`), and the map is injective. Its image is
+  the set of `QComp`s whose branches are completely positive (`QComp.toSubInstrument`,
   `SubInstrument.equivCP`). The map is not onto: a `QComp` admits positive branches that are
   not completely positive, such as the transpose map. The branches of the image are also
   completely positive in the sense of `Quantum.IsCPMap`, whose ancilla is on the left

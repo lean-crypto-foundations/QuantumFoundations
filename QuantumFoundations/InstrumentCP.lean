@@ -6,7 +6,7 @@ Authors: Bas Spitters
 module
 
 public import QuantumFoundations.QRHL
-public import QuantumFoundations.Bridge.ToQComp
+public import QuantumFoundations.Instrument.OfSubInstrument
 
 /-!
 # Completely positive branches of basic instruments

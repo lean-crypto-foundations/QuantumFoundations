@@ -5,7 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
-public import QuantumFoundations.Bridge.ToQComp
+public import QuantumFoundations.Instrument.OfSubInstrument
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!

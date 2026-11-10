@@ -13,6 +13,7 @@ public import QuantumFoundations.TraceNorm
 public import QuantumFoundations.Measurement
 public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.Instrument
+public import QuantumFoundations.Instrument.OfSubInstrument
 public import QuantumFoundations.InstrumentCP
 public import QuantumFoundations.QRHL
 public import QuantumFoundations.GentleMeasurement
@@ -57,7 +58,6 @@ public import QuantumFoundations.Pure.Instrument
 public import QuantumFoundations.Pure.State
 public import QuantumFoundations.Pure.Tensor
 
--- Agreement of the CPMap and MatrixMap developments.
+-- Agreement of the two developments: maps, states and instruments.
 public import QuantumFoundations.Bridge.CPMap
 public import QuantumFoundations.Bridge.Instrument
-public import QuantumFoundations.Bridge.ToQComp
