@@ -9,9 +9,8 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | Module | Content |
 |---|---|
 | `CPMap` | completely positive maps on matrices over a finite index type, effects, the trace dual of a linear map |
-| `DualMap` | functoriality of the trace dual (the Hilbert–Schmidt adjoint for positive maps) |
-| `ChoiKraus` | the Choi matrix; every CP map has a Kraus form |
-| `Stinespring` | the Stinespring dilation of a CPTP map by an ancilla |
+| `MatrixMap/Dual` | the trace dual of a matrix map: functoriality, Kraus maps, trace conditions |
+| `MatrixMap/Stinespring` | unitary Stinespring dilations of channels; purifications |
 | `PartialTrace` | partial traces over `Fin (d₁ * d₂)` |
 | `TensorProduct` | Kronecker products of states and maps, local operations |
 | `KroneckerPSD` | positivity of Kronecker products |
@@ -31,7 +30,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `MinEntropySplit` | conditional guessing probability; picking the better of two conditionings |
 | `LeftoverHash` | the leftover hash lemma for a 2-universal hash family |
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
-| `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi matrices, channels |
+| `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
 States, instruments, measurements and CP maps take the index of the system as any finite type;

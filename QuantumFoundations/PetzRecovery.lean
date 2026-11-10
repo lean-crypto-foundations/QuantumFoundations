@@ -7,7 +7,7 @@ module
 
 public import QuantumFoundations.Instrument
 public import QuantumFoundations.CPMap
-public import QuantumFoundations.DualMap
+public import QuantumFoundations.Bridge.CPMap
 public import Mathlib.Analysis.Matrix.Order
 public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 
