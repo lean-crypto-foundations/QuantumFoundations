@@ -17,6 +17,11 @@ for a self-adjoint involution `S` and uses that the trace dual `Φ†` is positi
 sub-unital, so that `Φ†(S)` is a Hermitian contraction. CPTP maps are the
 trace-preserving special case.
 
+The maps here have the same input and output system, `Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ`,
+because `IsPositiveMap`, `IsSTP` and `dualMap` in `QuantumFoundations.CPMap` are stated for
+such maps. Maps between different systems, such as the partial trace, are rectangular
+`MatrixMap A B`s and are not covered yet.
+
 ## Main results
 
 * `IsHermContraction.map` — a positive sub-unital map preserves Hermitian contractions
