@@ -78,7 +78,8 @@ does not construct a whole-program Kraus refinement or prove its coarse-graining
 * `Quantum.MatrixMap.isCP_iff_posSemidef_choi`: complete positivity is positivity of the Choi
   matrix.
 * `Quantum.MatrixMap.isCP_iff_exists_kraus`: complete positivity is having Kraus operators
-  (Choi's theorem); `Quantum.MatrixMap.IsCP.exists_kraus` gives at most `|A| * |B|` of them.
+  (Choi's theorem); `Quantum.MatrixMap.IsCP.exists_kraus` gives at most `|A| * |B|` of them,
+  and `Quantum.MatrixMap.IsCP.exists_kraus_fin` indexes them by `Fin (|B| * |A|)`.
 * `Quantum.MatrixMap.isTP_sum_conj_iff`, `Quantum.MatrixMap.isTNI_sum_conj_iff`: the trace
   conditions in terms of Kraus operators.
 * `Quantum.MatrixMap.sum_conj_eq_traceRight_comp_conj`,
@@ -300,6 +301,14 @@ theorem IsCP.exists_kraus [Fintype A] [Fintype B] {Φ : MatrixMap A B} (hΦ : Φ
   open scoped MatrixOrder in
   obtain ⟨Y, hY⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hΦ.posSemidef_choi.nonneg
   exact ⟨krausOfFactor Y, eq_sum_conj_krausOfFactor (by rw [hY, star_eq_conjTranspose])⟩
+
+/-- Choi's theorem with the Kraus operators indexed by `Fin (|B| * |A|)`. -/
+theorem IsCP.exists_kraus_fin [Fintype A] [Fintype B] {Φ : MatrixMap A B} (hΦ : Φ.IsCP) :
+    ∃ K : Fin (Fintype.card B * Fintype.card A) → Matrix B A ℂ, Φ = ∑ i, conj (K i) := by
+  obtain ⟨K, hK⟩ := hΦ.exists_kraus
+  let e : B × A ≃ Fin (Fintype.card B * Fintype.card A) :=
+    Fintype.equivFinOfCardEq (Fintype.card_prod B A)
+  exact ⟨K ∘ e.symm, hK.trans (Fintype.sum_equiv e _ _ fun _ ↦ by simp)⟩
 
 /-- A finite sum of Kraus maps is completely positive. -/
 theorem isCP_sum_conj [Fintype A] [Fintype ι] (K : ι → Matrix B A ℂ) :
