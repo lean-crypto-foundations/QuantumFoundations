@@ -9,6 +9,7 @@ public import QuantumFoundations.CPMap
 public import QuantumFoundations.PartialTrace
 public import QuantumFoundations.TensorProduct
 public import QuantumFoundations.KroneckerPSD
+public import QuantumFoundations.ForMathlib.Analysis.Matrix.Spectrum
 public import QuantumFoundations.TraceNorm
 public import QuantumFoundations.TraceDistance
 public import QuantumFoundations.Measurement

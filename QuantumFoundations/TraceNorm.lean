@@ -5,6 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
+public import QuantumFoundations.ForMathlib.Analysis.Matrix.Spectrum
 public import Mathlib.Analysis.Matrix.Spectrum
 public import Mathlib.Analysis.Matrix.PosDef
 public import Mathlib.LinearAlgebra.Matrix.PosDef
@@ -206,29 +207,6 @@ private lemma effect_diag_re_bounds (F : Matrix n n ℂ) (hF : IsEffect F) (i : 
   have h : 0 ≤ ((1 - F) i i).re := (Complex.nonneg_iff.mp (hF.2.diag_nonneg)).1
   simp only [Matrix.sub_apply, Matrix.one_apply_eq, Complex.sub_re, Complex.one_re] at h
   linarith
-
-/-- The trace `tr(E X)` in the eigenbasis of the Hermitian matrix `X`: the sum of the
-    diagonal entries of `U* E U` times the eigenvalues of `X`, for the eigenvector
-    unitary `U` of `X`. -/
-theorem _root_.Matrix.IsHermitian.trace_mul_eq_sum_eigenvalues {X : Matrix n n ℂ}
-    (hX : X.IsHermitian) (E : Matrix n n ℂ) :
-    (E * X).trace = ∑ i, (star (hX.eigenvectorUnitary : Matrix n n ℂ) * E *
-      (hX.eigenvectorUnitary : Matrix n n ℂ)) i i *
-      (↑(hX.eigenvalues i) : ℂ) := by
-  set U := (hX.eigenvectorUnitary : Matrix n n ℂ)
-  set D := diagonal (RCLike.ofReal ∘ hX.eigenvalues : n → ℂ)
-  have hX_spec : X = U * D * star U := by
-    rw [hX.spectral_theorem, conjStarAlgAut_apply]
-  calc (E * X).trace
-      = (E * (U * D * star U)).trace := by rw [hX_spec]
-    _ = ((E * U) * D * star U).trace := by
-        congr 1; rw [Matrix.mul_assoc, Matrix.mul_assoc, Matrix.mul_assoc]
-    _ = (star U * (E * U) * D).trace := by rw [trace_mul_cycle]
-    _ = (star U * E * U * D).trace := by
-        congr 1; rw [← Matrix.mul_assoc (star U)]
-    _ = ∑ i, (star U * E * U) i i * (↑(hX.eigenvalues i) : ℂ) := by
-        simp only [Matrix.trace, Matrix.diag]
-        congr 1; funext i; rw [mul_diagonal]; simp [Function.comp]
 
 /-- Unitary conjugation cancels: `U* (U D U*) U = D`. -/
 private lemma unitary_conj_cancel (U : ↥(unitaryGroup n ℂ)) (D : Matrix n n ℂ) :
