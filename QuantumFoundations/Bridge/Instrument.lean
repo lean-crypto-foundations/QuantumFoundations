@@ -48,9 +48,9 @@ This file proves that the overlapping definitions agree.
   `Measurement.projectiveMeasure`, `measureProj` and `UnitaryChannel.unitaryChannel` are
   defined as images of `SubInstrument.ofKraus`. The projective ones are the images of
   `SubInstrument.ofProjective`, and the unitary channel is the image of
-  `SubInstrument.ofUnitary`. The effects `Mᴴ M` of measurement operators form a POVM
-  (`Measurement.MeasurementOps.toPOVM`) whose Born probabilities are the outcome weights of the
-  Kraus subinstrument.
+  `SubInstrument.ofUnitary`. The Born probabilities of the POVM `Mᴴ M` of measurement
+  operators (`Measurement.MeasurementOps.toPOVM`) are the outcome weights of the Kraus
+  subinstrument.
 
 ## Main results
 
@@ -250,27 +250,11 @@ namespace Measurement
 
 variable [DecidableEq d]
 
-/-- Every operator of a projective measurement is a star projection. -/
-theorem ProjectiveMeasurement.isStarProjection [Fintype α] (P : ProjectiveMeasurement d α)
-    (a : α) : IsStarProjection (P.op a) :=
-  ⟨P.idempotent a, P.self_adjoint a⟩
-
-/-- The operators of a projective measurement sum to the identity. -/
-theorem ProjectiveMeasurement.sum_op [Fintype α] (P : ProjectiveMeasurement d α) :
-    ∑ a, P.op a = 1 := by
-  simpa only [P.self_adjoint, P.idempotent] using P.completeness
-
 /-- The instrument of a projective measurement is the image of its projective subinstrument. -/
 theorem projectiveMeasure_eq_toQComp [Fintype α] (P : ProjectiveMeasurement d α) :
     projectiveMeasure P =
       (SubInstrument.ofProjective P.op P.isStarProjection P.sum_op).toQComp :=
   QComp.ext_fun fun _ _ ↦ rfl
-
-/-- The effects `Mᴴ M` of measurement operators form a POVM. -/
-def MeasurementOps.toPOVM [Fintype α] (M : MeasurementOps d α) : POVM d α where
-  effect a := (M.op a)ᴴ * M.op a
-  effect_psd a := Matrix.posSemidef_conjTranspose_mul_self (M.op a)
-  sum_eq_one := M.completeness
 
 /-- The weight of outcome `a` of the Kraus subinstrument of measurement operators is the Born
 probability of `a` under their POVM. -/
