@@ -71,3 +71,4 @@ public import QuantumFoundations.Subsystem
 public import QuantumFoundations.SubInstrument.Relabel
 public import QuantumFoundations.SubInstrument.Subsystem
 public import QuantumFoundations.DSubInstrument.Relabel
+public import QuantumFoundations.DSubInstrument.Observe
