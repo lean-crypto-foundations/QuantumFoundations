@@ -66,3 +66,8 @@ public import QuantumFoundations.ForMathlib.Matrix.BlockDiagonal
 public import QuantumFoundations.ForMathlib.Matrix.Pinching
 
 public import QuantumFoundations.MatrixMap.Conjugation
+
+public import QuantumFoundations.Subsystem
+public import QuantumFoundations.SubInstrument.Relabel
+public import QuantumFoundations.SubInstrument.Subsystem
+public import QuantumFoundations.DSubInstrument.Relabel
