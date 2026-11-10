@@ -29,6 +29,12 @@ variable {X X' : Type*} [Fintype X] [Fintype X'] {ι κ : Type*} {B B' : ι → 
   [∀ i, Fintype (B i)] [∀ i, Fintype (B' i)] {C C' : κ → Type*} [∀ c, Fintype (C c)]
   [∀ c, Fintype (C' c)]
 
+/-- On the zero substate every outcome has weight zero. -/
+theorem outcomeMeasure_eq_zero_of_matrix_eq_zero [MeasurableSpace ι] (p : DSubInstrument X ι B)
+    {ρ : SubState X} (hρ : ρ.matrix = 0) : p.outcomeMeasure ρ = 0 := by
+  ext s hs
+  simp [outcomeMeasure_apply _ _ hs, hρ]
+
 /-- Two dependent subinstruments whose branches leave operators of the same trace on two
 substates, on every outcome, have the same outcome measures on them. -/
 theorem outcomeMeasure_congr [MeasurableSpace ι] {p : DSubInstrument X ι B}

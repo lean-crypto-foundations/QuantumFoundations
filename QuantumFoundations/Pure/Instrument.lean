@@ -79,18 +79,6 @@ universe u v w
 
 namespace Quantum
 
-namespace DSubInstrument
-
-variable {A : Type*} [Fintype A] {ι : Type*} {B : ι → Type*} [∀ i, Fintype (B i)]
-
-/-- On the zero substate every outcome has weight zero. -/
-theorem outcomeMeasure_eq_zero_of_matrix_eq_zero [MeasurableSpace ι] (p : DSubInstrument A ι B)
-    {ρ : SubState A} (hρ : ρ.matrix = 0) : p.outcomeMeasure ρ = 0 := by
-  ext s hs
-  simp [outcomeMeasure_apply _ _ hs, hρ]
-
-end DSubInstrument
-
 namespace SubInstrument
 
 open DSubInstrument
