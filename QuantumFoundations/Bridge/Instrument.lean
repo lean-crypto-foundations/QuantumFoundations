@@ -5,6 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
+public import QuantumFoundations.Bridge.CPMap
 public import QuantumFoundations.Bridge.ToQComp
 public import QuantumFoundations.Measurement
 public import QuantumFoundations.UnitaryChannel
@@ -36,8 +37,8 @@ This file proves that the overlapping definitions agree.
   `SubInstrument.equivCP`). The map is not onto: a `QComp` admits positive branches that are
   not completely positive, such as the transpose map. The branches of the image are also
   completely positive in the sense of `Quantum.IsCPMap`, whose ancilla is on the left
-  (`SubInstrument.isCPMap_toQComp_branch`); the comparison of the two predicates swaps the
-  factors of the index, following Quang Dao's `Bridge/CPMap`.
+  (`SubInstrument.isCPMap_toQComp_branch`), by the comparison `isCPMap_iff_isCP` of
+  `QuantumFoundations.Bridge.CPMap`, which swaps the factors of the index.
 * **Channels.** A `CPTPMap d` is a subinstrument with one outcome (`CPTPMap.toSubInstrument`),
   whose branch is the channel.
 * **Monad structure.** `SubInstrument.toQComp` commutes with `pure`, `bind`, `map` and failure,
@@ -129,34 +130,11 @@ theorem isCP_toQComp_branch (p : SubInstrument d d α) (a : α) :
     MatrixMap.IsCP (p.toQComp.branch a) :=
   p.isCP_branch a
 
-end SubInstrument
-
-omit [Fintype d] in
-/-- Complete positivity with the ancilla on the left (`IsCPMap`, amplification `id_k ⊗ Φ` on
-`Fin k × d`) is complete positivity with the ancilla on the right (`MatrixMap.IsCP`,
-amplification `Φ ⊗ id_k` on `d × Fin k`): swapping the two factors of the index conjugates one
-amplification into the other and preserves positive semidefiniteness. Quang Dao's pull request
-14 to QuantumFoundations adds the public theorem `Quantum.isCPMap_iff_isCP`, which replaces this
-lemma once it is merged. -/
-private theorem isCPMap_iff_isCP_aux (Φ : MatrixMap d d) : IsCPMap Φ ↔ MatrixMap.IsCP Φ := by
-  have swap (k : ℕ) (ρ : Matrix (d × Fin k) (d × Fin k) ℂ) :
-      tensorIdMap Φ k (ρ.submatrix Prod.swap Prod.swap) =
-        (Φ.amplify (Fin k) ρ).submatrix Prod.swap Prod.swap := rfl
-  constructor
-  · intro hΦ k ρ hρ
-    have h := (hΦ k _ (hρ.submatrix Prod.swap)).submatrix Prod.swap
-    rwa [swap, submatrix_submatrix, Prod.swap_swap_eq, submatrix_id_id] at h
-  · intro hΦ k M hM
-    have h := (hΦ k _ (hM.submatrix Prod.swap)).submatrix Prod.swap
-    rwa [← swap, submatrix_submatrix, Prod.swap_swap_eq, submatrix_id_id] at h
-
-namespace SubInstrument
-
 /-- Every branch of the image of a subinstrument is completely positive with the ancilla on the
 left (`IsCPMap`). -/
 theorem isCPMap_toQComp_branch (p : SubInstrument d d α) (a : α) :
     IsCPMap (p.toQComp.branch a) :=
-  (isCPMap_iff_isCP_aux _).2 (p.isCP_toQComp_branch a)
+  (isCPMap_iff_isCP _).2 (p.isCP_toQComp_branch a)
 
 end SubInstrument
 
@@ -164,8 +142,7 @@ namespace CPTPMap
 
 /-- A quantum channel as a subinstrument with one outcome. -/
 def toSubInstrument (Φ : CPTPMap d) : SubInstrument d d Unit :=
-  SubInstrument.ofMap Φ.toLinearMap (by exact (isCPMap_iff_isCP_aux _).1 Φ.cp)
-    (MatrixMap.IsTP.isTNI Φ.tp)
+  SubInstrument.ofMap Φ.toLinearMap Φ.isCP Φ.isTP.isTNI
 
 /-- The branch of `Φ.toSubInstrument` is `Φ`. -/
 @[simp]
