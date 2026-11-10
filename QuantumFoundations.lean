@@ -64,3 +64,5 @@ public import QuantumFoundations.ForMathlib.Matrix.PosSemidef
 public import QuantumFoundations.ForMathlib.Matrix.Contraction
 public import QuantumFoundations.ForMathlib.Matrix.BlockDiagonal
 public import QuantumFoundations.ForMathlib.Matrix.Pinching
+
+public import QuantumFoundations.MatrixMap.Conjugation

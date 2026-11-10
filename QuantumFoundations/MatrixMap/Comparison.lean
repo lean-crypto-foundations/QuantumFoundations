@@ -178,3 +178,75 @@ theorem measured_two_batches_distance_le [DecidableEq A] {ι : Type*}
     exact ofReal_trace_conj_add_rpow_le hρ _ _
 
 end Quantum.MatrixMap
+
+namespace Quantum.MatrixMap
+
+/-- The difference of two complete Kraus families has squared trace at most four times
+input trace, with the outcomes retained inside the sum. -/
+theorem sum_trace_conj_sub_le_four {n m ι : Type*} [Fintype n] [DecidableEq n]
+    [Fintype m] [Fintype ι] (F G : ι → Matrix m n ℂ)
+    (hF : ∑ a, (F a)ᴴ * F a = 1) (hG : ∑ a, (G a)ᴴ * G a = 1)
+    {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef) :
+    ∑ a, ENNReal.ofReal (MatrixMap.conj (F a - G a) ρ).trace.re ≤
+      4 * ENNReal.ofReal ρ.trace.re := by
+  have hpoint (a : ι) : (MatrixMap.conj (F a - G a) ρ).trace.re ≤
+      2 * ((MatrixMap.conj (F a) ρ).trace.re + (MatrixMap.conj (G a) ρ).trace.re) := by
+    have hp := (hρ.mul_mul_conjTranspose_same (F a + G a)).trace_re_nonneg
+    have he : MatrixMap.conj (F a - G a) ρ + MatrixMap.conj (F a + G a) ρ =
+        (MatrixMap.conj (F a) ρ + MatrixMap.conj (G a) ρ) +
+        (MatrixMap.conj (F a) ρ + MatrixMap.conj (G a) ρ) := by
+      simp only [MatrixMap.conj_apply, conjTranspose_sub, conjTranspose_add]
+      simp only [Matrix.sub_mul, Matrix.mul_sub, Matrix.add_mul, Matrix.mul_add]
+      abel
+    have ht := congrArg (fun M ↦ M.trace.re) he
+    simp only [trace_add, Complex.add_re] at ht
+    have hp' : 0 ≤ (MatrixMap.conj (F a + G a) ρ).trace.re := hp
+    linarith
+  have hf := congrArg Complex.re (MatrixMap.isTP_sum_conj hF ρ)
+  have hg := congrArg Complex.re (MatrixMap.isTP_sum_conj hG ρ)
+  simp only [LinearMap.sum_apply, trace_sum, Complex.re_sum] at hf hg
+  have hn (a : ι) : 0 ≤ (MatrixMap.conj (F a - G a) ρ).trace.re :=
+    (hρ.mul_mul_conjTranspose_same (F a - G a)).trace_re_nonneg
+  rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ ↦ hn a),
+    ← ENNReal.ofReal_ofNat, ← ENNReal.ofReal_mul (by norm_num : (0 : ℝ) ≤ 4)]
+  apply ENNReal.ofReal_le_ofReal
+  calc
+    _ ≤ ∑ a, 2 * ((MatrixMap.conj (F a) ρ).trace.re +
+        (MatrixMap.conj (G a) ρ).trace.re) := Finset.sum_le_sum fun a _ ↦ hpoint a
+    _ = 4 * ρ.trace.re := by rw [← Finset.mul_sum, Finset.sum_add_distrib, hf, hg]; ring
+
+/-- Domination of a Kraus operator's Gram matrix bounds its trace weight by the same trace
+pairing on every positive semidefinite input. -/
+theorem ofReal_trace_conj_le {J O : Type*} [Fintype J] [Fintype O]
+    (C : Matrix O J ℂ) (Δ : Matrix J J ℂ) {r : ℝ} (hr : 0 ≤ r)
+    (h : (r • Δ - Cᴴ * C).PosSemidef) {σ : Matrix J J ℂ} (hσ : σ.PosSemidef) :
+    ENNReal.ofReal (MatrixMap.conj C σ).trace.re ≤
+      ENNReal.ofReal r * ENNReal.ofReal (Δ * σ).trace.re := by
+  have ht := h.trace_mul_re_nonneg hσ
+  simp only [Matrix.sub_mul, Matrix.smul_mul, Matrix.trace_sub, Matrix.trace_smul,
+    Complex.sub_re, Complex.real_smul, Complex.re_ofReal_mul] at ht
+  rw [← ENNReal.ofReal_mul hr, MatrixMap.trace_conj_apply]
+  exact ENNReal.ofReal_le_ofReal (sub_nonneg.mp ht)
+
+/-- A finite Kraus family dominated by two weighted operators has trace weight bounded by the
+same weighted trace pairings on every positive semidefinite input. -/
+theorem tsum_ofReal_trace_conj_le_of_posSemidef {J O ι : Type*} [Fintype J] [Fintype O]
+    [Fintype ι] (C : ι → Matrix O J ℂ) (Δ Ε : Matrix J J ℂ) {a b : ℝ}
+    (ha : 0 ≤ a) (hb : 0 ≤ b) {σ : Matrix J J ℂ} (hσ : σ.PosSemidef)
+    (hC : (a • Δ + b • Ε - ∑ r, (C r)ᴴ * C r).PosSemidef) :
+    ∑' r, ENNReal.ofReal (conj (C r) σ).trace.re ≤
+      ENNReal.ofReal a * ENNReal.ofReal (Δ * σ).trace.re +
+        ENNReal.ofReal b * ENNReal.ofReal (Ε * σ).trace.re := by
+  have hnn : ∀ r, 0 ≤ (conj (C r) σ).trace.re := fun r ↦
+    (hσ.mul_mul_conjTranspose_same _).trace_re_nonneg
+  have hpos := hC.trace_mul_re_nonneg hσ
+  simp only [Matrix.sub_mul, Matrix.add_mul, Matrix.sum_mul, Matrix.smul_mul, Matrix.trace_sub,
+    Matrix.trace_add, Matrix.trace_sum, Matrix.trace_smul, Complex.sub_re, Complex.add_re,
+    Complex.re_sum, Complex.real_smul, Complex.re_ofReal_mul] at hpos
+  rw [tsum_fintype, ← ENNReal.ofReal_sum_of_nonneg fun r _ ↦ hnn r,
+    ← ENNReal.ofReal_mul ha, ← ENNReal.ofReal_mul hb]
+  refine (ENNReal.ofReal_le_ofReal ?_).trans ENNReal.ofReal_add_le
+  simp only [trace_conj_apply]
+  linarith
+
+end Quantum.MatrixMap
