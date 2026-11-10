@@ -33,7 +33,7 @@ For a probability vector `p : X → ℝ` the **collision probability** is
 
 * `TwoUniversalHashFamily` — the bundled structure (family + 2-universal axiom).
 * `collisionProb` — `∑_x (p x)²`; `collisionProb_nonneg`, monotone facts.
-* `expected_collision_le` (**the engine of the LHL**) — the expected collision
+* `expectedCollision_le` (**the engine of the LHL**) — the expected collision
   probability of the hashed variable `h(X)`, averaged over a uniform choice of
   `h` from a 2-universal family, satisfies
 
@@ -51,7 +51,8 @@ The statistical distance here is the `ℓ¹`/total-variation form
 * Impagliazzo, Levin, Luby — *Pseudo-random generation from one-way functions*,
   STOC 1989 (origin of the LHL).
 * Renner, R. — *Security of Quantum Key Distribution*, PhD thesis, ETH 2005
-  (LHL for privacy amplification, in the form used here).
+  (the conditional, quantum-side-information LHL; this file proves only its classical
+  unconditional special case).
 * Tomamichel — *Quantum Information Processing with Finite Resources*, §5
   (collision-entropy / ℓ² formulation).
 -/

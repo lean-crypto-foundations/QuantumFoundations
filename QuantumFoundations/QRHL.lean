@@ -12,27 +12,41 @@ public import QuantumFoundations.UnitaryChannel
 public import QuantumFoundations.CPMap
 
 /-!
-# Quantum Relational Hoare Logic (qRHL)
+# A relational Hoare judgment for `QComp` programs
 
-Defines a quantum relational Hoare logic for relating two `QComp` programs,
-following Unruh (2019) and Barthe et al. (2020).
+Defines a relational judgment `{Φ} C₁ ~ C₂ {Ψ}` between a program `C₁` on a
+`d₁`-dimensional register and a program `C₂` on a `d₂`-dimensional register. The
+pre- and postconditions `Φ`, `Ψ` are arbitrary predicates on `(d₁ * d₂) × (d₁ * d₂)`
+complex matrices.
 
-## Mathematical Background
+## Semantics
 
-A qRHL judgment `{Φ} C₁ ~ C₂ {Ψ}` operates on a **bipartite** quantum system
-H₁ ⊗ H₂ where C₁ acts on register 1 and C₂ acts on register 2. The pre/post-
-conditions Φ, Ψ are predicates on bipartite density matrices.
+`{Φ} C₁ ~ C₂ {Ψ}` holds when, for every positive semidefinite `ρ` satisfying `Φ`,
+the matrix `∑'_{(a, b)} (C₁.branch a ⊗ C₂.branch b)(ρ)` satisfies `Ψ`. This is the
+joint final state with the classical outcomes `a`, `b` summed out, so `Ψ` cannot
+refer to the values the two programs return.
 
-Semantically: `{Φ} C₁ ~ C₂ {Ψ}` means for all joint states ρ on H₁ ⊗ H₂
-satisfying Φ(ρ), applying C₁ on register 1 and C₂ on register 2 yields a
-state satisfying Ψ.
+This is not Unruh's quantum relational Hoare logic, nor the logic of Barthe et al.,
+although it is modelled on them: there is no coupling of the two output states,
+predicates are not restricted to subspaces, classical outputs are erased, and no
+theorem relates a judgment to output probabilities or to `qIndist`. For example,
+`qrhl_skip` proves `{Φ} pure true ~ pure false {Φ}` for every `Φ`, although the two
+programs return different bits.
+
+The branches of a `QComp` are only required to be positive, so for programs that are
+not completely positive the joint final state of a positive semidefinite `ρ` need
+not be positive semidefinite. The sequencing rule `qrhl_seq_one_sided_left` assumes
+that the branches of the first program are completely positive, and
+`qrhl_one_sided_left` assumes a trace-preserving program.
 
 ## Main definitions
 
-* `BipartitePred` — predicate on bipartite density matrices
+* `BipartitePred` — predicate on bipartite matrices
+* `BipartitePred.productState` — the matrix is a single product `ρ₁ ⊗ ρ₂`
 * `jointBranch` — the branch of the joint evolution for an outcome pair
-* `qrHoare` — the qRHL judgment
-* `qIndist` — ε-indistinguishability of two programs
+* `qrHoare` — the relational judgment
+* `qIndist` — ε-indistinguishability of two programs, defined from acceptance
+  probabilities and independent of `qrHoare`
 
 ## Main results
 
@@ -43,6 +57,8 @@ state satisfying Ψ.
 * `qIndist_refl`, `qIndist_symm`, `qIndist_triangle`
 
 ## References
+
+The coupling-based logics this judgment is modelled on:
 
 * D. Unruh, *Quantum Relational Hoare Logic*, POPL 2019
 * G. Barthe, J. Hsu, M. Ying, N. Yu, L. Zhou, *Relational Proofs for Quantum
@@ -68,7 +84,7 @@ open Quantum.UnitaryChannel
 
 /-! ## Bipartite Predicates -/
 
-/-- A predicate on bipartite density matrices. -/
+/-- A predicate on matrices of the bipartite system of dimension `d₁ * d₂`. -/
 def BipartitePred (d₁ d₂ : ℕ) :=
   Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ → Prop
 
@@ -87,11 +103,16 @@ def BipartitePred.eq (σ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     BipartitePred d₁ d₂ :=
   fun ρ => ρ = σ
 
-/-- Separability predicate: state is a product state ρ₁ ⊗ ρ₂. -/
-def BipartitePred.separable : BipartitePred d₁ d₂ :=
+/-- Product-state predicate: the joint matrix is a single Kronecker product `ρ₁ ⊗ ρ₂` of
+    positive semidefinite matrices. Separable states are the sums (convex mixtures) of such
+    products; this predicate does not cover them (e.g. `(|00⟩⟨00| + |11⟩⟨11|) / 2`). -/
+def BipartitePred.productState : BipartitePred d₁ d₂ :=
   fun ρ => ∃ (ρ₁ : Matrix (Fin d₁) (Fin d₁) ℂ)
     (ρ₂ : Matrix (Fin d₂) (Fin d₂) ℂ),
     ρ₁.PosSemidef ∧ ρ₂.PosSemidef ∧ ρ = TensorProduct.kronecker ρ₁ ρ₂
+
+@[deprecated BipartitePred.productState (since := "2026-10-27")]
+alias BipartitePred.separable := BipartitePred.productState
 
 /-! ## Joint Evolution -/
 
@@ -102,10 +123,10 @@ def BipartitePred.separable : BipartitePred d₁ d₂ :=
     Defined as `localOp₁(C₁) >>= λ a, localOp₂(C₂) >>= λ b, pure (a, b)`;
     local operations on different registers commute, so the order of the two
     local operations does not affect the result. -/
-def jointEvolve (C₁ : QComp d₁ α) (C₂ : QComp d₂ β)
+def jointEvolve (C₁ : QComp (Fin d₁) α) (C₂ : QComp (Fin d₂) β)
     (hC₁ : ∀ a, IsCPMap (C₁.branch a))
     (hC₂ : ∀ b, IsCPMap (C₂.branch b)) :
-    QComp (d₁ * d₂) (α × β) :=
+    QComp (Fin (d₁ * d₂)) (α × β) :=
   QComp.qbind (localOp₁ C₁ hC₁) fun a =>
     QComp.qbind (localOp₂ C₂ hC₂) fun b =>
       QComp.qpure (a, b)
@@ -118,7 +139,7 @@ def jointEvolve (C₁ : QComp d₁ α) (C₂ : QComp d₂ β)
     `jointBranch C₁ C₂ a b ρ` at entry `((i₁,i₂),(j₁,j₂))` applies `C₁.branch a`
     to the `(i₂,j₂)`-block (viewing ρ as a grid of d₁×d₁ blocks), then applies
     `C₂.branch b` to the second-register blocks of the result. -/
-def jointBranch (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
+def jointBranch (C₁ : QComp (Fin d₁) α) (C₂ : QComp (Fin d₂) β) (a : α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ :=
   Matrix.of fun i j =>
@@ -128,12 +149,12 @@ def jointBranch (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
       (C₁.branch a (extractBlock ρ i₂' j₂')) i₁ j₁)) i₂ j₂
 
 /-- The inner matrix fed to `C₂` in `jointBranch`. -/
-private def innerMatrix (C₁ : QComp d₁ α) (a : α)
+private def innerMatrix (C₁ : QComp (Fin d₁) α) (a : α)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₁ j₁ : Fin d₁) : Matrix (Fin d₂) (Fin d₂) ℂ :=
   Matrix.of fun i₂' j₂' => (C₁.branch a (extractBlock ρ i₂' j₂')) i₁ j₁
 
-private theorem innerMatrix_add (C₁ : QComp d₁ α) (a : α)
+private theorem innerMatrix_add (C₁ : QComp (Fin d₁) α) (a : α)
     (ρ₁ ρ₂ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₁ j₁ : Fin d₁) :
     innerMatrix C₁ a (ρ₁ + ρ₂) i₁ j₁ =
@@ -141,7 +162,7 @@ private theorem innerMatrix_add (C₁ : QComp d₁ α) (a : α)
   ext p q
   simp [innerMatrix, Matrix.of_apply, Matrix.add_apply, extractBlock_add, map_add]
 
-private theorem innerMatrix_smul (C₁ : QComp d₁ α) (a : α)
+private theorem innerMatrix_smul (C₁ : QComp (Fin d₁) α) (a : α)
     (c : ℂ) (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ)
     (i₁ j₁ : Fin d₁) :
     innerMatrix C₁ a (c • ρ) i₁ j₁ = c • innerMatrix C₁ a ρ i₁ j₁ := by
@@ -149,7 +170,7 @@ private theorem innerMatrix_smul (C₁ : QComp d₁ α) (a : α)
   simp [innerMatrix, Matrix.of_apply, Matrix.smul_apply, extractBlock_smul, map_smul,
     smul_eq_mul]
 
-private theorem jointBranch_unfold (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
+private theorem jointBranch_unfold (C₁ : QComp (Fin d₁) α) (C₂ : QComp (Fin d₂) β) (a : α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (i j : Fin (d₁ * d₂)) :
     jointBranch C₁ C₂ a b ρ i j =
       let e := finProdEquiv d₁ d₂
@@ -158,7 +179,7 @@ private theorem jointBranch_unfold (C₁ : QComp d₁ α) (C₂ : QComp d₂ β)
   simp [jointBranch, innerMatrix, Matrix.of_apply]
 
 /-- `jointBranch` is additive in the state. -/
-theorem jointBranch_add (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
+theorem jointBranch_add (C₁ : QComp (Fin d₁) α) (C₂ : QComp (Fin d₂) β) (a : α) (b : β)
     (ρ₁ ρ₂ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     jointBranch C₁ C₂ a b (ρ₁ + ρ₂) =
       jointBranch C₁ C₂ a b ρ₁ + jointBranch C₁ C₂ a b ρ₂ := by
@@ -167,30 +188,29 @@ theorem jointBranch_add (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (
   rw [innerMatrix_add, map_add, Matrix.add_apply]
 
 /-- `jointBranch` commutes with scalar multiplication of the state. -/
-theorem jointBranch_smul (C₁ : QComp d₁ α) (C₂ : QComp d₂ β) (a : α) (b : β)
+theorem jointBranch_smul (C₁ : QComp (Fin d₁) α) (C₂ : QComp (Fin d₂) β) (a : α) (b : β)
     (c : ℂ) (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     jointBranch C₁ C₂ a b (c • ρ) = c • jointBranch C₁ C₂ a b ρ := by
   ext i j
   simp only [jointBranch_unfold, Matrix.smul_apply, smul_eq_mul]
   rw [innerMatrix_smul, map_smul, Matrix.smul_apply, smul_eq_mul]
 
-/-! ## The qRHL Judgment -/
+/-! ## The Relational Judgment -/
 
-/-- **Quantum Relational Hoare Logic judgment** `{Φ} C₁ ~ C₂ {Ψ}`.
+/-- **Relational Hoare judgment** `{Φ} C₁ ~ C₂ {Ψ}`.
 
-    For programs C₁ on d₁-dim and C₂ on d₂-dim, with bipartite pre/post-
-    conditions on the joint system d₁ × d₂:
+    For programs C₁ on d₁-dim and C₂ on d₂-dim, with pre/postconditions on
+    matrices of the joint system d₁ × d₂: for every PSD ρ satisfying Φ, the
+    state `∑'_{a,b} jointBranch(C₁,C₂,a,b)(ρ)` satisfies Ψ, where `jointBranch`
+    applies `C₁.branch a` on register 1 and `C₂.branch b` on register 2.
 
-    For all joint PSD states ρ satisfying Φ, the post-evolution state
-    (summing over all outcome pairs) satisfies Ψ.
-
-    The post-evolution state is `∑'_{a,b} jointBranch(C₁,C₂,a,b)(ρ)` where
-    `jointBranch` applies `C₁.branch a` on register 1 and `C₂.branch b`
-    on register 2. -/
+    The outcomes `a`, `b` are summed out, so Ψ cannot depend on them. There is no
+    output coupling and no adequacy theorem linking this judgment to output
+    probabilities; it is not Unruh's qRHL judgment. -/
 def qrHoare
     (Φ : BipartitePred d₁ d₂)
-    (C₁ : QComp d₁ α)
-    (C₂ : QComp d₂ β)
+    (C₁ : QComp (Fin d₁) α)
+    (C₂ : QComp (Fin d₂) β)
     (Ψ : BipartitePred d₁ d₂) : Prop :=
   ∀ (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ),
     ρ.PosSemidef → Φ ρ →
@@ -202,7 +222,7 @@ notation "⟪" Φ "⟫ " C₁ " ~ " C₂ " ⟪" Ψ "⟫" => qrHoare Φ C₁ C₂
 
 /-- Joint branch where C₂ is pure and outcome doesn't match gives 0. -/
 theorem jointBranch_qpure_ne_right {b b' : β} (hb : b' ≠ b)
-    (C₁ : QComp d₁ α) (a : α)
+    (C₁ : QComp (Fin d₁) α) (a : α)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     jointBranch C₁ (QComp.qpure b) a b' ρ = 0 := by
   ext i j
@@ -235,7 +255,8 @@ theorem jointBranch_qpure_ne {a a' : α} {b b' : β}
 /-! ## Structural Rules -/
 
 /-- **Skip-Skip rule**: `{Φ} pure a ~ pure b {Φ}`.
-    Pure computations do not change the quantum state. -/
+    Pure computations do not change the quantum state. The returned values `a`, `b`
+    are arbitrary: the judgment does not see classical outcomes. -/
 theorem qrhl_skip (Φ : BipartitePred d₁ d₂) (a : α) (b : β) :
     qrHoare Φ (QComp.qpure a) (QComp.qpure b) Φ := by
   intro ρ _hρ hΦ
@@ -247,7 +268,7 @@ theorem qrhl_skip (Φ : BipartitePred d₁ d₂) (a : α) (b : β) :
 /-- **Consequence rule**: strengthen pre, weaken post.
     If `{Φ} C₁ ~ C₂ {Ψ}` and `Φ' → Φ` and `Ψ → Ψ'`, then `{Φ'} C₁ ~ C₂ {Ψ'}`. -/
 theorem qrhl_conseq {Φ Φ' : BipartitePred d₁ d₂} {Ψ Ψ' : BipartitePred d₁ d₂}
-    {C₁ : QComp d₁ α} {C₂ : QComp d₂ β}
+    {C₁ : QComp (Fin d₁) α} {C₂ : QComp (Fin d₂) β}
     (h : qrHoare Φ C₁ C₂ Ψ)
     (hΦ : ∀ ρ, ρ.PosSemidef → Φ' ρ → Φ ρ)
     (hΨ : ∀ ρ, Ψ ρ → Ψ' ρ) :
@@ -259,19 +280,19 @@ theorem qrhl_conseq {Φ Φ' : BipartitePred d₁ d₂} {Ψ Ψ' : BipartitePred d
 
 /-- The joint state after running `C₁` on register 1 and `pure b` on register 2:
     the sum over outcomes `a` of `jointBranch C₁ (pure b) a b ρ`. -/
-def oneSidedPost (C₁ : QComp d₁ α) (b : β)
+def oneSidedPost (C₁ : QComp (Fin d₁) α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ :=
   ∑' a, jointBranch C₁ (QComp.qpure b) a b ρ
 
 /-- The weakest precondition of `Ψ` under `C₁ ~ pure b`: the predicate that holds of
     `ρ` exactly when `Ψ` holds of `oneSidedPost C₁ b ρ`. -/
-def BipartitePred.oneSidedPre (C₁ : QComp d₁ α) (b : β) (Ψ : BipartitePred d₁ d₂) :
+def BipartitePred.oneSidedPre (C₁ : QComp (Fin d₁) α) (b : β) (Ψ : BipartitePred d₁ d₂) :
     BipartitePred d₁ d₂ :=
   fun ρ => Ψ (oneSidedPost C₁ b ρ)
 
 /-- The post-state of `C₁ ~ pure b` summed over outcome pairs is `oneSidedPost C₁ b ρ`. -/
-theorem tsum_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
+theorem tsum_jointBranch_qpure_right (C₁ : QComp (Fin d₁) α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     ∑' (p : α × β), jointBranch C₁ (QComp.qpure b) p.1 p.2 ρ = oneSidedPost C₁ b ρ := by
   set F := fun (p : α × β) => jointBranch C₁ (QComp.qpure b) p.1 p.2 ρ
@@ -295,7 +316,7 @@ theorem tsum_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
     intro ⟨a, _⟩; rfl
 
 /-- **One-sided rule, weakest-precondition form**: `{oneSidedPre C₁ b Ψ} C₁ ~ pure b {Ψ}`. -/
-theorem qrhl_one_sided_left_wp (C₁ : QComp d₁ α) (b : β) (Ψ : BipartitePred d₁ d₂) :
+theorem qrhl_one_sided_left_wp (C₁ : QComp (Fin d₁) α) (b : β) (Ψ : BipartitePred d₁ d₂) :
     qrHoare (BipartitePred.oneSidedPre C₁ b Ψ) C₁ (QComp.qpure b) Ψ := by
   intro ρ _hρ hΦ
   rw [tsum_jointBranch_qpure_right]
@@ -303,7 +324,7 @@ theorem qrhl_one_sided_left_wp (C₁ : QComp d₁ α) (b : β) (Ψ : BipartitePr
 
 /-- Entries of `jointBranch C₁ (pure b) a b ρ`: `C₁.branch a` applied to the block of `ρ`
     indexed by the second-register coordinates. -/
-theorem jointBranch_qpure_right_apply (C₁ : QComp d₁ α) (a : α) (b : β)
+theorem jointBranch_qpure_right_apply (C₁ : QComp (Fin d₁) α) (a : α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (i j : Fin (d₁ * d₂)) :
     jointBranch C₁ (QComp.qpure b) a b ρ i j =
       C₁.branch a (extractBlock ρ ((finProdEquiv d₁ d₂).symm i).2
@@ -312,7 +333,7 @@ theorem jointBranch_qpure_right_apply (C₁ : QComp d₁ α) (a : α) (b : β)
   simp [jointBranch, QComp.qpure]
 
 /-- The family `a ↦ jointBranch C₁ (pure b) a b ρ` is summable. -/
-theorem summable_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
+theorem summable_jointBranch_qpure_right (C₁ : QComp (Fin d₁) α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     Summable (fun a => jointBranch C₁ (QComp.qpure b) a b ρ) := by
   refine Pi.summable.mpr fun i => Pi.summable.mpr fun j => ?_
@@ -321,7 +342,7 @@ theorem summable_jointBranch_qpure_right (C₁ : QComp d₁ α) (b : β)
 
 /-- Each block of `oneSidedPost C₁ b ρ` is the total action of `C₁` on the
     corresponding block of `ρ`. -/
-theorem extractBlock_oneSidedPost (C₁ : QComp d₁ α) (b : β)
+theorem extractBlock_oneSidedPost (C₁ : QComp (Fin d₁) α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (i₂ j₂ : Fin d₂) :
     extractBlock (oneSidedPost C₁ b ρ) i₂ j₂ =
       ∑' a, C₁.branch a (extractBlock ρ i₂ j₂) := by
@@ -335,7 +356,7 @@ theorem extractBlock_oneSidedPost (C₁ : QComp d₁ α) (b : β)
 
 /-- The first marginal of `oneSidedPost C₁ b ρ` is the total action of `C₁` on the
     first marginal of `ρ`. -/
-theorem partialTrace₂_oneSidedPost (C₁ : QComp d₁ α) (b : β)
+theorem partialTrace₂_oneSidedPost (C₁ : QComp (Fin d₁) α) (b : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     partialTrace₂ (oneSidedPost C₁ b ρ) = ∑' a, C₁.branch a (partialTrace₂ ρ) := by
   have hsum : ∀ X : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ,
@@ -348,7 +369,7 @@ theorem partialTrace₂_oneSidedPost (C₁ : QComp d₁ α) (b : β)
 
 /-- If `C₁` is trace-preserving, the second marginal of `oneSidedPost C₁ b ρ` is the
     second marginal of `ρ`. -/
-theorem partialTrace₁_oneSidedPost (C₁ : QComp d₁ α) (b : β)
+theorem partialTrace₁_oneSidedPost (C₁ : QComp (Fin d₁) α) (b : β)
     (htp : ∀ σ : Matrix (Fin d₁) (Fin d₁) ℂ, (∑' a, C₁.branch a σ).trace = σ.trace)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     partialTrace₁ (oneSidedPost C₁ b ρ) = partialTrace₁ ρ := by
@@ -365,7 +386,7 @@ theorem partialTrace₁_oneSidedPost (C₁ : QComp d₁ α) (b : β)
 theorem qrhl_one_sided_left
     (P₁ : Matrix (Fin d₁) (Fin d₁) ℂ → Prop)
     (P₂ : Matrix (Fin d₂) (Fin d₂) ℂ → Prop)
-    (C₁ : QComp d₁ α) (b : β)
+    (C₁ : QComp (Fin d₁) α) (b : β)
     (h₁ : ∀ σ, σ.PosSemidef → P₁ σ →
       P₁ (∑' a, C₁.branch a σ))
     (htp : ∀ σ : Matrix (Fin d₁) (Fin d₁) ℂ, (∑' a, C₁.branch a σ).trace = σ.trace) :
@@ -390,7 +411,7 @@ theorem eq_of_extractBlock_eq {X Y : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d�
 
 /-- If every branch of `C₁` is completely positive, `oneSidedPost C₁ b` maps PSD states
     to PSD states. -/
-theorem oneSidedPost_psd (C₁ : QComp d₁ α) (b : β) (hcp : ∀ a, IsCPMap (C₁.branch a))
+theorem oneSidedPost_psd (C₁ : QComp (Fin d₁) α) (b : β) (hcp : ∀ a, IsCPMap (C₁.branch a))
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) (hρ : ρ.PosSemidef) :
     (oneSidedPost C₁ b ρ).PosSemidef := by
   have heq : ∀ a, jointBranch C₁ (QComp.qpure b) a b ρ =
@@ -405,7 +426,7 @@ theorem oneSidedPost_psd (C₁ : QComp d₁ α) (b : β) (hcp : ∀ a, IsCPMap (
 
 /-- `oneSidedPost` of the sequential composition `C₁; D₁` is the composite of the
     `oneSidedPost` maps of `C₁` and `D₁`. -/
-theorem oneSidedPost_qbind {γ : Type} (C₁ : QComp d₁ α) (D₁ : QComp d₁ γ) (b b' : β)
+theorem oneSidedPost_qbind {γ : Type} (C₁ : QComp (Fin d₁) α) (D₁ : QComp (Fin d₁) γ) (b b' : β)
     (ρ : Matrix (Fin (d₁ * d₂)) (Fin (d₁ * d₂)) ℂ) :
     oneSidedPost (QComp.qbind C₁ fun _ => D₁) b' ρ =
       oneSidedPost D₁ b' (oneSidedPost C₁ b ρ) := by
@@ -419,7 +440,7 @@ theorem oneSidedPost_qbind {γ : Type} (C₁ : QComp d₁ α) (D₁ : QComp d₁
     every branch of `C₁` is completely positive, then
     `{Φ} (C₁; D₁) ~ pure b' {Ψ}`, where `C₁; D₁` is `qbind C₁ (fun _ => D₁)`. -/
 theorem qrhl_seq_one_sided_left {γ : Type}
-    {Φ Θ Ψ : BipartitePred d₁ d₂} (C₁ : QComp d₁ α) (D₁ : QComp d₁ γ) (b b' : β)
+    {Φ Θ Ψ : BipartitePred d₁ d₂} (C₁ : QComp (Fin d₁) α) (D₁ : QComp (Fin d₁) γ) (b b' : β)
     (hcp : ∀ a, IsCPMap (C₁.branch a))
     (h₁ : qrHoare Φ C₁ (QComp.qpure b) Θ)
     (h₂ : qrHoare Θ D₁ (QComp.qpure b') Ψ) :
@@ -525,7 +546,7 @@ theorem qrhl_unitary
   rw [tsum_jointBranch_unitaryChannel]
   exact ⟨ρ, hρ, hΦ, rfl⟩
 
-/-! ## Quantum Indistinguishability via qRHL -/
+/-! ## Quantum Indistinguishability -/
 
 /-- **Quantum indistinguishability (induced / Helstrom distance).** Two programs
     are ε-indistinguishable if no distinguisher `D` and input `ρ` *on the
@@ -536,17 +557,20 @@ theorem qrhl_unitary
     At dimension `d₁ = 0` there is no density matrix (the trace of the empty
     matrix is `0`, not `1`), so `qIndist C₁ C₂ ε` holds for all `C₁`, `C₂` and
     `ε`. A statement about `qIndist` carries information only for `d₁ ≠ 0`,
-    which a caller over a variable dimension states as `[NeZero d₁]`. -/
-def qIndist (C₁ C₂ : QComp d₁ α) (ε : ℝ≥0∞) : Prop :=
-  ∀ (D : α → QComp d₁ Bool) (ρ : DensityMatrix d₁),
+    which a caller over a variable dimension states as `[NeZero d₁]`.
+
+    The definition is direct; no theorem derives `qIndist` from a `qrHoare`
+    judgment. -/
+def qIndist (C₁ C₂ : QComp (Fin d₁) α) (ε : ℝ≥0∞) : Prop :=
+  ∀ (D : α → QComp (Fin d₁) Bool) (ρ : DensityMatrix (Fin d₁)),
     absDiff (prTrue_Q (QComp.qbind C₁ D) ρ) (prTrue_Q (QComp.qbind C₂ D) ρ) ≤ ε
 
 /-- qIndist is reflexive. -/
-theorem qIndist_refl (C : QComp d₁ α) : qIndist C C 0 := by
+theorem qIndist_refl (C : QComp (Fin d₁) α) : qIndist C C 0 := by
   intro D ρ; simp [absDiff]
 
 /-- qIndist is symmetric. -/
-theorem qIndist_symm {C₁ C₂ : QComp d₁ α} {ε : ℝ≥0∞}
+theorem qIndist_symm {C₁ C₂ : QComp (Fin d₁) α} {ε : ℝ≥0∞}
     (h : qIndist C₁ C₂ ε) : qIndist C₂ C₁ ε := by
   intro D ρ
   have := h D ρ
@@ -555,7 +579,7 @@ theorem qIndist_symm {C₁ C₂ : QComp d₁ α} {ε : ℝ≥0∞}
   exact this
 
 /-- qIndist satisfies triangle inequality. -/
-theorem qIndist_triangle {C₁ C₂ C₃ : QComp d₁ α} {ε₁ ε₂ : ℝ≥0∞}
+theorem qIndist_triangle {C₁ C₂ C₃ : QComp (Fin d₁) α} {ε₁ ε₂ : ℝ≥0∞}
     (h₁ : qIndist C₁ C₂ ε₁) (h₂ : qIndist C₂ C₃ ε₂) :
     qIndist C₁ C₃ (ε₁ + ε₂) := by
   intro D ρ

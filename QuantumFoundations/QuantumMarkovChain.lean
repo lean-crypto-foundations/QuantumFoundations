@@ -25,6 +25,9 @@ information `I(A:C|B) = 0`.
 
 * `condMutualInfo` — conditional quantum mutual information I(A:C|B)
 * `IsQuantumMarkovChain` — A → B → C Markov chain property
+
+The entropies and `condMutualInfo` are defined for every positive semidefinite matrix; they
+have their information-theoretic meaning on density matrices (trace one).
 The recovery-channel characterisation of a Markov chain and the Fawzi–Renner
 approximate-recovery bound are not stated; the comments in the recovery and
 approximate-chain sections record what each needs.
@@ -54,7 +57,8 @@ variable {dA dB dC : ℕ}
 
 /-! ## Von Neumann Entropy -/
 
-/-- Von Neumann entropy of a density matrix: `S(ρ) = -tr(ρ log ρ)`.
+/-- Von Neumann entropy of a positive semidefinite matrix (a density matrix when `tr ρ = 1`):
+    `S(ρ) = -tr(ρ log ρ)`.
     Defined via eigenvalues: `S(ρ) = -∑_i λ_i log(λ_i)` where `λ_i` are
     the eigenvalues of the Hermitian part of `ρ`.
 
@@ -121,13 +125,17 @@ def IsQuantumMarkovChain
 
 /-! ## Approximate Markov Chains
 
-The Fawzi–Renner bound — `I(A:C|B) ≤ ε` implies that the Petz-recovered state
-is within trace distance `2√(2ε ln 2)` of ρ_{ABC} — is not stated here. Its
-conclusion needs the ampliation `id_A ⊗ R` of the Petz map and the trace
-distance between the recovered and the original state, neither of which this
-module constructs.
+The Fawzi–Renner theorem is not stated here. It says that for every ρ_{ABC} there exists
+some channel `R : B → BC` with `F(ρ_{ABC}, (id_A ⊗ R)(ρ_{AB})) ≥ 2^{-I(A:C|B)/2}`, where `F`
+is the fidelity `‖√ρ √σ‖₁` and `I(A:C|B)` is measured in bits; with the natural logarithms of
+`condMutualInfo` the bound reads `exp(-I(A:C|B)/2)`. Fawzi and Renner prove existence of a
+channel, not that the Petz map achieves the bound; Junge, Renner, Sutter, Wilde and Winter
+show that a universal recovery map, an average of rotated Petz maps, does. Stating it needs the
+ampliation `id_A ⊗ R` and the fidelity, neither of which this module constructs.
 
-**Reference**: O. Fawzi, R. Renner, "Quantum Conditional Mutual Information
-and Approximate Markov Chains", Comm. Math. Phys. 340 (2015), 575-611. -/
+**References**: O. Fawzi, R. Renner, "Quantum Conditional Mutual Information
+and Approximate Markov Chains", Comm. Math. Phys. 340 (2015), 575-611;
+M. Junge, R. Renner, D. Sutter, M. M. Wilde, A. Winter, "Universal recovery maps and
+approximate sufficiency of quantum relative entropy", Ann. Henri Poincaré 19 (2018). -/
 
 end Quantum.QuantumMarkovChain

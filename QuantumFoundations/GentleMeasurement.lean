@@ -32,15 +32,16 @@ measurement when the measurement outcome has high probability.
 * `Projector.gentle_decomposition` — `ρ - PρP = (I-P)ρ + Pρ(I-P)`
 * `Projector.gentle_diff_hermitian` — `ρ - PρP` is Hermitian
 * `Projector.PρP_psd` — `PρP` is PSD
-* `trace_product_cs_bound` — Cauchy-Schwarz: `|tr(AρB†)|² ≤ tr(AρA†)·tr(BρB†)` (fully proved)
+* `trace_product_cs_bound` — Cauchy-Schwarz: `|tr(AρB†)|² ≤ tr(AρA†)·tr(BρB†)`
 * `gentle_measurement` — `‖ρ - PρP‖₁ ≤ 2√ε`
 
 ## Mathematical Background
 
-The gentle measurement lemma (Winter 1999, Ogawa-Nagaoka 2007) states:
-for density matrix ρ and projector P, if `tr(Pρ) ≥ 1 - ε`, then the
-post-measurement state `PρP/tr(PρP)` is close to ρ in trace distance.
-Specifically, `½‖ρ - PρP‖₁ ≤ √ε`.
+The gentle measurement lemma (Winter 1999, Ogawa-Nagaoka 2007) bounds the disturbance of a
+likely measurement outcome. For a density matrix ρ and a projector P with `tr(Pρ) ≥ 1 - ε`,
+the unnormalized post-measurement state `PρP` satisfies `‖ρ - PρP‖₁ ≤ 2√ε`, that is,
+`½‖ρ - PρP‖₁ ≤ √ε`. This is the form proved here; the normalized post-measurement state
+`PρP / tr(Pρ)` is not treated.
 
 The proof decomposes `ρ - PρP = (I-P)ρ + Pρ(I-P)` and bounds each term
 using Cauchy-Schwarz for the Hilbert-Schmidt inner product weighted by ρ.
@@ -64,13 +65,13 @@ noncomputable section
 
 namespace Quantum.GentleMeasurement
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-! ## Projector -/
 
 namespace Projector
 
-variable (P : Projector d) (ρ : Matrix (Fin d) (Fin d) ℂ)
+variable (P : Projector d) (ρ : Matrix d d ℂ)
 
 /-- A projector is positive semidefinite.
 
@@ -180,12 +181,12 @@ theorem gentle_diff_trace :
 /-! ## Orthogonality -/
 
 /-- `PQ = 0` for complementary projectors. -/
-theorem P_mul_Q : P.val * (1 - P.val) = 0 := by
-  rw [mul_sub, mul_one, P.idempotent, sub_self]
+theorem P_mul_Q : P.val * (1 - P.val) = 0 :=
+  IsIdempotentElem.mul_one_sub_self P.idempotent
 
 /-- `QP = 0` for complementary projectors. -/
-theorem Q_mul_P : (1 - P.val) * P.val = 0 := by
-  rw [sub_mul, one_mul, P.idempotent, sub_self]
+theorem Q_mul_P : (1 - P.val) * P.val = 0 :=
+  IsIdempotentElem.one_sub_mul_self P.idempotent
 
 end Projector
 
@@ -199,21 +200,10 @@ weighted by a PSD matrix ρ:
 This is the key analytical tool for the gentle measurement bound.
 -/
 
-/-- Trace of a PSD-weighted outer product is non-negative:
-    `0 ≤ tr(AρA†)` when ρ is PSD.
-
-    Proof: `AρA† = A ρ^{1/2} (A ρ^{1/2})†`, which is PSD. -/
-theorem trace_AρAstar_nonneg {ρ A : Matrix (Fin d) (Fin d) ℂ}
-    (hρ : ρ.PosSemidef) :
-    0 ≤ (A * ρ * Aᴴ).trace := by
-  have h : (A * ρ * Aᴴ).PosSemidef := hρ.mul_mul_conjTranspose_same A
-  rw [Complex.nonneg_iff]
-  exact ⟨Quantum.trace_re_nonneg_of_psd h,
-         (Quantum.trace_im_zero_of_psd h).symm⟩
-
 private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z := by
   simp [Complex.normSq_apply]
 
+omit [DecidableEq d] in
 /-- **Cauchy-Schwarz for PSD-weighted trace products**.
 
     For PSD ρ and any matrices A, B:
@@ -222,7 +212,7 @@ private lemma normSq_star (z : ℂ) : Complex.normSq (star z) = Complex.normSq z
     Proof: use Mathlib's `toMatrixInnerProductSpace` (ρ-weighted inner product
     where `⟪A, B⟫ = tr(BρA†)`) and apply `norm_inner_le_norm` (Cauchy-Schwarz),
     then square both sides. -/
-theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
+theorem trace_product_cs_bound {ρ A B : Matrix d d ℂ}
     (hρ : ρ.PosSemidef) :
     Complex.normSq ((A * ρ * Bᴴ).trace) ≤
       (A * ρ * Aᴴ).trace.re * (B * ρ * Bᴴ).trace.re := by
@@ -235,9 +225,9 @@ theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
     rw [h, trace_conjTranspose, normSq_star]
   rw [h_nseq]
   -- Step 2: Set up the ρ-weighted inner product space
-  let _ : SeminormedAddCommGroup (Matrix (Fin d) (Fin d) ℂ) :=
+  let _ : SeminormedAddCommGroup (Matrix d d ℂ) :=
     ρ.toMatrixSeminormedAddCommGroup hρ
-  let _ : InnerProductSpace ℂ (Matrix (Fin d) (Fin d) ℂ) :=
+  let _ : InnerProductSpace ℂ (Matrix d d ℂ) :=
     ρ.toMatrixInnerProductSpace hρ
   -- ⟪A, B⟫ = (B * ρ * Aᴴ).trace (definitional)
   -- Step 3: Rewrite as normSq of inner product
@@ -274,7 +264,7 @@ theorem trace_product_cs_bound {ρ A B : Matrix (Fin d) (Fin d) ℂ}
 
     **References**: Wilde, QIT Lemma 9.4.1; Winter 1999. -/
 theorem gentle_measurement (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (_hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
     (h_herm : (ρ - P.val * ρ * P.val).IsHermitian) :
@@ -328,7 +318,7 @@ theorem gentle_measurement (P : Projector d)
 /-- Gentle measurement in trace distance form:
     `traceDist ρ (PρP) ≤ √ε` (half the trace norm bound). -/
 theorem gentle_measurement_traceDist (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (hρ : ρ.PosSemidef) (htr : ρ.trace = 1)
     (ε : ℝ) (hε : 0 ≤ ε)
     (h_meas : (P.val * ρ).trace.re ≥ 1 - ε)
     (h_herm : (ρ - P.val * ρ * P.val).IsHermitian) :
@@ -336,14 +326,12 @@ theorem gentle_measurement_traceDist (P : Projector d)
   have h := gentle_measurement P ρ hρ htr ε hε h_meas h_herm
   linarith
 
-/-! ## Complement Trace Bound (Fully Proved) -/
+/-! ## Complement Trace Bound -/
 
-/-- The complement trace bound (fully proved): `tr((I-P)ρ(I-P)) ≤ ε`.
-
-    This weaker bound (compared to the trace norm bound) is fully proved
-    and suffices for many applications in the O2H proof chain. -/
+/-- The complement trace bound: `tr((I-P)ρ(I-P)) ≤ ε` for a density matrix `ρ` with
+    `tr(Pρ) ≥ 1 - ε`. -/
 theorem complement_sandwich_trace_le (P : Projector d)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) (htr : ρ.trace = 1)
+    (ρ : Matrix d d ℂ) (htr : ρ.trace = 1)
     (ε : ℝ) (h_meas : (P.val * ρ).trace.re ≥ 1 - ε) :
     ((1 - P.val) * ρ * (1 - P.val)).trace.re ≤ ε := by
   rw [P.trace_QρQ_eq]

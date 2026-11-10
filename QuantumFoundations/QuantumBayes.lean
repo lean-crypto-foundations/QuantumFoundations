@@ -12,30 +12,32 @@ public import QuantumFoundations.PetzRecovery
 /-!
 # Quantum Bayesian Inversion
 
-The Bayes equation for the Petz recovery map, and the Lüders (Jeffrey) update
-of a density matrix by a measurement effect.
+The defining equation of the Petz recovery map, and the Lüders update of a density matrix
+by a measurement effect.
 
 ## Mathematical Background
 
-In an effectus (Cho-Jacobs 2015), Bayesian inversion for a channel Φ w.r.t.
-a prior σ is defined by the equation:
+Classically, the Bayesian inverse of a channel with respect to a prior is characterized by
+an equation between joint distributions (Cho–Jacobs). For quantum channels such an inverse
+exists only under restrictive conditions (Parzygnat); the Petz recovery map
 
 ```
 Φ†_σ(A) = σ^{1/2} Φ†[Φ(σ)^{-1/2} A Φ(σ)^{-1/2}] σ^{1/2}
 ```
 
-This is exactly the Petz recovery map. Properties:
-1. `Φ†_σ(Φ(σ)) = σ` (exact recovery of the prior)
-2. Compositionality: `(Ψ∘Φ)†_σ = Φ†_σ ∘ Ψ†_{Φ(σ)}`
-3. Uniqueness (Parzygnat-Buscemi 2023)
+is the standard quantum substitute (Leifer; Parzygnat–Buscemi). It recovers the prior,
+`Φ†_σ(Φ(σ)) = σ`, and composes, `(Ψ∘Φ)†_σ = Φ†_σ ∘ Ψ†_{Φ(σ)}`. Parzygnat and Buscemi single
+it out among the rotated Petz maps (their Theorem 6.5); whether it is the unique retrodiction
+functor is their open Question 7.1.
 
 ## Main Results
 
 * `quantum_bayes_rule` — the defining equation of `petzRecovery`
-* `jeffreyUpdate` — the Lüders update of a prior by a measurement effect
+* `jeffreyUpdate` — the Lüders update of a prior by a measurement effect; it is the zero
+  matrix when the Born probability `tr(E σ)` vanishes
 * `jeffreyUpdate_denominator` — the update normalizes by the Born
   probability `tr(E σ)`
-* `jeffreyUpdate_density` — the update preserves positivity and unit trace
+* `jeffreyUpdate_density` — when `tr(E σ) ≠ 0`, the update is PSD with unit trace
 
 Exact recovery and the chain rule for the Petz map live in `PetzRecovery.lean`,
 as the theorems `petzRecovery_exact` and `petzRecovery_comp`.
@@ -45,6 +47,8 @@ as the theorems `petzRecovery_exact` and `petzRecovery_comp`.
 * Cho, K. & Jacobs, B. — *Disintegration and Bayesian Inversion via
   String Diagrams*, MSCS 29(7), 2019
 * Parzygnat, A.J. & Buscemi, F. — *Axioms for Retrodiction*, Quantum 7, 2023
+* Parzygnat, A.J. — *Inverses, disintegrations, and Bayesian inversion in quantum
+  Markov categories*
 * Leifer, M.S. — *Quantum Dynamics as an Analog of Conditional Probability*,
   PRA 74, 2006
 -/
@@ -60,7 +64,7 @@ namespace Quantum.QuantumBayes
 
 open Quantum
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 -- Loewner order instances for CFC (inherited from PetzRecovery imports).
 attribute [local instance] instPartialOrder Matrix.instStarOrderedRing
@@ -73,7 +77,8 @@ private lemma complex_inv_of_real_im_zero (z : ℂ) (h_im : z.im = 0) :
   have h_eq : z = Complex.ofReal z.re := by apply Complex.ext <;> simp [h_im]
   rw [h_eq, ← Complex.ofReal_inv]; simp [Complex.ofReal_re]
 
-private lemma psd_smul_trace_inv (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSemidef)
+omit [DecidableEq d] in
+private lemma psd_smul_trace_inv (M : Matrix d d ℂ) (hM : M.PosSemidef)
     (_h_ne : M.trace ≠ 0) :
     (M.trace⁻¹ • M).PosSemidef := by
   -- Trace of PSD is real (im = 0, re ≥ 0), so trace⁻¹ is a non-negative real.
@@ -88,7 +93,7 @@ private lemma psd_smul_trace_inv (M : Matrix (Fin d) (Fin d) ℂ) (hM : M.PosSem
 
 /-- The trace of the unnormalized Lüders update is the Born probability of the
     effect: `tr(E^{1/2} σ E^{1/2}) = tr(E σ)`. -/
-theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+theorem trace_sqrt_conj (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) :
     (psdSqrt E hE * σ * psdSqrt E hE).trace = (E * σ).trace := by
   have : (psdSqrt E hE * σ * psdSqrt E hE).trace =
@@ -104,39 +109,42 @@ theorem trace_sqrt_conj (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (F
 
     `R_{σ,Φ}(A) = σ^{1/2} Φ†[Φ(σ)^{-1/2} A Φ(σ)^{-1/2}] σ^{1/2}`
 
-    where `Φ† = hsAdjoint Φ` is the Hilbert-Schmidt adjoint. -/
+    where `Φ† = dualMap Φ` is the trace dual of `Φ`. -/
 theorem quantum_bayes_rule
-    (Φ : Matrix (Fin d) (Fin d) ℂ →ₗ[ℂ] Matrix (Fin d) (Fin d) ℂ)
-    (hΦ_cp : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef)
-    (A : Matrix (Fin d) (Fin d) ℂ) :
-    petzRecovery σ hσ Φ hΦ_cp A =
+    (Φ : Matrix d d ℂ →ₗ[ℂ] Matrix d d ℂ)
+    (hΦ : ∀ ρ, ρ.PosSemidef → (Φ ρ).PosSemidef)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef)
+    (A : Matrix d d ℂ) :
+    petzRecovery σ hσ Φ hΦ A =
       psdSqrt σ hσ *
-        hsAdjoint Φ (psdInvSqrt (Φ σ) (hΦ_cp σ hσ) * A *
-          psdInvSqrt (Φ σ) (hΦ_cp σ hσ)) *
+        dualMap Φ (psdInvSqrt (Φ σ) (hΦ σ hσ) * A *
+          psdInvSqrt (Φ σ) (hΦ σ hσ)) *
         psdSqrt σ hσ :=
   rfl
 
 /-! ## Jeffrey Update -/
 
-/-- **Quantum Jeffrey update** (Lueders rule): updating a prior σ given
-    evidence from a measurement with effect E.
+/-- The Lüders update of a prior `σ` on observing the effect `E`:
 
-    The updated state is:
-    `σ_E = E^{1/2} σ E^{1/2} / tr(E^{1/2} σ E^{1/2})`
+    `σ_E = E^{1/2} σ E^{1/2} / tr(E^{1/2} σ E^{1/2})`,
 
-    where `E^{1/2}` is the matrix square root via `psdSqrt` (CFC). -/
-def jeffreyUpdate (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+    where `E^{1/2} = psdSqrt E`. The denominator is the Born probability `tr(E σ)`
+    (`jeffreyUpdate_denominator`). When it is zero the update is the zero matrix, by the
+    convention `0⁻¹ = 0`; `jeffreyUpdate_density` assumes it is nonzero. Despite the name, this
+    is the quantum analogue of conditioning on `E`, not of Jeffrey's rule, which updates toward
+    a prescribed distribution of outcomes. The hypothesis `(1 - E).PosSemidef` is not used. -/
+def jeffreyUpdate (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) (_h_le : (1 - E).PosSemidef) :
-    Matrix (Fin d) (Fin d) ℂ :=
+    Matrix d d ℂ :=
   let E_half := psdSqrt E hE
   let unnormalized := E_half * σ * E_half
   (unnormalized.trace)⁻¹ • unnormalized
 
-/-- Jeffrey update preserves density matrices (PSD, trace 1). -/
+/-- When the Born probability `tr(E σ)` is nonzero, the Lüders update of a density matrix `σ` is PSD
+    with unit trace. -/
 theorem jeffreyUpdate_density
-    (σ : Matrix (Fin d) (Fin d) ℂ) (hσ : σ.PosSemidef) (_hσ_tr : σ.trace = 1)
-    (E : Matrix (Fin d) (Fin d) ℂ) (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef)
+    (σ : Matrix d d ℂ) (hσ : σ.PosSemidef) (_hσ_tr : σ.trace = 1)
+    (E : Matrix d d ℂ) (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef)
     (h_nonzero : (E * σ).trace ≠ 0) :
     (jeffreyUpdate σ E hE h_le).PosSemidef ∧
     (jeffreyUpdate σ E hE h_le).trace = 1 := by
@@ -156,9 +164,10 @@ theorem jeffreyUpdate_density
 
     `σ_E = E^{1/2} σ E^{1/2} / tr(E σ)`
 
-    This is the quantum form of the Bayes denominator `P(A)`. -/
+    This is the quantum form of the Bayes denominator `P(A)`. Both sides are zero when
+    `tr(E σ) = 0`. -/
 theorem jeffreyUpdate_denominator
-    (σ : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin d) (Fin d) ℂ)
+    (σ : Matrix d d ℂ) (E : Matrix d d ℂ)
     (hE : E.PosSemidef) (h_le : (1 - E).PosSemidef) :
     jeffreyUpdate σ E hE h_le =
       (E * σ).trace⁻¹ • (psdSqrt E hE * σ * psdSqrt E hE) := by

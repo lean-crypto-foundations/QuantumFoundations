@@ -15,17 +15,17 @@ the guessing probability of the product distribution factors:
 
   `guessProb (fun (x,y) => p₀ x * p₁ y) = guessProb p₀ * guessProb p₁`,
 
-so the min-entropy is **additive**:
+so, when both guessing probabilities are positive, the min-entropy is **additive**:
 
   `Hₘᵢₙ(p₀ ⊗ p₁) = Hₘᵢₙ(p₀) + Hₘᵢₙ(p₁)`.
 
+(With the convention `minEntropy 0 = 0` this fails for a zero factor.)
+
 Iterating this gives the min-entropy of `n` *independent* conjugate-basis BB84
 measurements: each contributes `1` bit (`minEntropy_uniform_two`), so the
-joint min-entropy of the independent case is `n`. This is the **honest,
-non-tight** counterpart of the DFRSS tight uncertainty relation
-(`H_∞^ε ≥ (½−2λ)n`, which holds even for adversarially chosen states and is
-cited rather than re-derived): for genuinely independent registers the bound is
-exact and elementary.
+joint min-entropy of the independent case is `n`. This covers independent registers only.
+The DFRSS uncertainty relation (full version, Corollary 3.4: `H_∞^ε(X|Θ) ≥ (½−2λ)n`), which
+holds for adversarially prepared states, is not formalized here.
 -/
 
 @[expose] public section
@@ -62,7 +62,9 @@ theorem guessProb_product {ι₀ ι₁ : Type*} [Fintype ι₀] [Fintype ι₁]
     rw [hxy]
     exact le_guessProb (fun q : ι₀ × ι₁ => p₀ q.1 * p₁ q.2) (x, y)
 
-/-- **Min-entropy is additive over independent registers.** -/
+/-- **Min-entropy is additive over independent registers.** The positivity
+hypotheses exclude a zero factor: `minEntropy` of the zero vector is `0`
+(`minEntropy_zero`), so additivity fails there. -/
 theorem minEntropy_product {ι₀ ι₁ : Type*} [Fintype ι₀] [Fintype ι₁]
     [Nonempty ι₀] [Nonempty ι₁] (p₀ : ι₀ → ℝ) (p₁ : ι₁ → ℝ)
     (h₀ : ∀ x, 0 ≤ p₀ x) (h₁ : ∀ y, 0 ≤ p₁ y)
