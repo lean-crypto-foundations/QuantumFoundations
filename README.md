@@ -3,6 +3,9 @@
 Finite-dimensional quantum information for cryptographic proofs in Lean 4, on Mathlib only.
 Shared by [CatCrypt](https://github.com/spitters/CatCrypt-core) and
 [VCVio](https://github.com/Verified-zkEVM/VCVio).
+Results we intend to contribute to the `QuantumInfo` library of
+[Physlib](https://github.com/leanprover-community/physlib) are listed, with what each still
+needs, in `QuantumFoundations/ForPhyslib/README.md`.
 
 This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathlib v4.35.0):
 
