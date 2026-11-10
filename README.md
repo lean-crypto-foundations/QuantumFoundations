@@ -14,7 +14,8 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PartialTrace` | partial traces over `Fin (d₁ * d₂)` |
 | `TensorProduct` | Kronecker products of states and maps, local operations |
 | `KroneckerPSD` | positivity of Kronecker products |
-| `TraceNorm` | the trace norm and its bounds |
+| `TraceNorm` | the trace norm, its dual bound by Hermitian contractions (`trace_mul_re_le_traceNormH`), the triangle inequality |
+| `TraceDistance` | positive trace-nonincreasing maps (CPTP maps in particular) contract the trace norm and the trace distance |
 | `Measurement` | general and projective measurements as instruments |
 | `UnitaryChannel` | unitary channels |
 | `Instrument` | `QComp d α`: positive (maybe non-CP) branches, jointly sub-TP; a lawful monad |
@@ -32,6 +33,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
 | `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
+| `ForMathlib/Analysis/Matrix/Spectrum` | `tr(E X)` in the eigenbasis of a Hermitian `X` (a Mathlib candidate) |
 
 States, instruments, measurements and CP maps take the index of the system as any finite type.
 Two register conventions coexist. `PartialTrace` and `TensorProduct` flatten a bipartite system
