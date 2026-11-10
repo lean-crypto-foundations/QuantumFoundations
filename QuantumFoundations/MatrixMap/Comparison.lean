@@ -181,8 +181,8 @@ end Quantum.MatrixMap
 
 namespace Quantum.MatrixMap
 
-/-- The difference of two complete Kraus families has squared trace at most four times
-input trace, with the outcomes retained inside the sum. -/
+/-- The sum of the trace weights of the differences of two complete Kraus families is at most
+four times the input trace. -/
 theorem sum_trace_conj_sub_le_four {n m ι : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [Fintype ι] (F G : ι → Matrix m n ℂ)
     (hF : ∑ a, (F a)ᴴ * F a = 1) (hG : ∑ a, (G a)ᴴ * G a = 1)

@@ -27,6 +27,8 @@ public import QuantumFoundations.LeftoverHash
 public import QuantumFoundations.PrivacyAmplification
 
 -- From VCVio.
+public import QuantumFoundations.ForMathlib.Algebra.Group.Conj
+public import QuantumFoundations.ForMathlib.Analysis.Matrix.Contraction
 public import QuantumFoundations.ForMathlib.Analysis.Matrix.PosSemidef
 public import QuantumFoundations.ForMathlib.Analysis.Normed.Ring.Commutator
 public import QuantumFoundations.DSubInstrument
@@ -35,12 +37,14 @@ public import QuantumFoundations.MatrixMap.BlockNorm
 public import QuantumFoundations.MatrixMap.Commutant
 public import QuantumFoundations.MatrixMap.Comparison
 public import QuantumFoundations.MatrixMap.Completion
+public import QuantumFoundations.MatrixMap.Conjugation
 public import QuantumFoundations.MatrixMap.Dual
 public import QuantumFoundations.MatrixMap.Family
 public import QuantumFoundations.MatrixMap.Kraus
 public import QuantumFoundations.MatrixMap.Norm
 public import QuantumFoundations.MatrixMap.OpNorm
 public import QuantumFoundations.MatrixMap.Pinching
+public import QuantumFoundations.MatrixMap.PinchingCompletion
 public import QuantumFoundations.MatrixMap.ProjectorEvent
 public import QuantumFoundations.MatrixMap.ProjectorPair
 public import QuantumFoundations.MatrixMap.Stinespring
@@ -59,10 +63,3 @@ public import QuantumFoundations.Pure.Tensor
 
 -- Agreement of the CPMap and MatrixMap developments.
 public import QuantumFoundations.Bridge.CPMap
-
-public import QuantumFoundations.ForMathlib.Matrix.PosSemidef
-public import QuantumFoundations.ForMathlib.Matrix.Contraction
-public import QuantumFoundations.ForMathlib.Matrix.BlockDiagonal
-public import QuantumFoundations.ForMathlib.Matrix.Pinching
-
-public import QuantumFoundations.MatrixMap.Conjugation

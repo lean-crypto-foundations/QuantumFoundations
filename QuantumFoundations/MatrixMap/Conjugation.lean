@@ -6,7 +6,7 @@ Authors: Quang Dao
 
 module
 public import QuantumFoundations.MatrixMap
-public import QuantumFoundations.ForMathlib.Matrix.Contraction
+public import QuantumFoundations.ForMathlib.Analysis.Matrix.Contraction
 
 /-!
 # Conjugation, amplification and projections
