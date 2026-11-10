@@ -59,3 +59,8 @@ public import QuantumFoundations.Pure.Tensor
 
 -- Agreement of the CPMap and MatrixMap developments.
 public import QuantumFoundations.Bridge.CPMap
+
+public import QuantumFoundations.ForMathlib.Matrix.PosSemidef
+public import QuantumFoundations.ForMathlib.Matrix.Contraction
+public import QuantumFoundations.ForMathlib.Matrix.BlockDiagonal
+public import QuantumFoundations.ForMathlib.Matrix.Pinching
