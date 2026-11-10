@@ -475,4 +475,115 @@ instance : LawfulMonad (SubInstrument M M) :=
 
 end SubInstrument
 
+namespace SubInstrument
+
+section sandwich
+
+variable {A' B' : Type*} [Fintype A'] [Fintype B']
+
+/-- A subinstrument preceded by the completely positive, trace-nonincreasing map `Φ` and
+followed by `Ψ`. -/
+@[expose]
+noncomputable def sandwich (p : SubInstrument A B α) (Φ : MatrixMap A' A) (Ψ : MatrixMap B B')
+    (hΦ : Φ.IsCP) (hΦ' : Φ.IsTNI) (hΨ : Ψ.IsCP) (hΨ' : Ψ.IsTNI) : SubInstrument A' B' α where
+  branch a := Ψ ∘ₗ p.branch a ∘ₗ Φ
+  isCP_branch a := hΨ.comp ((p.isCP_branch a).comp hΦ)
+  trace_le s ρ hρ := by
+    have hΦρ := hΦ.posSemidef hρ
+    calc ∑ a ∈ s, ((Ψ ∘ₗ p.branch a ∘ₗ Φ) ρ).trace.re
+        ≤ ∑ a ∈ s, (p.branch a (Φ ρ)).trace.re :=
+          Finset.sum_le_sum fun a _ ↦ hΨ' _ ((p.isCP_branch a).posSemidef hΦρ)
+      _ = ((∑ a ∈ s, p.branch a) (Φ ρ)).trace.re := (MatrixMap.trace_re_sum_apply _ _ _).symm
+      _ ≤ (Φ ρ).trace.re := p.isTNI_sum s _ hΦρ
+      _ ≤ ρ.trace.re := hΦ' ρ hρ
+
+/-- Each branch composes the input map, the original branch and the output map. -/
+@[simp]
+theorem branch_sandwich (p : SubInstrument A B α) (Φ : MatrixMap A' A) (Ψ : MatrixMap B B')
+    (hΦ : Φ.IsCP) (hΦ' : Φ.IsTNI) (hΨ : Ψ.IsCP) (hΨ' : Ψ.IsTNI) (a : α) :
+    (p.sandwich Φ Ψ hΦ hΦ' hΨ hΨ').branch a = Ψ ∘ₗ p.branch a ∘ₗ Φ :=
+  rfl
+
+end sandwich
+
+/-- The Kraus operators of a subinstrument whose branches are Kraus maps have
+`1 - ∑ r ∈ s, (K r)ᴴ * K r` positive semidefinite on every finite set of outcomes. -/
+theorem posSemidef_one_sub_sum_of_branch_eq_conj {A B α : Type*}
+    [Fintype A] [Fintype B] [DecidableEq A] (p : SubInstrument A B α) {K : α → Matrix B A ℂ}
+    (hK : ∀ r, p.branch r = MatrixMap.conj (K r)) (s : Finset α) :
+    (1 - ∑ r ∈ s, (K r)ᴴ * K r).PosSemidef := by
+  have h := p.isTNI_sum s
+  simp_rw [hK] at h
+  rw [← Finset.sum_coe_sort s] at h ⊢
+  exact MatrixMap.isTNI_sum_conj_iff.mp h
+
+/-- For a lossless subinstrument with two outcomes, the traces of the two branches add up to the
+trace of the input. -/
+theorem trace_re_branch_add_of_lossless {A B : Type*} [Fintype A] [Fintype B]
+    {p : SubInstrument A B Bool} (hp : p.Lossless) (ρ : Matrix A A ℂ) :
+    (p.branch true ρ).trace.re + (p.branch false ρ).trace.re = ρ.trace.re := by
+  rw [← hp ρ, MatrixMap.familyTrace_apply_univ, Fintype.sum_bool, Complex.add_re]
+
+section uniform
+
+variable (Ω : Type*) [Fintype Ω] (A : Type*) [Fintype A] [DecidableEq A]
+
+/-- The Kraus operator of every outcome of a uniform coin: `|Ω|^(-1/2) • 1`. -/
+@[expose]
+noncomputable def uniformKraus : Matrix A A ℂ :=
+  ((Real.sqrt (Fintype.card Ω : ℝ)⁻¹ : ℝ) : ℂ) • (1 : Matrix A A ℂ)
+
+private theorem sqrt_inv_card_mul_self : (((Real.sqrt (Fintype.card Ω : ℝ)⁻¹ : ℝ) : ℂ)) *
+    ((Real.sqrt (Fintype.card Ω : ℝ)⁻¹ : ℝ) : ℂ) = (Fintype.card Ω : ℂ)⁻¹ := by
+  rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by positivity)]
+  simp
+
+/-- The Kraus operator of a uniform coin, composed with its adjoint, is `|Ω|⁻¹ • 1`. -/
+theorem conjTranspose_uniformKraus_mul_self :
+    (uniformKraus Ω A)ᴴ * uniformKraus Ω A =
+      ((Fintype.card Ω : ℂ)⁻¹) • (1 : Matrix A A ℂ) := by
+  simp only [uniformKraus, conjTranspose_smul, conjTranspose_one, Complex.star_def,
+    Complex.conj_ofReal, smul_mul_smul, Matrix.mul_one, sqrt_inv_card_mul_self]
+
+variable [Nonempty Ω]
+
+/-- The Kraus operators of a uniform coin form a complete family. -/
+theorem sum_conjTranspose_uniformKraus_mul_self :
+    ∑ _ω : Ω, (uniformKraus Ω A)ᴴ * uniformKraus Ω A = 1 := by
+  rw [conjTranspose_uniformKraus_mul_self, Finset.sum_const, Finset.card_univ,
+    ← Nat.cast_smul_eq_nsmul ℂ, smul_smul,
+    mul_inv_cancel₀ (Nat.cast_ne_zero.mpr Fintype.card_ne_zero), one_smul]
+
+end uniform
+
+section uniformCoin
+
+variable (Ω : Type*) [Fintype Ω] [Nonempty Ω] (A : Type*) [Fintype A]
+
+/-- **A uniform coin**: draw a uniform outcome in `Ω` and leave the register `A` untouched. Each
+branch is `ρ ↦ ρ / |Ω|` (`Quantum.SubInstrument.branch_uniform_apply`). It measures a
+fresh uniform register and discards the measured register. -/
+@[expose]
+noncomputable def uniform : SubInstrument A A Ω := by
+  classical
+  exact ofKraus (fun _ ↦ uniformKraus Ω A) (sum_conjTranspose_uniformKraus_mul_self Ω A)
+
+/-- Each branch of a uniform coin scales the state by `1 / |Ω|`. -/
+theorem branch_uniform_apply (ω : Ω) (ρ : Matrix A A ℂ) :
+    (uniform Ω A).branch ω ρ = ((Fintype.card Ω : ℂ)⁻¹) • ρ := by
+  classical
+  rw [uniform, DSubInstrument.branch_ofKraus_apply, MatrixMap.conj_apply]
+  simp only [uniformKraus, conjTranspose_smul, conjTranspose_one, Complex.star_def,
+    Complex.conj_ofReal, smul_mul, Matrix.one_mul, Matrix.mul_smul, Matrix.mul_one, smul_smul,
+    sqrt_inv_card_mul_self]
+
+/-- A uniform coin is lossless. -/
+theorem lossless_uniform : (uniform Ω A).Lossless := by
+  classical
+  exact DSubInstrument.lossless_ofKraus _ (sum_conjTranspose_uniformKraus_mul_self Ω A)
+
+end uniformCoin
+
+end SubInstrument
+
 end Quantum
