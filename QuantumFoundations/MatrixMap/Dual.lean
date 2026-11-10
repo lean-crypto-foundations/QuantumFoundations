@@ -105,27 +105,25 @@ theorem dual_id [Fintype A] : dual (LinearMap.id : MatrixMap A A) = LinearMap.id
 
 /-- The trace dual of the zero map is zero. -/
 @[simp]
-theorem dual_zero [Finite A] : dual (0 : MatrixMap A B) = 0 := by
-  cases nonempty_fintype A
-  exact (eq_dual_iff.mpr fun _ _ ↦ by simp).symm
+theorem dual_zero : dual (0 : MatrixMap A B) = 0 := by
+  ext Y a a'
+  simp
 
 /-- The trace dual is additive. -/
-theorem dual_add [Finite A] (Φ Ψ : MatrixMap A B) : dual (Φ + Ψ) = dual Φ + dual Ψ := by
-  cases nonempty_fintype A
-  exact (eq_dual_iff.mpr fun Y X ↦ by
-    simp [Matrix.add_mul, Matrix.mul_add, trace_dual_mul]).symm
+theorem dual_add (Φ Ψ : MatrixMap A B) : dual (Φ + Ψ) = dual Φ + dual Ψ := by
+  ext Y a a'
+  simp [Matrix.mul_add]
 
 /-- The trace dual commutes with scalar multiplication. -/
-theorem dual_smul [Finite A] (c : ℂ) (Φ : MatrixMap A B) : dual (c • Φ) = c • dual Φ := by
-  cases nonempty_fintype A
-  exact (eq_dual_iff.mpr fun Y X ↦ by simp [trace_dual_mul]).symm
+theorem dual_smul (c : ℂ) (Φ : MatrixMap A B) : dual (c • Φ) = c • dual Φ := by
+  ext Y a a'
+  simp
 
 /-- The trace dual commutes with finite sums. -/
-theorem dual_sum [Finite A] (s : Finset ι) (Φ : ι → MatrixMap A B) :
+theorem dual_sum (s : Finset ι) (Φ : ι → MatrixMap A B) :
     dual (∑ i ∈ s, Φ i) = ∑ i ∈ s, dual (Φ i) := by
-  cases nonempty_fintype A
-  exact (eq_dual_iff.mpr fun Y X ↦ by
-    simp [LinearMap.sum_apply, Matrix.sum_mul, Matrix.mul_sum, trace_dual_mul]).symm
+  ext Y a a'
+  simp [LinearMap.sum_apply, Matrix.mul_sum, Matrix.sum_apply]
 
 /-- The trace dual reverses composition: `dual (Ψ ∘ Φ) = dual Φ ∘ dual Ψ`. -/
 theorem dual_comp [Finite A] (Ψ : MatrixMap B C) (Φ : MatrixMap A B) :

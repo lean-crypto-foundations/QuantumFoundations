@@ -33,9 +33,12 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
-States, instruments, measurements and CP maps take the index of the system as any finite type;
-bipartite systems are encoded as `Fin (d₁ * d₂)`. The planned merges with VCVio's `MatrixMap`
-and `SubInstrument` (CP branches) are separate pull requests.
+States, instruments, measurements and CP maps take the index of the system as any finite type.
+Two register conventions coexist. `PartialTrace` and `TensorProduct` flatten a bipartite system
+to `Fin (d₁ * d₂)`. The `MatrixMap` modules, including `MatrixMap/Stinespring`, index it by a
+product type `A × R` and discard the right factor with `traceRight`. `Bridge/CPMap` already
+relates `CPMap` to `MatrixMap`. Unifying the instruments with VCVio's `SubInstrument` (CP
+branches) is the remaining work, in #17.
 
 ## From VCVio
 

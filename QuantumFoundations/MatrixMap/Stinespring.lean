@@ -95,12 +95,6 @@ theorem exists_unitary_submatrix_eq [DecidableEq A] [Fintype X] [DecidableEq X]
     simp [v, hj.extend_apply]
   simpa [Module.Basis.toMatrix_apply] using congrArg (fun w ↦ w.ofLp x) hba
 
-/-- Multiplying by the matrix of a basis embedding selects columns. -/
-theorem mul_submatrix_one_id [Fintype X] [DecidableEq X] (U : Matrix X X ℂ) (j : A → X) :
-    U * (1 : Matrix X X ℂ).submatrix id j = U.submatrix id j := by
-  ext x a
-  simp [Matrix.mul_apply, Matrix.one_apply]
-
 /-- Conjugating by the embedding `ψ ↦ ψ ⊗ |r⟩` appends the ancilla state `|r⟩⟨r|`. -/
 theorem conj_submatrix_one_mk [Fintype A] [DecidableEq A] [DecidableEq R] (r : R)
     (ρ : Matrix A A ℂ) :
@@ -126,7 +120,9 @@ theorem exists_unitary_sum_conj_eq [Fintype A] [DecidableEq A] [Fintype B] [Deci
     rw [conjTranspose_stinespring_mul_stinespring, hK]
   obtain ⟨U, hU, hUS⟩ := exists_unitary_submatrix_eq hS hj
   refine ⟨U, hU, ?_⟩
-  rw [← conj_mul, mul_submatrix_one_id, hUS, sum_conj_eq_traceRight_comp_conj]
+  have hUj : U * (1 : Matrix (B × ι) (B × ι) ℂ).submatrix id j = U.submatrix id j := by
+    simpa using Matrix.mul_submatrix_one (Equiv.refl (B × ι)) j U
+  rw [← conj_mul, hUj, hUS, sum_conj_eq_traceRight_comp_conj]
 
 /-- **Unitary Stinespring dilation of a channel.** A completely positive trace-preserving map
 `Φ : M_A → M_B` is `ρ ↦ tr_E (U (P ρ Pᴴ) Uᴴ)` with environment `E = B × A`, `U` unitary on
