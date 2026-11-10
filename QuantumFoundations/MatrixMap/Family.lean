@@ -165,6 +165,15 @@ theorem trace_tsum [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f) :
     (∑' i, f i).trace = ∑' i, (f i).trace :=
   hf.map_tsum (traceLinearMap n ℂ ℂ) (LinearMap.continuous_of_finiteDimensional _)
 
+/-- The trace of the sum of a summable family of positive semidefinite matrices is the sum of
+the traces, in `ℝ≥0∞`. -/
+theorem ofReal_trace_re_tsum {ι n : Type*} [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f)
+    (hpos : ∀ b, (f b).PosSemidef) :
+    ENNReal.ofReal (∑' b, f b).trace.re = ∑' b, ENNReal.ofReal (f b).trace.re := by
+  rw [Matrix.trace_tsum hf, Complex.re_tsum (Matrix.summable_trace hf)]
+  exact ENNReal.ofReal_tsum_of_nonneg (fun b ↦ (hpos b).trace_re_nonneg)
+    (Complex.reCLM.summable (Matrix.summable_trace hf))
+
 end Matrix
 
 namespace Quantum
@@ -923,6 +932,20 @@ theorem familyTrace_familyBind {Φ : (i : ι) → MatrixMap A (B i)}
     (fun i ↦ (hΨ i).summable_trace_apply) (hΦ.prod hΨ).summable_trace_apply ρ
 
 end familyBind
+
+end MatrixMap
+
+namespace MatrixMap
+
+/-- The trace weight of a completely positive map is additive on summable families of positive
+semidefinite matrices. -/
+theorem IsCP.ofReal_trace_re_tsum {A B ι : Type*} [Finite A] [Fintype B]
+    {Φ : MatrixMap A B} (hΦ : Φ.IsCP) {g : ι → Matrix A A ℂ} (hg : Summable g)
+    (hpos : ∀ b, (g b).PosSemidef) :
+    ENNReal.ofReal (Φ (∑' b, g b)).trace.re = ∑' b, ENNReal.ofReal (Φ (g b)).trace.re := by
+  rw [MatrixMap.map_tsum _ hg]
+  exact Matrix.ofReal_trace_re_tsum (MatrixMap.summable_comp _ hg)
+    fun b ↦ hΦ.posSemidef (hpos b)
 
 end MatrixMap
 

@@ -580,6 +580,47 @@ theorem exists_kraus_of_isTP_sum [Fintype A] [Fintype B] [DecidableEq A] [Fintyp
   rw [← Fintype.sum_prod_type' (f := fun i k ↦ (K i k)ᴴ * K i k)]
   exact isTP_sum_conj_iff.mp htp
 
+open scoped Kronecker
+
+/-- Kraus maps whose operators `M ω` resolve the identity (`∑ ω, (M ω)ᴴ M ω = 1`),
+applied on the second factor, preserve the trace in sum. -/
+theorem sum_trace_amplifyLeft_conj {Ω S B : Type*} {S' : Ω → Type*} [Fintype Ω] [Fintype S]
+    [DecidableEq S] [∀ ω, Fintype (S' ω)] [Fintype B] (M : ∀ ω, Matrix (S' ω) S ℂ)
+    (hM : ∑ ω, (M ω)ᴴ * M ω = 1) (N : Matrix (B × S) (B × S) ℂ) :
+    ∑ ω, ((MatrixMap.conj (M ω)).amplifyLeft B N).trace = N.trace := by
+  classical
+  simp only [MatrixMap.amplifyLeft_conj, MatrixMap.conj_apply]
+  have h (ω : Ω) :
+      (((1 : Matrix B B ℂ) ⊗ₖ M ω) * N * ((1 : Matrix B B ℂ) ⊗ₖ M ω)ᴴ).trace =
+      (((1 : Matrix B B ℂ) ⊗ₖ ((M ω)ᴴ * M ω)) * N).trace := by
+    rw [Matrix.trace_mul_cycle, conjTranspose_kronecker, conjTranspose_one, ← mul_kronecker_mul,
+      Matrix.one_mul]
+  have hsum : ∑ ω, (1 : Matrix B B ℂ) ⊗ₖ ((M ω)ᴴ * M ω) =
+      (1 : Matrix B B ℂ) ⊗ₖ ∑ ω, (M ω)ᴴ * M ω := by
+    exact (map_sum (kroneckerBilinear (R := ℂ) (1 : Matrix B B ℂ)) _ _).symm
+  simp only [h, ← Matrix.trace_sum, ← Finset.sum_mul, hsum, hM, one_kronecker_one,
+    Matrix.one_mul]
+
+/-- The blocks of a complete family `∑ₖ (B k)ᴴ B k = 1` split the trace. -/
+theorem tsum_ofReal_trace_conj_kronecker_one {J D : Type*} [Fintype J] [DecidableEq J]
+    [Fintype D] [DecidableEq D] {K : Type*} [Fintype K] {J' : K → Type*} [∀ k, Fintype (J' k)]
+    {B : ∀ k, Matrix (J' k) J ℂ}
+    (hB : ∑ k, (B k)ᴴ * B k = 1) {σ : Matrix (J × D) (J × D) ℂ} (hσ : σ.PosSemidef) :
+    ∑' k, ENNReal.ofReal (MatrixMap.conj (B k ⊗ₖ (1 : Matrix D D ℂ)) σ).trace.re =
+      ENNReal.ofReal σ.trace.re := by
+  have hnn : ∀ k, 0 ≤ (MatrixMap.conj (B k ⊗ₖ (1 : Matrix D D ℂ)) σ).trace.re := fun k ↦
+    (hσ.mul_mul_conjTranspose_same _).trace_re_nonneg
+  have h1 : ∑ k, (B k ⊗ₖ (1 : Matrix D D ℂ))ᴴ * (B k ⊗ₖ (1 : Matrix D D ℂ)) = 1 := by
+    simp only [Matrix.conjTranspose_kronecker, Matrix.conjTranspose_one, ← Matrix.mul_kronecker_mul,
+      Matrix.one_mul]
+    rw [← Matrix.one_kronecker_one, ← hB]
+    ext ⟨a, b⟩ ⟨c, d⟩
+    simp [Matrix.sum_apply, Finset.sum_mul]
+  rw [tsum_fintype, ← ENNReal.ofReal_sum_of_nonneg fun k _ ↦ hnn k]
+  congr 1
+  simp only [MatrixMap.trace_conj_apply, ← Complex.re_sum, ← Matrix.trace_sum, ← Matrix.sum_mul,
+    h1, Matrix.one_mul]
+
 end MatrixMap
 
 end Quantum
