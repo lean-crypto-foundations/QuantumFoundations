@@ -5,7 +5,7 @@ Authors: Bas Spitters
 -/
 module
 
-public import QuantumFoundations.Instrument
+public import QuantumFoundations.Instrument.OfSubInstrument
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -24,12 +24,17 @@ branches `ρ ↦ M_a ρ M_aᴴ`, whose POVM is `{M_aᴴ M_a}`.
 * `Quantum.Measurement.MeasurementOps`: a complete family of measurement operators.
 * `Quantum.Measurement.measureOps`: the instrument of a family of measurement
   operators.
+* `Quantum.Measurement.MeasurementOps.toPOVM`: the POVM `{M_aᴴ M_a}` of a family of measurement
+  operators.
 * `Quantum.Measurement.ProjectiveMeasurement`, `Quantum.Measurement.projectiveMeasure`:
   measurement operators that are orthogonal projectors, and their instrument.
 * `Quantum.Measurement.bornProb`: the Born-rule probability `tr(E_a ρ)`.
 
 ## Main results
 
+* `Quantum.Measurement.ProjectiveMeasurement.isStarProjection`,
+  `Quantum.Measurement.ProjectiveMeasurement.sum_op`: the operators of a projective measurement
+  are star projections summing to the identity.
 * `Quantum.Measurement.bornProb_sum`: the Born-rule probabilities sum to `tr ρ`.
 
 ## References
@@ -77,10 +82,16 @@ structure MeasurementOps (d : Type*) [Fintype d] [DecidableEq d] (α : Type) [Fi
   /-- Completeness: `∑_a M_aᴴ M_a = 1`. -/
   completeness : ∑ a, (op a)ᴴ * op a = 1
 
-/-- The instrument of a family of measurement operators: branch `a` maps
-`ρ ↦ M_a ρ M_aᴴ`. -/
+/-- The instrument of a family of measurement operators, the image of their Kraus
+subinstrument: branch `a` maps `ρ ↦ M_a ρ M_aᴴ`. -/
 def measureOps [Fintype α] (M : MeasurementOps d α) : QComp d α :=
-  QComp.ofKraus M.op M.completeness
+  (SubInstrument.ofKraus M.op M.completeness).toQComp
+
+/-- The effects `Mᴴ M` of measurement operators form a POVM. -/
+def MeasurementOps.toPOVM [Fintype α] (M : MeasurementOps d α) : POVM d α where
+  effect a := (M.op a)ᴴ * M.op a
+  effect_psd a := Matrix.posSemidef_conjTranspose_mul_self (M.op a)
+  sum_eq_one := M.completeness
 
 /-! ## Projective Measurement -/
 
@@ -93,10 +104,21 @@ structure ProjectiveMeasurement (d : Type*) [Fintype d] [DecidableEq d] (α : Ty
   /-- Every operator is idempotent. -/
   idempotent : ∀ a, op a * op a = op a
 
-/-- The instrument of a projective measurement. -/
+/-- Every operator of a projective measurement is a star projection. -/
+theorem ProjectiveMeasurement.isStarProjection [Fintype α] (P : ProjectiveMeasurement d α)
+    (a : α) : IsStarProjection (P.op a) :=
+  ⟨P.idempotent a, P.self_adjoint a⟩
+
+/-- The operators of a projective measurement sum to the identity. -/
+theorem ProjectiveMeasurement.sum_op [Fintype α] (P : ProjectiveMeasurement d α) :
+    ∑ a, P.op a = 1 := by
+  simpa only [P.self_adjoint, P.idempotent] using P.completeness
+
+/-- The instrument of a projective measurement, the image of the Kraus subinstrument of its
+projectors. -/
 def projectiveMeasure [Fintype α] (P : ProjectiveMeasurement d α) :
     QComp d α :=
-  measureOps P.toMeasurementOps
+  (SubInstrument.ofKraus P.op P.completeness).toQComp
 
 /-! ## Born Rule -/
 

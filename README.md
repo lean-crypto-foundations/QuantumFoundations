@@ -18,6 +18,7 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `Measurement` | general and projective measurements as instruments |
 | `UnitaryChannel` | unitary channels |
 | `Instrument` | `QComp d α`: positive (maybe non-CP) branches, jointly sub-TP; a lawful monad |
+| `Instrument/OfSubInstrument` | a subinstrument as a `QComp` (`SubInstrument.toQComp`); the instrument of Kraus operators (`QComp.ofKraus`) |
 | `InstrumentCP` | complete positivity of instrument branches, tensor products of instruments |
 | `QRHL` | a relational judgment on joint final states, outcomes summed out (not Unruh's qRHL) |
 | `GentleMeasurement` | the gentle-measurement lemma for projective measurements |
@@ -30,15 +31,14 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathli
 | `MinEntropySplit` | conditional guessing probability; picking the better of two conditionings |
 | `LeftoverHash` | the leftover hash lemma for a 2-universal hash family |
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
-| `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
 
 States, instruments, measurements and CP maps take the index of the system as any finite type.
 Two register conventions coexist. `PartialTrace` and `TensorProduct` flatten a bipartite system
 to `Fin (d₁ * d₂)`. The `MatrixMap` modules, including `MatrixMap/Stinespring`, index it by a
-product type `A × R` and discard the right factor with `traceRight`. `Bridge/CPMap` already
-relates `CPMap` to `MatrixMap`. Unifying the instruments with VCVio's `SubInstrument` (CP
-branches) is the remaining work, in #17.
+product type `A × R` and discard the right factor with `traceRight`. The measurements and the
+unitary channel are defined as images of Kraus subinstruments, and the `Bridge` modules below
+relate the rest of the two developments.
 
 ## From VCVio
 
@@ -67,6 +67,13 @@ branches) is the remaining work, in #17.
 | `Observe` | substates, post-measurement states, and Born outcome measures |
 | `Pure/State`, `Pure/Instrument`, `Pure/Tensor` | pure states, measurements, and tensors |
 | `Oracle/Basis`, `Oracle/Unitary` | computational-basis operations and unitary oracle gates |
+
+## Agreement of the two developments
+
+| Module | Content |
+|---|---|
+| `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
+| `Bridge/Instrument` | density matrices are the trace-one substates; instruments with completely positive branches are exactly the `QComp`s whose branches are completely positive (`SubInstrument.equivCP`), compatibly with `pure`, `bind`, `map` and `fail`; acceptance probability is the outcome measure of `{true}`; the Kraus, general, projective and unitary measurements of both sides agree |
 
 ## License
 

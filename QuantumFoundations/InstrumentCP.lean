@@ -6,6 +6,7 @@ Authors: Bas Spitters
 module
 
 public import QuantumFoundations.QRHL
+public import QuantumFoundations.Instrument.OfSubInstrument
 
 /-!
 # Completely positive branches of basic instruments
@@ -63,7 +64,7 @@ theorem isCPMap_zero {n : Type*} :
 open Classical in
 /-- Every branch of the trivial instrument `qpure a₀` is completely positive:
 it is `id` on the outcome `a₀` and `0` elsewhere. -/
-theorem qpure_branch_isCPMap {n : Type*} [Fintype n] [DecidableEq n] {α : Type} (a₀ : α) :
+theorem qpure_branch_isCPMap {n : Type*} [Fintype n] {α : Type} (a₀ : α) :
     ∀ a, IsCPMap ((QComp.qpure (d := n) a₀).branch a) := by
   intro a
   change IsCPMap (if a = a₀ then LinearMap.id else 0)
@@ -100,7 +101,7 @@ end Quantum
 namespace Quantum.GentleMeasurement
 
 /-- A projector on a system with basis indexed by `d`: self-adjoint and idempotent. -/
-structure Projector (d : Type*) [Fintype d] [DecidableEq d] where
+structure Projector (d : Type*) [Fintype d] where
   /-- The underlying matrix. -/
   val : Matrix d d ℂ
   /-- The matrix is self-adjoint. -/
@@ -116,9 +117,9 @@ open Quantum Quantum.GentleMeasurement
 
 /-- The projective measurement `{P, 1 - P}` as a quantum instrument: outcome
 `true` is the branch `P ρ P`, outcome `false` the branch
-`(1 - P) ρ (1 - P)`. -/
+`(1 - P) ρ (1 - P)`. It is the image of the Kraus subinstrument of `P` and `1 - P`. -/
 def measureProj {d : Type*} [Fintype d] [DecidableEq d] (P : Projector d) : QComp d Bool :=
-  QComp.ofKraus (fun b => if b then P.val else 1 - P.val)
+  SubInstrument.toQComp <| SubInstrument.ofKraus (fun b => if b then P.val else 1 - P.val)
     (by
       rw [Fintype.sum_bool]
       change P.valᴴ * P.val + (1 - P.val)ᴴ * (1 - P.val) = 1
