@@ -75,7 +75,7 @@ theorem exists_unitary_submatrix_eq [DecidableEq A] [Fintype X] [DecidableEq X]
     rw [orthonormal_iff_ite]
     intro a a'
     have h := congrFun (congrFun hV a) a'
-    rw [mul_apply, one_apply] at h
+    rw [Matrix.mul_apply, Matrix.one_apply] at h
     rw [← h]
     simp only [col, PiLp.inner_apply, conjTranspose_apply, RCLike.inner_apply]
     exact Finset.sum_congr rfl fun _ _ ↦ mul_comm _ _

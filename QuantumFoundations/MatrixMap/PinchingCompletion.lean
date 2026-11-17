@@ -77,7 +77,7 @@ theorem exists_pinch_eq_sub_sq_le_of_completion
 theorem labelControlled_smul_one {n κ : Type*} [DecidableEq n] (β : n → κ) (c : κ → ℂ) :
     labelControlled β (fun k ↦ c k • (1 : Matrix n n ℂ)) = diagonal fun a ↦ c (β a) := by
   ext a b
-  rw [labelControlled_apply, Matrix.smul_apply, one_apply, diagonal_apply]
+  rw [labelControlled_apply, Matrix.smul_apply, Matrix.one_apply, diagonal_apply]
   split_ifs <;> simp
 
 end Matrix

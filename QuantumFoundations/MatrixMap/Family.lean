@@ -160,11 +160,6 @@ theorem summable_trace [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f)
     Summable fun i ↦ (f i).trace :=
   hf.map (traceLinearMap n ℂ ℂ) (LinearMap.continuous_of_finiteDimensional _)
 
-/-- The trace of the sum of a summable family of square matrices is the sum of the traces. -/
-theorem trace_tsum [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f) :
-    (∑' i, f i).trace = ∑' i, (f i).trace :=
-  hf.map_tsum (traceLinearMap n ℂ ℂ) (LinearMap.continuous_of_finiteDimensional _)
-
 /-- The trace of the sum of a summable family of positive semidefinite matrices is the sum of
 the traces, in `ℝ≥0∞`. -/
 theorem ofReal_trace_re_tsum {ι n : Type*} [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f)

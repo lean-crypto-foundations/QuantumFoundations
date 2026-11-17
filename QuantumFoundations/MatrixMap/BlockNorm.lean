@@ -42,7 +42,7 @@ theorem conjTranspose_one_submatrix_mul_self [Fintype m] [DecidableEq m] {m' : T
     [DecidableEq m'] {f : m' → m} (hf : Function.Injective f) :
     ((1 : Matrix m m 𝕜).submatrix id f)ᴴ * (1 : Matrix m m 𝕜).submatrix id f = 1 := by
   ext a b
-  simp [mul_apply, one_apply, hf.eq_iff]
+  simp [Matrix.mul_apply, Matrix.one_apply, hf.eq_iff]
 
 /-- Restricting the rows and the columns along injective maps does not increase the norm. -/
 theorem l2_opNorm_submatrix_le_of_injective [Fintype m] [Fintype n] [DecidableEq n]
@@ -58,7 +58,7 @@ theorem l2_opNorm_submatrix_le_of_injective [Fintype m] [Fintype n] [DecidableEq
   have h : A.submatrix f g =
       ((1 : Matrix m m 𝕜).submatrix id f)ᴴ * A * (1 : Matrix n n 𝕜).submatrix id g := by
     ext a b
-    simp [mul_apply, one_apply]
+    simp [Matrix.mul_apply, Matrix.one_apply]
   rw [h]
   calc ‖((1 : Matrix m m 𝕜).submatrix id f)ᴴ * A * (1 : Matrix n n 𝕜).submatrix id g‖
       ≤ ‖((1 : Matrix m m 𝕜).submatrix id f)ᴴ‖ * ‖A‖ *
@@ -94,7 +94,7 @@ theorem submatrix_sum_single_kronecker (A : C → Matrix m n 𝕜) (c : C) :
     (∑ c₀, single c₀ c₀ (1 : 𝕜) ⊗ₖ A c₀).submatrix
       (fun i ↦ (c, i)) (fun j ↦ (c, j)) = A c := by
   ext i j
-  simp [sum_single_kronecker_apply]
+  simp only [submatrix_apply, sum_single_kronecker_apply, ↓reduceIte]
 
 /-- **The norm of a classically controlled operator** is the largest norm of its blocks:
 `‖∑ c, |c⟩⟨c| ⊗ A c‖ = ⨆ c, ‖A c‖`, for any finite control register `C` (the

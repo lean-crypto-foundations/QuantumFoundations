@@ -4,7 +4,7 @@ Finite-dimensional quantum information for cryptographic proofs in Lean 4, on Ma
 Shared by [CatCrypt](https://github.com/spitters/CatCrypt-core) and
 [VCVio](https://github.com/Verified-zkEVM/VCVio).
 
-This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathlib v4.35.0):
+This contribution holds CatCrypt-core's quantum foundation (Lean v4.36.0, Mathlib v4.36.0):
 
 | Module | Content |
 |---|---|

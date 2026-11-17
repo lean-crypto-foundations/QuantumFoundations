@@ -86,10 +86,10 @@ theorem finish_sum_le_complement [DecidableEq A] {ι : Type*}
     ∑' i, ENNReal.ofReal (Φ i (conj (K i) ρ)).trace.re ≤
       ENNReal.ofReal (conj (1 - G) ρ).trace.re := by
   calc _ ≤ ∑' i, ENNReal.ofReal (Φ i (conj (K i) (conj (1 - G) ρ))).trace.re :=
-          ENNReal.tsum_le_tsum fun i ↦ (hΦ i).finish_le_complement
+          tsum_le_tsum fun i ↦ (hΦ i).finish_le_complement
             (hT i) (K i) G (hzero i) hρ
     _ ≤ ∑' i, ENNReal.ofReal (conj (K i) (conj (1 - G) ρ)).trace.re := by
-      apply ENNReal.tsum_le_tsum
+      apply tsum_le_tsum
       intro i
       exact ENNReal.ofReal_le_ofReal
         (hT i _ ((isCP_conj _).posSemidef ((isCP_conj _).posSemidef hρ)))
@@ -131,8 +131,7 @@ theorem measured_sandwich_weight_le [DecidableEq A] {ι : Type*}
       ENNReal.ofReal (‖L‖ ^ 2) * ENNReal.ofReal (conj R ρ).trace.re := by
   calc _ ≤ ∑' i, ENNReal.ofReal (‖L‖ ^ 2) *
       ENNReal.ofReal (conj (P i) (conj R ρ)).trace.re := by
-        apply ENNReal.tsum_le_tsum
-        intro i
+        refine tsum_le_tsum fun i ↦ ?_
         rw [Matrix.mul_assoc, conj_mul, LinearMap.comp_apply, conj_mul,
           LinearMap.comp_apply, ← ENNReal.ofReal_mul (sq_nonneg _)]
         exact ENNReal.ofReal_le_ofReal (re_trace_conj_le L

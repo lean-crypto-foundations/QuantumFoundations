@@ -112,7 +112,7 @@ theorem SubInstrument.outcomeMeasure_bind_le {A B C : Type*} [Fintype A] [Fintyp
   let _ : MeasurableSpace α := ⊤
   rw [DSubInstrument.outcomeMeasure_bind, Measure.sum_apply _ hs]
   calc ∑' a, (k a).outcomeMeasure (p.post ρ a) s
-      ≤ ∑' a, ε * ENNReal.ofReal (p.branch a ρ.matrix).trace.re := ENNReal.tsum_le_tsum h
+      ≤ ∑' a, ε * ENNReal.ofReal (p.branch a ρ.matrix).trace.re := tsum_le_tsum h
     _ = ε * p.outcomeMeasure ρ Set.univ := by
         rw [ENNReal.tsum_mul_left, DSubInstrument.outcomeMeasure_apply _ _ MeasurableSet.univ]
         simp

@@ -96,7 +96,7 @@ theorem posSemidef_blockDiagonal' {o : Type*} [DecidableEq o] {m : o → Type*}
         simp [blockDiagonal'_apply_ne _ _ _ (Ne.symm hl)]
       · intro hk
         have hz : x.split k = 0 := by
-          simpa only [Finsupp.mem_splitSupport_iff_nonzero, not_not] using hk
+          simpa only [Finsupp.mem_splitSupport_iff_ne_zero, not_not] using hk
         simp [hz]
     rw [Finsupp.sigma_sum]
     simp_rw [hrow]

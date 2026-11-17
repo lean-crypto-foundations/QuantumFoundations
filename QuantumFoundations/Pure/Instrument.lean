@@ -549,10 +549,10 @@ theorem outcomeMeasure_ofKraus_ofVector_apply (K : (i : ι) → Matrix (B i) A �
     (ofKraus K hK).outcomeMeasure (.ofVector ψ hψ) s =
       ENNReal.ofReal (∑ a with a ∈ s, ‖K a •ᵥ ψ‖ ^ 2) := by
   have hs : MeasurableSet s := s.toFinite.measurableSet
-  rw [outcomeMeasure_ofKraus_ofVector, Measure.coe_finsetSum, Finset.sum_apply,
+  rw [outcomeMeasure_ofKraus_ofVector, FunLike.coe_sum, Finset.sum_apply,
     ENNReal.ofReal_sum_of_nonneg fun _ _ ↦ sq_nonneg _, Finset.sum_filter]
   refine Finset.sum_congr rfl fun a _ ↦ ?_
-  rw [Measure.smul_apply, Measure.dirac_apply' _ hs, smul_eq_mul, Set.indicator_apply]
+  rw [smul_apply, Measure.dirac_apply' _ hs, smul_eq_mul, Set.indicator_apply]
   split_ifs <;> simp
 
 /-- Born rule for an event, as a real number. -/
@@ -584,13 +584,13 @@ theorem abs_outcomeMeasure_real_ofKraus_ofVector_sub_le
   have hreal (χ : EuclideanSpace ℂ A) (hχ : ‖χ‖ ≤ 1) :
       ((ofKraus K hK).outcomeMeasure (.ofVector χ hχ)).real s =
         ∑ a ∈ t, ‖K a •ᵥ χ‖ ^ 2 := by
-    rw [Measure.real, outcomeMeasure_ofKraus_ofVector, Measure.coe_finsetSum, Finset.sum_apply]
+    rw [Measure.real, outcomeMeasure_ofKraus_ofVector, FunLike.coe_sum, Finset.sum_apply]
     have heq : (∑ a, (ENNReal.ofReal (‖K a •ᵥ χ‖ ^ 2) • Measure.dirac a) s) =
         ENNReal.ofReal (∑ a ∈ t, ‖K a •ᵥ χ‖ ^ 2) := by
       rw [ENNReal.ofReal_sum_of_nonneg fun _ _ ↦ sq_nonneg _]
       simp only [t, Finset.sum_filter]
       refine Finset.sum_congr rfl fun a _ ↦ ?_
-      rw [Measure.smul_apply, smul_eq_mul]
+      rw [smul_apply, smul_eq_mul]
       rcases Measure.dirac_apply_eq_zero_or_one (a := a) (s := s) with ha | ha <;>
         simp [ha]
     rw [heq, ENNReal.toReal_ofReal (Finset.sum_nonneg fun _ _ ↦ sq_nonneg _)]

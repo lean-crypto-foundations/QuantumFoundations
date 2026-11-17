@@ -177,8 +177,8 @@ theorem one_kronecker_mul_diagonal_mul_one_kronecker_apply {Q Z : Type*} [Fintyp
     (q' : Q) (z' : Z) (q : Q) (z : Z) :
     (((1 : Matrix Q Q ℂ) ⊗ₖ A) * diagonal d * ((1 : Matrix Q Q ℂ) ⊗ₖ B)) (q', z') (q, z) =
       if q' = q then ∑ z₁, A z' z₁ * d (q, z₁) * B z₁ z else 0 := by
-  rw [mul_apply, Fintype.sum_prod_type, Finset.sum_eq_single q]
-  · simp only [mul_diagonal, kroneckerMap_apply, one_apply, ↓reduceIte, one_mul]
+  rw [Matrix.mul_apply, Fintype.sum_prod_type, Finset.sum_eq_single q]
+  · simp only [mul_diagonal, kroneckerMap_apply, Matrix.one_apply, ↓reduceIte, one_mul]
     split_ifs with h
     · subst h
       simp only [one_mul]

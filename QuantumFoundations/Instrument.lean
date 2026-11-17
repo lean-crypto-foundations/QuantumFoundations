@@ -393,7 +393,7 @@ private lemma norm_quadratic_form_le {d : Type*} [Fintype d]
             ≤ ∑ j, ‖M i j * x j‖ := norm_sum_le _ _
           _ = ∑ j, ‖M i j‖ * ‖x j‖ := by congr 1; ext j; exact norm_mul _ _
           _ ≤ ∑ j, ‖M‖ * ‖x j‖ := Finset.sum_le_sum fun j _ =>
-              mul_le_mul_of_nonneg_right (norm_entry_le_entrywise_sup_norm M) (norm_nonneg _)
+              mul_le_mul_of_nonneg_right (Matrix.norm_apply_le_norm M) (norm_nonneg _)
           _ = ‖M‖ * ∑ j, ‖x j‖ := by rw [Finset.mul_sum]
     _ ≤ ↑(Fintype.card d) * ‖M‖ * ∑ i : d, ‖x i‖ ^ 2 := by
         have h1 : ∑ i : d, ‖x i‖ * (‖M‖ * ∑ j : d, ‖x j‖) =
@@ -489,7 +489,7 @@ private lemma trace_re_le_dim_mul_norm {d : Type*} [Fintype d] (M : Matrix d d �
   simp only [Matrix.trace, Matrix.diag, Complex.re_sum]
   calc ∑ i : d, (M i i).re
       ≤ ∑ i : d, ‖M i i‖ := Finset.sum_le_sum fun i _ => Complex.re_le_norm _
-    _ ≤ ∑ i : d, ‖M‖ := Finset.sum_le_sum fun i _ => norm_entry_le_entrywise_sup_norm M
+    _ ≤ ∑ i : d, ‖M‖ := Finset.sum_le_sum fun i _ => Matrix.norm_apply_le_norm M
     _ = ↑(Fintype.card d) * ‖M‖ := by simp [Finset.sum_const, nsmul_eq_mul]
 
 private lemma trace_one_re {d : Type*} [Fintype d] [DecidableEq d] :
@@ -976,10 +976,10 @@ theorem weighted_bound {ι : Type} (w f g : ι → ℝ≥0∞) (ε : ℝ≥0∞)
     ∑' i, w i * f i ≤ (∑' i, w i * g i) + ε := by
   calc ∑' i, w i * f i
       ≤ ∑' i, w i * (g i + ε) := by
-        apply ENNReal.tsum_le_tsum; intro i; exact mul_le_mul_right (hfg i) _
+        apply tsum_le_tsum; intro i; exact mul_le_mul_right (hfg i) _
     _ = ∑' i, (w i * g i + w i * ε) := by
         congr 1; funext i; exact mul_add (w i) (g i) ε
-    _ = (∑' i, w i * g i) + ∑' i, w i * ε := ENNReal.tsum_add
+    _ = (∑' i, w i * g i) + ∑' i, w i * ε := tsum_add
     _ = (∑' i, w i * g i) + (∑' i, w i) * ε := by
         congr 1; exact ENNReal.tsum_mul_right
     _ ≤ (∑' i, w i * g i) + 1 * ε := by
@@ -1133,9 +1133,9 @@ theorem absDiff_prTrue_Q_qbind_le {α : Type} (c : QComp d α)
     intro f g hfg
     calc ∑' a, f a
         ≤ ∑' a, (g a + ENNReal.ofReal (c.branch a ρ.val).trace.re * ε) :=
-          ENNReal.tsum_le_tsum hfg
+          tsum_le_tsum hfg
       _ = (∑' a, g a) + ∑' a, ENNReal.ofReal (c.branch a ρ.val).trace.re * ε :=
-          ENNReal.tsum_add
+          tsum_add
       _ = (∑' a, g a) + (∑' a, ENNReal.ofReal (c.branch a ρ.val).trace.re) * ε := by
           congr 1; exact ENNReal.tsum_mul_right
       _ ≤ (∑' a, g a) + 1 * ε := by gcongr
