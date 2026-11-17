@@ -143,7 +143,7 @@ end Dual
 
 section CPTPMap
 
-variable [Fintype ι] [DecidableEq ι]
+variable [Fintype ι]
 
 /-- The linear map of a CPTP channel is completely positive in the sense of `MatrixMap`. -/
 theorem CPTPMap.isCP (Φ : CPTPMap ι) : MatrixMap.IsCP Φ.toLinearMap :=
