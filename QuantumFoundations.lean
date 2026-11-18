@@ -68,3 +68,8 @@ public import QuantumFoundations.SubInstrument.Subsystem
 
 -- Agreement of the CPMap and MatrixMap developments.
 public import QuantumFoundations.Bridge.CPMap
+
+-- Links to Mathlib's completely positive maps.
+public import QuantumFoundations.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
+public import QuantumFoundations.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap.Matrix
+public import QuantumFoundations.ForMathlib.Data.Matrix.Composition
