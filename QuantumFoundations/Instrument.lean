@@ -251,67 +251,16 @@ theorem psd_summable_of_trace_summable {f : α → Matrix d d ℂ}
     (htrace.of_nonneg_of_le (fun _ => norm_nonneg _) (fun a => psd_norm_le_trace (hpsd a)))
 
 omit [Fintype d] [DecidableEq d] in
-/-- Entry-wise summability from matrix summability. -/
-private theorem summable_entry {f : α → Matrix d d ℂ}
-    (hf : Summable f) (i j : d) : Summable (fun a => f a i j) :=
-  Pi.summable.mp (Pi.summable.mp hf i) j
-
-omit [Fintype d] [DecidableEq d] in
-/-- Entry-wise tsum for summable matrix families. -/
-private theorem tsum_entry {f : α → Matrix d d ℂ}
-    (hf : Summable f) (i j : d) :
-    (∑' a, f a) i j = ∑' a, f a i j := by
-  have h1 : (∑' a, f a) i = ∑' a, f a i := Pi.tsum_apply hf
-  have h2 : (∑' a, f a i) j = ∑' a, f a i j := Pi.tsum_apply (Pi.summable.mp hf i)
-  exact (congr_fun h1 j).trans h2
-
-omit [Fintype d] [DecidableEq d] in
-/-- Tsum of Hermitian matrices is Hermitian. -/
-private theorem tsum_isHermitian {f : α → Matrix d d ℂ}
-    (hH : ∀ a, (f a).IsHermitian) (hf : Summable f) :
-    (∑' a, f a).IsHermitian := by
-  ext i j
-  simp only [conjTranspose_apply]
-  rw [tsum_entry hf j i, tsum_entry hf i j, tsum_star]
-  congr 1; ext a
-  exact congr_fun (congr_fun (hH a) i) j
-
-omit [Fintype d] [DecidableEq d] in
 /-- Tsum of PSD matrices is PSD (summable family). -/
 theorem tsum_posSemidef [Finite d] {f : α → Matrix d d ℂ}
-    (hpsd : ∀ a, (f a).PosSemidef) (hf : Summable f) :
-    (∑' a, f a).PosSemidef := by
-  have := Fintype.ofFinite d
-  rw [posSemidef_iff_dotProduct_mulVec]
-  refine ⟨tsum_isHermitian (fun a => (hpsd a).isHermitian) hf, fun x => ?_⟩
-  -- Show: star x ⬝ᵥ (∑' a, f a) *ᵥ x = ∑' a, star x ⬝ᵥ f a *ᵥ x, then use tsum_nonneg
-  suffices h : star x ⬝ᵥ (∑' a, f a) *ᵥ x = ∑' a, star x ⬝ᵥ f a *ᵥ x by
-    rw [h]; exact tsum_nonneg (fun a => (posSemidef_iff_dotProduct_mulVec.mp (hpsd a)).2 x)
-  -- Push the quadratic form through the tsum using finite-sum/tsum interchange
-  have hentry : ∀ i j, Summable (fun a => f a i j) := summable_entry hf
-  have hentry_mul : ∀ i j, Summable (fun a => f a i j * x j) :=
-    fun i j => (hentry i j).mul_right _
-  have hrow : ∀ i, Summable (fun a => ∑ j : d, f a i j * x j) :=
-    fun i => summable_sum fun j _ => hentry_mul i j
-  simp only [dotProduct, mulVec]
-  simp_rw [tsum_entry hf]
-  simp_rw [← tsum_mul_right]
-  simp_rw [show ∀ i, ∑ j : d, ∑' a, f a i j * x j =
-      ∑' a, ∑ j : d, f a i j * x j from fun i => by
-    rw [show (∑ j : d, ∑' a, f a i j * x j) =
-        (∑ j ∈ Finset.univ, ∑' a, (fun j' a' => f a' i j' * x j') j a) from by simp]
-    rw [← Summable.tsum_finsetSum (fun j _ => hentry_mul i j)]]
-  simp_rw [← tsum_mul_left]
-  rw [show (∑ i : d, ∑' a, star x i * ∑ j : d, f a i j * x j) =
-      (∑ i ∈ Finset.univ, ∑' a,
-        (fun i' a' => star x i' * ∑ j : d, f a' i' j * x j) i a) from by simp]
-  rw [← Summable.tsum_finsetSum (fun i _ => (hrow i).mul_left _)]
+    (hpsd : ∀ a, (f a).PosSemidef) :
+    (hf : Summable f) → (∑' a, f a).PosSemidef :=
+  fun _ => _root_.PosSemidef.tsum hpsd
 
 omit [DecidableEq d] in
 /-- Trace commutes with tsum for summable matrix families. -/
 theorem trace_tsum {f : α → Matrix d d ℂ} (hf : Summable f) :
-    (∑' a, f a).trace = ∑' a, (f a).trace := by
-  simp [Matrix.trace, tsum_entry hf, Summable.tsum_finsetSum fun j _ => summable_entry hf j j]
+    (∑' a, f a).trace = ∑' a, (f a).trace := Matrix.trace_tsum hf
 
 /-- The trace, as a ContinuousLinearMap from matrices to ℂ. -/
 def traceCLM (d : Type*) [Fintype d] : Matrix d d ℂ →L[ℂ] ℂ :=
@@ -321,7 +270,7 @@ omit [DecidableEq d] in
 /-- Summability of traces from summability of matrices. -/
 theorem trace_summable {f : α → Matrix d d ℂ} (hf : Summable f) :
     Summable (fun a => (f a).trace) :=
-  (traceCLM d).summable hf
+  hf.matrix_trace
 
 omit [DecidableEq d] in
 /-- Summability of trace real parts from summability of matrices. -/

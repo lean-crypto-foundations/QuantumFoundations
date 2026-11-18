@@ -108,9 +108,8 @@ theorem PosSemidef.ofReal_trace_re [Fintype n] {M : Matrix n n ℂ} (hM : M.PosS
 /-- A sum of positive semidefinite complex matrices is positive semidefinite. This holds for
 every family: the sum of a family that is not summable is zero. -/
 theorem PosSemidef.tsum {f : ι → Matrix n n ℂ} (hf : ∀ i, (f i).PosSemidef) :
-    (∑' i, f i).PosSemidef := by
-  open scoped MatrixOrder in
-  exact Matrix.nonneg_iff_posSemidef.mp (tsum_nonneg fun i ↦ (hf i).nonneg)
+    (∑' i, f i).PosSemidef :=
+  _root_.PosSemidef.tsum hf
 
 /-- Positive semidefinite complex matrices span all complex matrices. -/
 theorem span_posSemidef [Finite n] :
@@ -158,7 +157,7 @@ theorem summable_of_apply_apply {m : Type*} {f : ι → Matrix m n ℂ}
 /-- The traces of a summable family of square matrices are summable. -/
 theorem summable_trace [Fintype n] {f : ι → Matrix n n ℂ} (hf : Summable f) :
     Summable fun i ↦ (f i).trace :=
-  hf.map (traceLinearMap n ℂ ℂ) (LinearMap.continuous_of_finiteDimensional _)
+  hf.matrix_trace
 
 /-- The trace of the sum of a summable family of positive semidefinite matrices is the sum of
 the traces, in `ℝ≥0∞`. -/
