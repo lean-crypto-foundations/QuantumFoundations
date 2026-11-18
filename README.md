@@ -32,6 +32,9 @@ This contribution holds CatCrypt-core's quantum foundation (Lean v4.36.0, Mathli
 | `PrivacyAmplification` | the classical leftover hash lemma in min-entropy form |
 | `Bridge/CPMap` | `CPMap` and `MatrixMap` agree: CP, TP, sub-TP, Choi's theorem, trace duals, channels |
 | `ForMathlib/MatrixPosSemidef` | `Re z ≤ √c` from `normSq z ≤ c` (a Mathlib candidate) |
+| `ForMathlib/Data/Matrix/Composition` | `Matrix.comp` as a star algebra equivalence |
+| `ForMathlib/Analysis/CStarAlgebra/CStarMatrix` | a `CStarMatrix` of complex matrices is nonnegative iff its flattening is positive semidefinite |
+| `ForMathlib/Analysis/CStarAlgebra/CompletelyPositiveMap/Matrix` | `MatrixMap.IsCP` agrees with Mathlib's `CompletelyPositiveMap` on complex matrices |
 
 States, instruments, measurements and CP maps take the index of the system as any finite type.
 Two register conventions coexist. `PartialTrace` and `TensorProduct` flatten a bipartite system
