@@ -4,7 +4,7 @@ Finite-dimensional quantum information for cryptographic proofs in Lean 4, on Ma
 Shared by [CatCrypt](https://github.com/spitters/CatCrypt-core) and
 [VCVio](https://github.com/Verified-zkEVM/VCVio).
 
-This contribution holds CatCrypt-core's quantum foundation (Lean v4.35.0, Mathlib v4.35.0):
+This contribution holds CatCrypt-core's quantum foundation (Lean v4.36.0, Mathlib v4.36.0):
 
 | Module | Content |
 |---|---|
@@ -50,13 +50,21 @@ branches) is the remaining work, in #17.
 | `MatrixMap/Family`, `MatrixMap/Kraus` | summable families of maps and Kraus representations |
 | `MatrixMap/Norm`, `MatrixMap/OpNorm`, `MatrixMap/BlockNorm` | trace, operator and block norm bounds |
 | `MatrixMap/Completion` | matrix completion without increasing the operator norm (Parrott's theorem) |
+| `MatrixMap/PinchingCompletion` | matrix completion localized to invariant blocks |
+| `MatrixMap/Conjugation` | Kraus maps under amplification, partial traces and diagonal projections |
 | `MatrixMap/Pinching`, `MatrixMap/Commutant` | pinching maps and commutation bounds |
 | `MatrixMap/Comparison` | replacing Kraus operators before a trace-nonincreasing finishing map |
 | `MatrixMap/ProjectorEvent`, `MatrixMap/ProjectorPair` | projector events and pairs of projectors |
 | `DSubInstrument`, `SubInstrument` | instruments with dependent or fixed output registers |
+| `Subsystem` | a register factored as a selected register and its complement |
+| `SubInstrument/Subsystem` | subinstruments acting on a subsystem, leaving its complement unchanged |
+| `SubInstrument/Relabel`, `DSubInstrument/Relabel` | transporting input and output bases along equivalences |
+| `DSubInstrument/Observe` | outcome measures under framing, relabelling and continuations |
 | `Register` | finite quantum registers |
 | `Pure/Vector`, `Pure/Norm` | state vectors, matrix actions, and norm bounds |
-| `ForMathlib/Analysis/Matrix/PosSemidef` | bounds for positive semidefinite matrices |
+| `ForMathlib/Analysis/Matrix/PosSemidef` | bounds for positive semidefinite matrices; block-diagonal positivity |
+| `ForMathlib/Analysis/Matrix/Contraction` | contractions, isometries and Kronecker-product identities |
+| `ForMathlib/Algebra/Group/Conj` | conjugation by an involution in a monoid |
 | `ForMathlib/Analysis/Normed/Ring/Commutator` | norm bounds for commutators |
 | `Observe` | substates, post-measurement states, and Born outcome measures |
 | `Pure/State`, `Pure/Instrument`, `Pure/Tensor` | pure states, measurements, and tensors |

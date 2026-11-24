@@ -78,7 +78,7 @@ theorem rpow_inv_two_sum_add_sum_le (s : Finset K) (c : K → ℝ≥0∞) (d : �
 theorem rpow_inv_two_tsum_le_of_le_add {t a b : K → ℝ≥0∞}
     (h : ∀ k, t k ^ (2⁻¹ : ℝ) ≤ a k ^ (2⁻¹ : ℝ) + b k ^ (2⁻¹ : ℝ)) :
     (∑' k, t k) ^ (2⁻¹ : ℝ) ≤ (∑' k, a k) ^ (2⁻¹ : ℝ) + (∑' k, b k) ^ (2⁻¹ : ℝ) := by
-  rw [ENNReal.rpow_inv_le_iff (by norm_num : (0 : ℝ) < 2), ENNReal.tsum_eq_iSup_sum]
+  rw [ENNReal.rpow_inv_le_iff (by norm_num : (0 : ℝ) < 2), tsum_eq_iSup_sum]
   refine iSup_le fun s ↦ ?_
   rw [← ENNReal.rpow_inv_le_iff (by norm_num : (0 : ℝ) < 2)]
   have hab := ENNReal.Lp_add_le s (fun k ↦ a k ^ (2⁻¹ : ℝ)) (fun k ↦ b k ^ (2⁻¹ : ℝ))
@@ -92,7 +92,7 @@ theorem rpow_inv_two_tsum_le_of_le_add {t a b : K → ℝ≥0∞}
         exact h k
     _ ≤ (∑ k ∈ s, a k) ^ (2⁻¹ : ℝ) + (∑ k ∈ s, b k) ^ (2⁻¹ : ℝ) := hab
     _ ≤ (∑' k, a k) ^ (2⁻¹ : ℝ) + (∑' k, b k) ^ (2⁻¹ : ℝ) := by
-        gcongr <;> exact ENNReal.sum_le_tsum s
+        gcongr <;> exact sum_le_tsum s
 
 /-- **`ℓ²` Minkowski inequality for countably many series.** If every term satisfies
 `√(L k) ≤ √(t k) + ∑' j, √(m j k)`, then `√(∑ L) ≤ √(∑ t) + ∑' j, √(∑' k, m j k)`. -/
@@ -101,7 +101,7 @@ theorem rpow_inv_two_tsum_le_of_le_add_tsum {L t : K → ℝ≥0∞} {m : ℕ �
     (∑' k, L k) ^ (2⁻¹ : ℝ) ≤
       (∑' k, t k) ^ (2⁻¹ : ℝ) + ∑' j, (∑' k, m j k) ^ (2⁻¹ : ℝ) := by
   have h2 : (0 : ℝ) < 2 := by norm_num
-  rw [ENNReal.rpow_inv_le_iff h2, ENNReal.tsum_eq_iSup_sum]
+  rw [ENNReal.rpow_inv_le_iff h2, tsum_eq_iSup_sum]
   refine iSup_le fun s ↦ ?_
   let S : ℕ → K → ℝ≥0∞ := fun n k ↦ ∑ j ∈ Finset.range n, m j k ^ (2⁻¹ : ℝ)
   have hS : ∀ k, Monotone fun n ↦ S n k := fun k _ _ hnn ↦
@@ -126,10 +126,10 @@ theorem rpow_inv_two_tsum_le_of_le_add_tsum {L t : K → ℝ≥0∞} {m : ℕ �
         refine (rpow_inv_two_sum_add_sum_le s _ (fun j k ↦ m j k ^ (2⁻¹ : ℝ)) n).trans ?_
         simp only [rpow_inv_two_rpow_two]
         gcongr
-        · exact ENNReal.sum_le_tsum s
-        · refine (Finset.sum_le_sum fun j _ ↦ ?_).trans (ENNReal.sum_le_tsum _)
+        · exact sum_le_tsum s
+        · refine (Finset.sum_le_sum fun j _ ↦ ?_).trans (sum_le_tsum _)
           gcongr
-          exact ENNReal.sum_le_tsum s
+          exact sum_le_tsum s
 
 end Minkowski
 

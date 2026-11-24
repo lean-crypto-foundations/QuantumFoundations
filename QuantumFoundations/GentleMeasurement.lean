@@ -226,9 +226,9 @@ theorem trace_product_cs_bound {ρ A B : Matrix d d ℂ}
   rw [h_nseq]
   -- Step 2: Set up the ρ-weighted inner product space
   let _ : SeminormedAddCommGroup (Matrix d d ℂ) :=
-    ρ.toMatrixSeminormedAddCommGroup hρ
+    ρ.toMatrixSeminormedAddCommGroup d hρ
   let _ : InnerProductSpace ℂ (Matrix d d ℂ) :=
-    ρ.toMatrixInnerProductSpace hρ
+    ρ.toMatrixInnerProductSpace d hρ
   -- ⟪A, B⟫ = (B * ρ * Aᴴ).trace (definitional)
   -- Step 3: Rewrite as normSq of inner product
   change Complex.normSq (@inner ℂ _ _ A B) ≤

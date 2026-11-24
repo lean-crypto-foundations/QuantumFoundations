@@ -213,6 +213,63 @@ theorem conj_basisMatrix_equiv [Fintype A] [DecidableEq B] (e : A ≃ B) (ρ : M
   · exact fun a _ ha ↦ by simp [show b' ≠ e a from fun h ↦ ha (by simp [h])]
   · simp
 
+/-- The basis matrix of a bijection is unitary. -/
+theorem basisMatrix_perm_mem_unitaryGroup {A : Type*} [Fintype A] [DecidableEq A]
+    (e : Equiv.Perm A) : basisMatrix e ∈ unitaryGroup A ℂ := by
+  rw [mem_unitaryGroup_iff', star_eq_conjTranspose]
+  exact conjTranspose_basisMatrix_mul_self e.injective
+
+/-- A product with a basis matrix on the right reads a column of the left factor. -/
+theorem mul_basisMatrix_apply {A B C : Type*} [Fintype B] [DecidableEq B] (K : Matrix C B ℂ)
+    (f : A → B) (c : C) (a : A) : (K * basisMatrix f) c a = K c (f a) := by
+  simp [Matrix.mul_apply]
+
+/-- A product with the basis matrix of a bijection on the left reads a row of the right factor. -/
+theorem basisMatrix_equiv_mul_apply {A B C : Type*} [Fintype A] [DecidableEq B] (e : A ≃ B)
+    (N : Matrix A C ℂ) (b : B) (c : C) : (basisMatrix e * N) b c = N (e.symm b) c := by
+  rw [Matrix.mul_apply, Finset.sum_eq_single (e.symm b)]
+  · simp
+  · intro a _ ha
+    rw [basisMatrix_apply, ite_eq_right_iff.mpr fun h ↦ absurd (by simp [h]) ha, zero_mul]
+  · simp
+
+/-- Compressing by basis matrices picks out a submatrix. -/
+theorem conjTranspose_basisMatrix_mul_mul_basisMatrix {l m n o : Type*} [Fintype m] [Fintype n]
+    [DecidableEq m] [DecidableEq n] (f : l → m) (g : o → n) (M : Matrix m n ℂ) :
+    (basisMatrix f)ᴴ * M * basisMatrix g = M.submatrix f g := by
+  ext a b
+  simp [Matrix.mul_apply, apply_ite (star : ℂ → ℂ), ite_mul, mul_ite, Finset.sum_ite_eq']
+
+/-- The column of the basis state at `b`, times its adjoint, is the basis state at `b`. -/
+theorem basisMatrix_const_mul_conjTranspose {B : Type*} [DecidableEq B] (b : B) :
+    basisMatrix (fun _ : Unit ↦ b) * (basisMatrix fun _ : Unit ↦ b)ᴴ = Matrix.single b b 1 := by
+  ext c c'
+  by_cases h : c = b <;> by_cases h' : c' = b <;>
+    simp [Matrix.mul_apply, Matrix.single_apply, h, h'] <;> grind
+
+/-- The gate of a basis matrix sends the basis state at `a` to the basis state at `f a`. -/
+theorem conj_basisMatrix_single {A B : Type*} [Fintype A] [DecidableEq A] [DecidableEq B]
+    (f : A → B) (a : A) :
+    MatrixMap.conj (basisMatrix f) (Matrix.single a a 1) = Matrix.single (f a) (f a) 1 := by
+  rw [← basisMatrix_const_mul_conjTranspose a, MatrixMap.conj_apply,
+    ← Matrix.mul_assoc (basisMatrix f), Matrix.mul_assoc (basisMatrix f * _),
+    ← Matrix.conjTranspose_mul, ← basisMatrix_comp]
+  exact basisMatrix_const_mul_conjTranspose (f a)
+
+/-- The identity on the query register next to a basis matrix is the basis matrix of the
+product map. -/
+theorem one_kronecker_basisMatrix {T T' : Type*} [DecidableEq A] [DecidableEq T']
+    (g : T → T') :
+    (1 : Matrix A A ℂ) ⊗ₖ basisMatrix g = basisMatrix (Prod.map id g) := by
+  ext ⟨a, t'⟩ ⟨a', t⟩
+  by_cases h : a = a' <;> simp [h]
+
+/-- A basis matrix beside an identity is the basis matrix of the product map. -/
+theorem basisMatrix_kronecker_one {l m n : Type*} [DecidableEq m] [DecidableEq n] (f : l → m) :
+    basisMatrix f ⊗ₖ (1 : Matrix n n ℂ) = basisMatrix (Prod.map f id) := by
+  ext ⟨a, c⟩ ⟨b, d⟩
+  by_cases h1 : a = f b <;> by_cases h2 : c = d <;> simp [h1, h2]
+
 end basisMatrix
 
 /-! ## Basis states -/

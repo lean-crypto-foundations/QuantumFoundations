@@ -91,7 +91,7 @@ theorem pinch_eq_sum [DecidableEq κ] [Fintype κ] [Fintype n] [DecidableEq n]
     [NonAssocSemiring α] (β : n → κ) (A : Matrix n n α) :
     pinch β A = ∑ i, labelProjector β i * A * labelProjector β i := by
   ext a b
-  simp only [pinch_apply, labelProjector, sum_apply, mul_diagonal, diagonal_mul, ite_mul,
+  simp only [pinch_apply, labelProjector, Matrix.sum_apply, mul_diagonal, diagonal_mul, ite_mul,
     one_mul, zero_mul, mul_ite, mul_one, mul_zero]
   simp only [Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
@@ -111,7 +111,7 @@ theorem mul_pinch_mul_conjTranspose [DecidableEq κ] [Fintype n] [NonUnitalCommS
     (hU : ∀ a b, U a b ≠ 0 → βm a = βn b) (A : Matrix n n α) :
     U * pinch βn A * Uᴴ = pinch βm (U * A * Uᴴ) := by
   ext a a'
-  simp only [mul_apply, pinch_apply, conjTranspose_apply, Finset.sum_mul]
+  simp only [Matrix.mul_apply, pinch_apply, conjTranspose_apply, Finset.sum_mul]
   by_cases h : βm a = βm a'
   · simp only [h, ite_true]
     refine Finset.sum_congr rfl fun c' _ ↦ Finset.sum_congr rfl fun c _ ↦ ?_
@@ -156,8 +156,8 @@ theorem labelControlled_eq_sum [DecidableEq κ] [Fintype κ] [Fintype n] [Decida
     [NonAssocSemiring α] (β : n → κ) (W : κ → Matrix n n α) :
     labelControlled β W = ∑ i, labelProjector β i * W i := by
   ext a b
-  simp only [labelControlled_apply, labelProjector, sum_apply, diagonal_mul, ite_mul, one_mul,
-    zero_mul]
+  simp only [labelControlled_apply, labelProjector, Matrix.sum_apply, diagonal_mul, ite_mul,
+    one_mul, zero_mul]
   simp [Finset.sum_ite_eq]
 
 /-- A label-controlled operator whose members are unitaries mapping every block into itself is
@@ -167,10 +167,10 @@ theorem labelControlled_mem_unitaryGroup [Fintype n] [DecidableEq n] [CommRing �
     (hU : ∀ k, W k ∈ unitaryGroup n α) : labelControlled β W ∈ unitaryGroup n α := by
   rw [mem_unitaryGroup_iff]
   ext a b
-  simp only [mul_apply, star_apply, labelControlled_apply]
+  simp only [Matrix.mul_apply, star_apply, labelControlled_apply]
   by_cases h : β a = β b
   · have hk := congrFun (congrFun (mem_unitaryGroup_iff.mp (hU (β a))) a) b
-    simp only [mul_apply, star_apply] at hk
+    simp only [Matrix.mul_apply, star_apply] at hk
     rw [← hk, h]
   · have hab : a ≠ b := fun e ↦ h (e ▸ rfl)
     rw [one_apply_ne hab]
@@ -191,7 +191,7 @@ theorem labelControlled_mul_pinch [DecidableEq κ] [Fintype n] [NonUnitalCommSem
   ext a b
   have hl : (labelControlled β W * pinch β A) a b =
       if β a = β b then (W (β a) * A) a b else 0 := by
-    simp only [mul_apply, labelControlled_apply, pinch_apply]
+    simp only [Matrix.mul_apply, labelControlled_apply, pinch_apply]
     split_ifs with h
     · refine Finset.sum_congr rfl fun c _ ↦ ?_
       by_cases hc : W (β a) a c = 0
@@ -205,7 +205,7 @@ theorem labelControlled_mul_pinch [DecidableEq κ] [Fintype n] [NonUnitalCommSem
       simp [h]
   have hr : (pinch β A * labelControlled β W) a b =
       if β a = β b then (A * W (β a)) a b else 0 := by
-    simp only [mul_apply, labelControlled_apply, pinch_apply]
+    simp only [Matrix.mul_apply, labelControlled_apply, pinch_apply]
     split_ifs with h
     · refine Finset.sum_congr rfl fun c _ ↦ ?_
       by_cases hc : W (β c) c b = 0
@@ -280,7 +280,7 @@ theorem one_sub_labelProjector_bool [Ring α] (β : n → Bool) (b : Bool) :
   ext a c
   by_cases h : a = c
   · subst h
-    simp only [labelProjector, sub_apply, one_apply_eq, diagonal_apply_eq]
+    simp only [labelProjector, Matrix.sub_apply, one_apply_eq, diagonal_apply_eq]
     cases β a <;> cases b <;> simp
   · simp [labelProjector, one_apply_ne h, diagonal_apply_ne _ h]
 
@@ -300,8 +300,8 @@ theorem sum_labelProjector [Fintype κ] [NonAssocSemiring α] (β : n → κ) :
   ext a b
   by_cases hab : a = b
   · subst hab
-    simp [labelProjector, sum_apply]
-  · simp [labelProjector, sum_apply, hab]
+    simp [labelProjector, Matrix.sum_apply]
+  · simp [labelProjector, Matrix.sum_apply, hab]
 
 /-- For finite labels, the label projectors form a complete family: `∑ i, (P i)ᴴ * P i = 1`. -/
 theorem sum_conjTranspose_mul_labelProjector [Fintype n] [Fintype κ] [Semiring α] [StarRing α]
@@ -333,7 +333,8 @@ theorem sub_pinch_bool [Ring α] (β : n → Bool) (A : Matrix n n α) :
     A - pinch β A = labelProjector β true * A * labelProjector β false +
       labelProjector β false * A * labelProjector β true := by
   ext a c
-  simp only [sub_apply, pinch_apply, add_apply, labelProjector, mul_diagonal, diagonal_mul]
+  simp only [Matrix.sub_apply, pinch_apply, Matrix.add_apply, labelProjector, mul_diagonal,
+    diagonal_mul]
   cases β a <;> cases β c <;> simp
 
 /-- For a labelling by `Bool`, the commutator of `A` with a label projector is the difference of
@@ -344,7 +345,7 @@ theorem labelProjector_mul_sub_mul_labelProjector_bool [Ring α] (β : n → Boo
       labelProjector β b * A * labelProjector β (!b) -
         labelProjector β (!b) * A * labelProjector β b := by
   ext a c
-  simp only [sub_apply, labelProjector, mul_diagonal, diagonal_mul]
+  simp only [Matrix.sub_apply, labelProjector, mul_diagonal, diagonal_mul]
   cases β a <;> cases β c <;> cases b <;> simp
 
 variable {𝕜 : Type*} [RCLike 𝕜]

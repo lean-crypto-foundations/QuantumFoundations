@@ -111,7 +111,7 @@ theorem l2_opNorm_kronecker_one_le [DecidableEq n] [DecidableEq p] (A : Matrix m
   refine l2_opNorm_le_of_sum_norm_mulVec_sq_le (norm_nonneg A) fun v ↦ ?_
   have hrow (i : m) (e : p) :
       ((A ⊗ₖ (1 : Matrix p p 𝕜)) *ᵥ v) (i, e) = (A *ᵥ fun j ↦ v (j, e)) i := by
-    simp only [mulVec, dotProduct, Fintype.sum_prod_type, kroneckerMap_apply, one_apply,
+    simp only [mulVec, dotProduct, Fintype.sum_prod_type, kroneckerMap_apply, Matrix.one_apply,
       mul_ite, mul_one, mul_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ,
       ite_true]
   simp only [Fintype.sum_prod_type, hrow]

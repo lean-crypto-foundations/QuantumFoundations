@@ -65,8 +65,8 @@ omit [DecidableEq n] in
 /-- The real part of `trace (Xᴴ X)` is the sum of the squared entries of `X`. -/
 theorem re_trace_conjTranspose_mul_self (X : Matrix n n 𝕜) :
     RCLike.re (trace (Xᴴ * X)) = ∑ i, ∑ j, ‖X i j‖ ^ 2 := by
-  simp only [trace, diag_apply, mul_apply, conjTranspose_apply, RCLike.star_def, RCLike.conj_mul,
-    map_sum]
+  simp only [trace, diag_apply, Matrix.mul_apply, conjTranspose_apply, RCLike.star_def,
+    RCLike.conj_mul, map_sum]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun i _ ↦ Finset.sum_congr rfl fun j _ ↦ ?_
   rw [← RCLike.ofReal_pow, RCLike.ofReal_re]
@@ -159,12 +159,12 @@ theorem pinch_conjTranspose_of_pinch_eq {β : n → κ} {X : Matrix n n 𝕜} (h
 omit [Fintype n] [DecidableEq n] in
 theorem pinch_add (β : n → κ) (X Y : Matrix n n 𝕜) :
     pinch β (X + Y) = pinch β X + pinch β Y := by
-  ext a b; simp only [pinch_apply, add_apply]; split_ifs <;> simp
+  ext a b; simp only [pinch_apply, Matrix.add_apply]; split_ifs <;> simp
 
 omit [Fintype n] [DecidableEq n] in
 theorem pinch_smul (β : n → κ) (c : 𝕜) (X : Matrix n n 𝕜) :
     pinch β (c • X) = c • pinch β X := by
-  ext a b; simp only [pinch_apply, smul_apply]; split_ifs <;> simp
+  ext a b; simp only [pinch_apply, Matrix.smul_apply]; split_ifs <;> simp
 
 /-- **Pinching is a contraction.** Pinching by any labelling does not increase the operator
 norm. -/

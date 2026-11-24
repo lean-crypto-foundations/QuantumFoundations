@@ -143,7 +143,7 @@ theorem outcomeMeasure_apply (p : DSubInstrument A ι B) (ρ : SubState A) {s : 
     (hs : MeasurableSet s) :
     p.outcomeMeasure ρ s =
       ∑' i, ENNReal.ofReal (p.branch i ρ.matrix).trace.re * s.indicator 1 i := by
-  simp only [outcomeMeasure, Measure.sum_apply _ hs, Measure.smul_apply,
+  simp only [outcomeMeasure, Measure.sum_apply _ hs, smul_apply,
     Measure.dirac_apply' _ hs, smul_eq_mul]
 
 /-- The outcome measure as a sum of weighted point masses over any finite set of outcomes
@@ -153,11 +153,11 @@ theorem outcomeMeasure_eq_sum_of_forall_notMem (p : DSubInstrument A ι B) (ρ :
     p.outcomeMeasure ρ =
       ∑ i ∈ s, ENNReal.ofReal (p.branch i ρ.matrix).trace.re • Measure.dirac i := by
   ext t ht
-  rw [outcomeMeasure_apply _ _ ht, Measure.coe_finsetSum, Finset.sum_apply,
+  rw [outcomeMeasure_apply _ _ ht, FunLike.coe_sum, Finset.sum_apply,
     tsum_eq_sum (s := s) fun i hi ↦ by
       rw [hs i hi, LinearMap.zero_apply, Matrix.trace_zero, Complex.zero_re, ENNReal.ofReal_zero,
         zero_mul]]
-  simp only [Measure.smul_apply, Measure.dirac_apply' _ ht, smul_eq_mul]
+  simp only [smul_apply, Measure.dirac_apply' _ ht, smul_eq_mul]
 
 /-- Sum the outcome measure over a finite set containing every nonzero branch. -/
 theorem outcomeMeasure_eq_sum_of_subset (p : DSubInstrument A ι B) (ρ : SubState A)
@@ -232,7 +232,7 @@ theorem outcomeMeasure_bind [MeasurableSpace κ] (p : DSubInstrument A ι B)
   rw [outcomeMeasure_apply _ _ ht, Measure.sum_apply _ ht]
   simp_rw [outcomeMeasure_apply _ _ ht, matrix_post]
   have h := p.isCPTNIFamily.comp_eval fun i ↦ (k i).isCPTNIFamily
-  rw [← ENNReal.tsum_comm]
+  rw [← tsum_comm]
   refine tsum_congr fun c ↦ ?_
   rw [branch_bind, MatrixMap.trace_re_familyBind_apply p.isCPTNIFamily
       (fun i ↦ (k i).isCPTNIFamily),
