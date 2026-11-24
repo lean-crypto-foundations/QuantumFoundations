@@ -35,6 +35,10 @@ maps on complex matrices, along with the trace dual of a linear map on matrices.
   completely positive; `isCPMap_conjugate` is its instance at
   `UnitaryChannel.conjugate K`
 * `tp_iff_dual_unital` — TP ↔ dual map is unital
+* `stp_iff_dual_subunital` — a positive map is trace-nonincreasing ↔ its dual map is
+  sub-unital, `Φ†(1) ≤ 1`
+* `IsTP.isSTP`, `IsPositiveMap.isHermitian_map` — a TP map is trace-nonincreasing, and a
+  positive map preserves Hermitian matrices
 * `dual_positive_of_positive` — dual of positive map is positive
 * `IsPositiveMap.map_conjTranspose`, `dual_spec_conjTranspose` — a positive map commutes
   with `conjTranspose`, and for such maps the trace dual is the Hilbert–Schmidt adjoint
@@ -402,6 +406,51 @@ theorem dual_spec_conjTranspose (Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι 
   rw [← trace_conjTranspose, ← trace_conjTranspose, conjTranspose_mul, conjTranspose_mul,
     hΦ, conjTranspose_conjTranspose, conjTranspose_conjTranspose] at h
   rw [trace_mul_comm, h, trace_mul_comm]
+
+/-! ## Positive and trace-nonincreasing maps -/
+
+omit [Fintype ι] [DecidableEq ι] in
+/-- A positive map sends Hermitian matrices to Hermitian matrices. -/
+theorem IsPositiveMap.isHermitian_map [Finite ι] {Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ}
+    (hΦ : IsPositiveMap Φ) {X : Matrix ι ι ℂ} (hX : X.IsHermitian) : (Φ X).IsHermitian :=
+  (hΦ.map_conjTranspose X).symm.trans (congrArg Φ hX)
+
+omit [DecidableEq ι] in
+/-- A trace-preserving map is trace-nonincreasing. -/
+theorem IsTP.isSTP {Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ} (hΦ : IsTP Φ) : IsSTP Φ :=
+  fun A _ => (congrArg Complex.re (hΦ A)).le
+
+/-- A positive map is trace-nonincreasing if and only if its trace dual is sub-unital,
+`Φ†(1) ≤ 1` in the Loewner order: the analogue of `tp_iff_dual_unital`. The converse uses
+`tr Φ(P) = tr(Φ†(1) P)` for positive semidefinite `P`. -/
+theorem stp_iff_dual_subunital {Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ}
+    (hΦ : IsPositiveMap Φ) : IsSTP Φ ↔ (1 - dualMap Φ 1).PosSemidef := by
+  refine ⟨fun hT => ?_, fun h P hP => ?_⟩
+  · have hD := dual_positive_of_positive Φ hΦ 1 PosSemidef.one
+    rw [posSemidef_iff_dotProduct_mulVec]
+    refine ⟨isHermitian_one.sub hD.isHermitian, fun x => ?_⟩
+    set P := vecMulVec x (star x) with hPdef
+    have hP : P.PosSemidef := by simpa using posSemidef_vecMulVec_star_self (star x)
+    have hq : star x ⬝ᵥ (1 - dualMap Φ 1) *ᵥ x = P.trace - (Φ P).trace := by
+      rw [show star x ⬝ᵥ (1 - dualMap Φ 1) *ᵥ x = ((1 - dualMap Φ 1) * P).trace by
+        rw [hPdef, mul_vecMulVec, trace_vecMulVec, dotProduct_comm],
+        sub_mul, trace_sub, one_mul, dual_spec, one_mul]
+    have h1 := Complex.nonneg_iff.mp hP.trace_nonneg
+    have h2 := Complex.nonneg_iff.mp (hΦ P hP).trace_nonneg
+    have h3 := hT P hP
+    rw [hq, Complex.nonneg_iff, Complex.sub_re, Complex.sub_im]
+    exact ⟨by linarith, by linarith [h1.2, h2.2]⟩
+  · have htr : ((1 - dualMap Φ 1) * P).trace = P.trace - (Φ P).trace := by
+      rw [sub_mul, trace_sub, one_mul, dual_spec, one_mul]
+    have h0 := (Complex.nonneg_iff.mp (trace_psd_mul_psd_nonneg _ _ h hP)).1
+    rw [htr, Complex.sub_re] at h0
+    linarith
+
+/-- The trace dual of a positive trace-nonincreasing map is sub-unital:
+`Φ†(1) ≤ 1` in the Loewner order. -/
+theorem one_sub_dualMap_one_posSemidef {Φ : Matrix ι ι ℂ →ₗ[ℂ] Matrix ι ι ℂ}
+    (hΦ : IsPositiveMap Φ) (hT : IsSTP Φ) : (1 - dualMap Φ 1).PosSemidef :=
+  (stp_iff_dual_subunital hΦ).1 hT
 
 end General
 
